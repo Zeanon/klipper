@@ -88,8 +88,8 @@ class LimitedCartKinematics(cartesian.CartKinematics):
             msg += ("Per axis accelerations limits "
                     "scale with current acceleration.\n")
         else:
-            msg += ("Per axis accelerations limits are "
-                    "independent of current acceleration.\n")
+            msg += ("Per axis accelerations limits "
+                    "are independent of current acceleration.\n")
         msg += ("Maximum XY velocity of %.1f mm/s "
                 "reached on %.0f degrees diagonals.\n"
                 "Maximum XY acceleration of %.0f mm/s^2 "
