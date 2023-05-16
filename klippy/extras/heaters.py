@@ -465,6 +465,10 @@ class ProfileManager:
             desc=self.cmd_PID_VALUES_GET_help)
     def load_profile(self, prof_name):
         profile = self.profiles.get(prof_name, None)
+        for profile1 in self.profiles:
+            self.gcode.respond_info(
+                profile1.name
+            )
         if profile is None:
             raise self.gcode.error(
                 "heaters: Unknown profile [%s]" % prof_name)
