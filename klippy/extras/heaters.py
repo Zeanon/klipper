@@ -450,7 +450,6 @@ class ProfileManager:
         self.printerheaters = printerheaters
         self.current_profile = ""
         self.gcode.respond_info("test")
-        self.configfile = self.printer.lookup_object('configfile')
         self.gcode.register_command(
             "PID_PROFILE_LOAD", self.cmd_PID_PROFILE_LOAD,
             desc=self.cmd_PID_PROFILE_help)
@@ -462,12 +461,13 @@ class ProfileManager:
         heater_name = gcmd.get('HEATER')
         profile_name = gcmd.get('PROFILE', None)
         current_heater = self.printerheaters.lookup_heater(heater_name)
+        configfile = self.printer.lookup_object('configfile')
         if current_heater is None:
             raise self.gcode.error(
                 "pid_tune: Unknown heater [%s]" % current_heater)
         section_name = (
             heater_name if profile_name is None else (heater_name + " " + profile_name))
-        profile = self.configfile.get(section_name)
+        profile = configfile.get(section_name)
         algo = profile.getchoice('control', current_heater.algos)
         current_heater.control = algo(current_heater, profile)
         self.gcode.respond_info(
