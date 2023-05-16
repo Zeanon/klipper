@@ -448,74 +448,31 @@ class ProfileManager:
         self.printer = config.get_printer()
         self.gcode = self.printer.lookup_object('gcode')
         self.printerheaters = printerheaters
-        self.profiles = {}
         self.current_profile = ""
         self.gcode.respond_info("test")
-        stored_profs = config.get_prefix_sections(self.name)
-        raise self.gcode.error("%s", self.name)
-        for profile in stored_profs:
-            name = profile.get_name().split(' ', 1)[1]
-            self.profiles[name] = profile
-            raise self.gcode.error("%s", name)
+        self.configfile = self.printer.lookup_object('configfile')
         self.gcode.register_command(
-            "PID_PROFILE", self.cmd_PID_PROFILE,
+            "PID_PROFILE_LOAD", self.cmd_PID_PROFILE_LOAD,
             desc=self.cmd_PID_PROFILE_help)
-        self.gcode.register_command(
-            "PID_VALUES_SET", self.cmd_PID_VALUES_SET,
-            desc=self.cmd_PID_VALUES_SET_help)
         self.gcode.register_command(
             "PID_VALUES_GET", self.cmd_PID_VALUES_GET,
             desc=self.cmd_PID_VALUES_GET_help)
-    def load_profile(self, prof_name):
-        profile = self.profiles.get(prof_name, None)
-        if profile is None:
-            for profile1 in self.profiles:
-                raise self.gcode.error("%s", profile1.name)
-            raise self.gcode.error(
-                "heaters: Unknown profile [%s]" % prof_name)
-        heater = self.printerheaters.lookup_heater(self.name)
-        heater.control = heater.algo(heater, profile)
-    def save_profile(self, prof_name):
-        pass
-    def remove_profile(self, prof_name):
-        if prof_name in self.profiles:
-            configfile = self.printer.lookup_object('configfile')
-            configfile.remove_section(self.name + ' ' + prof_name)
-            profiles = dict(self.profiles)
-            del profiles[prof_name]
-            self.profiles = profiles
-            self.gcode.respond_info(
-                "Profile [%s] removed from storage for this session.\n"
-                "The SAVE_CONFIG command will update the printer\n"
-                "configuration and restart the printer" % (prof_name))
-        else:
-            self.gcode.respond_info(
-                "No profile named [%s] to remove" % (prof_name))
     cmd_PID_PROFILE_help = "PID Profile Persistent Storage management"
-    def cmd_PID_PROFILE(self, gcmd):
-        options = collections.OrderedDict({
-            'LOAD': self.load_profile,
-            'SAVE': self.save_profile,
-            'REMOVE': self.remove_profile
-        })
-        for key in options:
-            name = gcmd.get(key, None)
-            if name is not None:
-                if not name.strip():
-                    raise gcmd.error(
-                        "Value for parameter '%s' must be specified" % (key)
-                    )
-                if name == "default" and key == 'SAVE':
-                    gcmd.respond_info(
-                        "Profile 'default' is reserved, please choose"
-                        " another profile name.")
-                else:
-                    options[key](name)
-                return
-        gcmd.respond_info("Invalid syntax '%s'" % (gcmd.get_commandline(),))
-    cmd_PID_VALUES_SET_help = "Set PID values directly"
-    def cmd_PID_VALUES_SET(self, gcmd):
-        pass
+    def cmd_PID_PROFILE_LOAD(self, gcmd):
+        heater_name = gcmd.get('HEATER')
+        profile_name = gcmd.get('PROFILE', None)
+        current_heater = self.printerheaters.lookup_heater(heater_name)
+        if current_heater is None:
+            raise self.gcode.error(
+                "pid_tune: Unknown heater [%s]" % current_heater)
+        section_name = (
+            heater_name if profile_name is None else (heater_name + " " + profile_name))
+        profile = self.configfile.get(section_name)
+        algo = profile.getchoice('control', current_heater.algos)
+        current_heater.control = algo(current_heater, profile)
+        self.gcode.respond_info(
+            "PID_Tune Profile [%s] loaded."
+            % ("default" if profile_name is None else profile_name))
     cmd_PID_VALUES_GET_help = "Set PID values directly"
     def cmd_PID_VALUES_GET(self):
         heater = self.printerheaters.lookup_heater(self.name)
