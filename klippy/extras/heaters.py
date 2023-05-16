@@ -450,9 +450,13 @@ class ProfileManager:
         self.printerheaters = printerheaters
         self.profiles = {}
         self.current_profile = ""
+        self.gcode.respond_info(
+            "test")
         stored_profs = config.get_prefix_sections(self.name)
         for profile in stored_profs:
             name = profile.get_name().split(' ', 1)[1]
+            self.gcode.respond_info(
+                name)
             self.profiles[name] = profile
         self.gcode.register_command(
             "PID_PROFILE", self.cmd_PID_PROFILE,
