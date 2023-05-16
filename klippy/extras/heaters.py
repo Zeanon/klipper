@@ -469,6 +469,8 @@ class ProfileManager:
         for profile1 in self.profiles:
             self.gcode.respond_info("%s", profile1.name)
         if profile is None:
+            for profile1 in self.profiles:
+                raise self.gcode.error("%s", profile1.name)
             raise self.gcode.error(
                 "heaters: Unknown profile [%s]" % prof_name)
         heater = self.printerheaters.lookup_heater(self.name)
