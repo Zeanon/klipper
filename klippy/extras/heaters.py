@@ -450,13 +450,10 @@ class ProfileManager:
         self.printerheaters = printerheaters
         self.profiles = {}
         self.current_profile = ""
-        self.gcode.respond_info(
-            "test")
+        self.gcode.respond_info("test")
         stored_profs = config.get_prefix_sections(self.name)
         for profile in stored_profs:
             name = profile.get_name().split(' ', 1)[1]
-            self.gcode.respond_info(
-                name)
             self.profiles[name] = profile
         self.gcode.register_command(
             "PID_PROFILE", self.cmd_PID_PROFILE,
@@ -470,9 +467,7 @@ class ProfileManager:
     def load_profile(self, prof_name):
         profile = self.profiles.get(prof_name, None)
         for profile1 in self.profiles:
-            self.gcode.respond_info(
-                profile1.name
-            )
+            self.gcode.respond_info("%s", profile1.name)
         if profile is None:
             raise self.gcode.error(
                 "heaters: Unknown profile [%s]" % prof_name)
