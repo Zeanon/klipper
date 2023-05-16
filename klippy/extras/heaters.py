@@ -3,7 +3,7 @@
 # Copyright (C) 2016-2020  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import os, logging, threading
+import os, logging, threading, collections
 
 
 ######################################################################
@@ -307,6 +307,8 @@ class PrinterHeaters:
         self.printer.register_event_handler("klippy:ready", self._handle_ready)
         self.printer.register_event_handler("gcode:request_restart",
                                             self.turn_off_all_heaters)
+        self.pmgr = ProfileManager(config, self)
+
         # Register commands
         gcode = self.printer.lookup_object('gcode')
         gcode.register_command("TURN_OFF_HEATERS", self.cmd_TURN_OFF_HEATERS,
@@ -439,6 +441,81 @@ class PrinterHeaters:
             print_time = toolhead.get_last_move_time()
             gcmd.respond_raw(self._get_temp(eventtime))
             eventtime = reactor.pause(eventtime + 1.)
+
+class ProfileManager:
+    def __init__(self, config, printerheaters):
+        self.name = config.get_name()
+        self.printer = config.get_printer()
+        self.gcode = self.printer.lookup_object('gcode')
+        self.printerheaters = printerheaters
+        self.profiles = {}
+        self.current_profile = ""
+        stored_profs = config.get_prefix_sections(self.name)
+        for profile in stored_profs:
+            name = profile.get_name().split(' ', 1)[1]
+            self.profiles[name] = profile
+        self.gcode.register_command(
+            "PID_PROFILE", self.cmd_PID_PROFILE,
+            desc=self.cmd_PID_PROFILE_help)
+        self.gcode.register_command(
+            "PID_VALUES_SET", self.cmd_PID_VALUES_SET,
+            desc=self.cmd_PID_VALUES_SET_help)
+        self.gcode.register_command(
+            "PID_VALUES_GET", self.cmd_PID_VALUES_GET,
+            desc=self.cmd_PID_VALUES_GET_help)
+    def load_profile(self, prof_name):
+        profile = self.profiles.get(prof_name, None)
+        if profile is None:
+            raise self.gcode.error(
+                "heaters: Unknown profile [%s]" % prof_name)
+        heater = self.printerheaters.lookup_heater(self.name)
+        heater.control = heater.algo(heater, profile)
+    def save_profile(self, prof_name):
+        pass
+    def remove_profile(self, prof_name):
+        if prof_name in self.profiles:
+            configfile = self.printer.lookup_object('configfile')
+            configfile.remove_section(self.name + ' ' + prof_name)
+            profiles = dict(self.profiles)
+            del profiles[prof_name]
+            self.profiles = profiles
+            self.gcode.respond_info(
+                "Profile [%s] removed from storage for this session.\n"
+                "The SAVE_CONFIG command will update the printer\n"
+                "configuration and restart the printer" % (prof_name))
+        else:
+            self.gcode.respond_info(
+                "No profile named [%s] to remove" % (prof_name))
+    cmd_PID_PROFILE_help = "PID Profile Persistent Storage management"
+    def cmd_PID_PROFILE(self, gcmd):
+        options = collections.OrderedDict({
+            'LOAD': self.load_profile,
+            'SAVE': self.save_profile,
+            'REMOVE': self.remove_profile
+        })
+        for key in options:
+            name = gcmd.get(key, None)
+            if name is not None:
+                if not name.strip():
+                    raise gcmd.error(
+                        "Value for parameter '%s' must be specified" % (key)
+                    )
+                if name == "default" and key == 'SAVE':
+                    gcmd.respond_info(
+                        "Profile 'default' is reserved, please choose"
+                        " another profile name.")
+                else:
+                    options[key](name)
+                return
+        gcmd.respond_info("Invalid syntax '%s'" % (gcmd.get_commandline(),))
+    cmd_PID_VALUES_SET_help = "Set PID values directly"
+    def cmd_PID_VALUES_SET(self, gcmd):
+        pass
+    cmd_PID_VALUES_GET_help = "Set PID values directly"
+    def cmd_PID_VALUES_GET(self):
+        heater = self.printerheaters.lookup_heater(self.name)
+        self.gcode.respond_info(
+            heater.control.kp)
 
 def load_config(config):
     return PrinterHeaters(config)
