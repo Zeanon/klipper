@@ -452,6 +452,7 @@ class ProfileManager:
         self.current_profile = ""
         self.gcode.respond_info("test")
         stored_profs = config.get_prefix_sections(self.name)
+        raise self.gcode.error("%s", self.name)
         for profile in stored_profs:
             name = profile.get_name().split(' ', 1)[1]
             self.profiles[name] = profile
