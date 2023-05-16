@@ -455,6 +455,7 @@ class ProfileManager:
         for profile in stored_profs:
             name = profile.get_name().split(' ', 1)[1]
             self.profiles[name] = profile
+            raise self.gcode.error("%s", name)
         self.gcode.register_command(
             "PID_PROFILE", self.cmd_PID_PROFILE,
             desc=self.cmd_PID_PROFILE_help)
@@ -466,8 +467,6 @@ class ProfileManager:
             desc=self.cmd_PID_VALUES_GET_help)
     def load_profile(self, prof_name):
         profile = self.profiles.get(prof_name, None)
-        for profile1 in self.profiles:
-            self.gcode.respond_info("%s", profile1.name)
         if profile is None:
             for profile1 in self.profiles:
                 raise self.gcode.error("%s", profile1.name)
