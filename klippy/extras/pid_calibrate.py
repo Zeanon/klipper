@@ -18,6 +18,7 @@ class PIDCalibrate:
         target = gcmd.get_float('TARGET')
         write_file = gcmd.get_int('WRITE_FILE', 0)
         tolerance = gcmd.get_float('TOLERANCE', TUNE_PID_TOL, above=0.)
+        profile = gcmd.get('PROFILE', None)
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(heater_name)
@@ -45,11 +46,14 @@ class PIDCalibrate:
             "with these parameters and restart the printer." % (Kp, Ki, Kd))
         # Store results for SAVE_CONFIG
         configfile = self.printer.lookup_object('configfile')
-        control = 'pid_v' if old_control.get_name() == 'pid_v' else 'pid'
-        configfile.set(heater_name, 'control', control)
-        configfile.set(heater_name, 'pid_Kp', "%.3f" % (Kp,))
-        configfile.set(heater_name, 'pid_Ki', "%.3f" % (Ki,))
-        configfile.set(heater_name, 'pid_Kd', "%.3f" % (Kd,))
+        section_name = (
+            heater_name if profile is None else (heater_name + " " + profile))
+        if profile is None:
+            control = 'pid_v' if old_control.get_name() == 'pid_v' else 'pid'
+            configfile.set(section_name, 'control', control)
+        configfile.set(section_name, 'pid_Kp', "%.3f" % (Kp,))
+        configfile.set(section_name, 'pid_Ki', "%.3f" % (Ki,))
+        configfile.set(section_name, 'pid_Kd', "%.3f" % (Kd,))
 
 TUNE_PID_DELTA = 5.0
 TUNE_PID_TOL = 0.02
