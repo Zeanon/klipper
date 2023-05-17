@@ -46,13 +46,7 @@ class Heater:
         self.next_pwm_time = 0.
         self.last_pwm_value = 0.
         # Setup control algorithm sub-class
-        algos = {
-            'watermark': ControlBangBang,
-            'pid': ControlPID,
-            'pid_v': ControlVelocityPID,
-        }
-        algo = config.getchoice('control', algos)
-        self.control = algo(self, config)
+        self.control = self.lookup_control(config)
         # Setup output heater pin
         heater_pin = config.get('heater_pin')
         ppins = self.printer.lookup_object('pins')
@@ -68,6 +62,14 @@ class Heater:
         gcode.register_mux_command("SET_HEATER_TEMPERATURE", "HEATER",
                                    self.name, self.cmd_SET_HEATER_TEMPERATURE,
                                    desc=self.cmd_SET_HEATER_TEMPERATURE_help)
+    def lookup_control(self, config):
+        algos = {
+            'watermark': ControlBangBang,
+            'pid': ControlPID,
+            'pid_v': ControlVelocityPID,
+        }
+        algo = config.getchoice('control', algos)
+        return algo(self, config)
     def set_pwm(self, read_time, value):
         if self.target_temp <= 0.:
             value = 0.
@@ -123,6 +125,8 @@ class Heater:
             self.control = control
             self.target_temp = 0.
         return old_control
+    def get_control(self):
+        return self.control
     def alter_target(self, target_temp):
         if target_temp:
             target_temp = max(self.min_temp, min(self.max_temp, target_temp))
@@ -307,7 +311,7 @@ class PrinterHeaters:
         self.printer.register_event_handler("klippy:ready", self._handle_ready)
         self.printer.register_event_handler("gcode:request_restart",
                                             self.turn_off_all_heaters)
-        self.pmgr = ProfileManager(config, self)
+        self.pmgr = ProfileManager(config.get_printer(), self)
 
         # Register commands
         gcode = self.printer.lookup_object('gcode')
@@ -443,41 +447,47 @@ class PrinterHeaters:
             eventtime = reactor.pause(eventtime + 1.)
 
 class ProfileManager:
-    def __init__(self, config, printerheaters):
-        self.name = config.get_name()
-        self.printer = config.get_printer()
+    def __init__(self, printer, printerheaters):
+        self.printer = printer
         self.gcode = self.printer.lookup_object('gcode')
         self.printerheaters = printerheaters
-        self.current_profile = ""
-        self.gcode.respond_info("test")
         self.gcode.register_command(
             "PID_PROFILE_LOAD", self.cmd_PID_PROFILE_LOAD,
-            desc=self.cmd_PID_PROFILE_help)
+            desc=self.cmd_PID_PROFILE_LOAD_help)
         self.gcode.register_command(
             "PID_VALUES_GET", self.cmd_PID_VALUES_GET,
             desc=self.cmd_PID_VALUES_GET_help)
-    cmd_PID_PROFILE_help = "PID Profile Persistent Storage management"
+    cmd_PID_PROFILE_LOAD_help = "PID Profile Persistent Storage management"
     def cmd_PID_PROFILE_LOAD(self, gcmd):
-        heater_name = gcmd.get('HEATER')
+        heater_name = gcmd.get('HEATER', None)
+        if heater_name is None:
+            raise self.gcode.error(
+                "pid_profile: Heater must be specified")
         profile_name = gcmd.get('PROFILE', None)
         current_heater = self.printerheaters.lookup_heater(heater_name)
-        configfile = self.printerheaters.config
         if current_heater is None:
             raise self.gcode.error(
-                "pid_tune: Unknown heater [%s]" % current_heater)
-        section_name = (
-            heater_name if profile_name is None else (heater_name + " " + profile_name))
-        profile = configfile.getsection(section_name)
-        algo = profile.getchoice('control', current_heater.algos)
-        current_heater.control = algo(current_heater, profile)
+                "pid_profile: Unknown heater [%s]" % current_heater)
+        profile_config = (self.printer
+                          .lookup_object('configfile')
+                          .read_config()
+                          .getsection(
+            heater_name if profile_name is None
+            else ("pid_profile " + heater_name + " " + profile_name
+                  )))
+        if profile_config is None:
+            raise self.gcode.error(
+                "pid_profile: Unknown profile [%s]" % current_heater)
+        current_heater.set_control(self.printerheaters.lookup_control(profile_config))
         self.gcode.respond_info(
-            "PID_Tune Profile [%s] loaded."
+            "PID Profile [%s] loaded."
             % ("default" if profile_name is None else profile_name))
-    cmd_PID_VALUES_GET_help = "Set PID values directly"
-    def cmd_PID_VALUES_GET(self):
-        heater = self.printerheaters.lookup_heater(self.name)
+    cmd_PID_VALUES_GET_help = "Get PID values directly"
+    def cmd_PID_VALUES_GET(self, gcmd):
+        heater_name = gcmd.get('HEATER')
+        heater = self.printerheaters.lookup_heater(heater_name)
         self.gcode.respond_info(
-            heater.control.kp)
+            heater.get_control().kp)
 
 def load_config(config):
     return PrinterHeaters(config)
