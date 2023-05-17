@@ -482,7 +482,10 @@ class ProfileManager:
         self.gcode.respond_info(
             "PID Profile [%s] loaded.\n"
             "PID parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f"
-            % (("default" if profile_name is None else profile_name), control.Kp, control.Ki, control.Kd))
+            % (("default" if profile_name is None else profile_name),
+               profile_config.getfloat('pid_Kp'),
+               profile_config.getfloat('pid_Ki'),
+               profile_config.getfloat('pid_Kd')))
 
 def load_config(config):
     return PrinterHeaters(config)
