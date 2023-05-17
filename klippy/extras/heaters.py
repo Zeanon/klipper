@@ -512,15 +512,15 @@ class ProfileManager:
         if control != 'pid' and control != 'pid_v':
             raise self.gcode.error(
                 "pid_profile: unsupported control mode [%s]" % control)
-        Kp = gcmd.get_float('Kp', None)
+        Kp = gcmd.get_float('Kp')
         if Kp is None:
             raise self.gcode.error(
                 "pid_profile: Kp must be specified")
-        Ki = gcmd.get_float('Ki', None)
+        Ki = gcmd.get_float('Ki')
         if Ki is None:
             raise self.gcode.error(
                 "pid_profile: Ki must be specified")
-        Kd = gcmd.get_float('Kd', None)
+        Kd = gcmd.get_float('Kd')
         if Kd is None:
             raise self.gcode.error(
                 "pid_profile: Kd must be specified")
