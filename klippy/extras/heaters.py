@@ -470,12 +470,12 @@ class ProfileManager:
         if current_heater is None:
             raise self.gcode.error(
                 "pid_profile: Unknown heater [%s]" % current_heater)
-        profile_name = gcmd.get('PROFILE', None)
+        profile_name = gcmd.get('PROFILE', 'default')
         profile_config = (self.printer
                           .lookup_object('configfile')
                           .read_main_config()
                           .getsection(
-            heater_name if profile_name is None
+            heater_name if profile_name=='default'
             else ("pid_profile " + heater_name + " " + profile_name
                   )))
         if profile_config is None:
