@@ -457,17 +457,20 @@ class ProfileManager:
         self.gcode.register_command(
             "PID_VALUES_GET", self.cmd_PID_VALUES_GET,
             desc=self.cmd_PID_VALUES_GET_help)
+        self.gcode.register_command(
+            "PID_VALUES_SET", self.cmd_PID_VALUES_SET,
+            desc=self.cmd_PID_VALUES_SET_help)
     cmd_PID_PROFILE_LOAD_help = "PID Profile Persistent Storage management"
     def cmd_PID_PROFILE_LOAD(self, gcmd):
         heater_name = gcmd.get('HEATER', None)
         if heater_name is None:
             raise self.gcode.error(
                 "pid_profile: Heater must be specified")
-        profile_name = gcmd.get('PROFILE', None)
         current_heater = self.printerheaters.lookup_heater(heater_name)
         if current_heater is None:
             raise self.gcode.error(
                 "pid_profile: Unknown heater [%s]" % current_heater)
+        profile_name = gcmd.get('PROFILE', None)
         profile_config = (self.printer
                           .lookup_object('configfile')
                           .read_main_config()
@@ -477,7 +480,7 @@ class ProfileManager:
                   )))
         if profile_config is None:
             raise self.gcode.error(
-                "pid_profile: Unknown profile [%s]" % current_heater)
+                "pid_profile: Unknown profile [%s]" % profile_name)
         current_heater.set_control(
             current_heater.lookup_control(profile_config))
         self.gcode.respond_info(
@@ -489,6 +492,51 @@ class ProfileManager:
         heater = self.printerheaters.lookup_heater(heater_name)
         self.gcode.respond_info(
             str(heater.get_control().Kp))
+    cmd_PID_VALUES_SET_help = "Set PID values directly"
+    def cmd_PID_VALUES_SET(self, gcmd):
+        heater_name = gcmd.get('HEATER', None)
+        if heater_name is None:
+            raise self.gcode.error(
+                "pid_profile: Heater must be specified")
+        current_heater = self.printerheaters.lookup_heater(heater_name)
+        if current_heater is None:
+            raise self.gcode.error(
+                "pid_profile: Unknown heater [%s]" % current_heater)
+        profile_name = gcmd.get('PROFILE', None)
+        section_name = (
+            heater_name if profile_name is None
+            else ("pid_profile " + heater_name + " " + profile_name))
+        control = gcmd.get('CONTROL', 'pid')
+        if control != 'pid' and control != 'pid_v':
+            raise self.gcode.error(
+                "pid_profile: unsupported control mode [%s]" % control)
+        Kp = gcmd.get('Kp', None)
+        if Kp is None:
+            raise self.gcode.error(
+                "pid_profile: Kp must be specified")
+        Ki = gcmd.get('Ki', None)
+        if Ki is None:
+            raise self.gcode.error(
+                "pid_profile: Ki must be specified")
+        Kd = gcmd.get('Kd', None)
+        if Kd is None:
+            raise self.gcode.error(
+                "pid_profile: Kd must be specified")
+        gcmd.respond_info(
+            "PID parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
+            "The SAVE_CONFIG command will update the printer config file\n"
+            "with these parameters and restart the printer." % (Kp, Ki, Kd))
+        configfile = self.printer.lookup_object('configfile')
+        configfile.set(section_name, 'control', control)
+        configfile.set(section_name, 'pid_Kp', "%.3f" % (Kp,))
+        configfile.set(section_name, 'pid_Ki', "%.3f" % (Ki,))
+        configfile.set(section_name, 'pid_Kd', "%.3f" % (Kd,))
+        profile_config = (self.printer
+                          .lookup_object('configfile')
+                          .read_main_config()
+                          .getsection(section_name))
+        current_heater.set_control(
+            current_heater.lookup_control(profile_config))
 
 def load_config(config):
     return PrinterHeaters(config)

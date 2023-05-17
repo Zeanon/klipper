@@ -47,7 +47,8 @@ class PIDCalibrate:
         # Store results for SAVE_CONFIG
         configfile = self.printer.lookup_object('configfile')
         section_name = (
-            heater_name if profile is None else (heater_name + " " + profile))
+            heater_name if profile is None
+            else ("pid_profile " + heater_name + " " + profile))
         control = 'pid_v' if old_control.get_name() == 'pid_v' else 'pid'
         configfile.set(section_name, 'control', control)
         configfile.set(section_name, 'pid_Kp', "%.3f" % (Kp,))
