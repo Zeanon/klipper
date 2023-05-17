@@ -6,6 +6,8 @@
 import math, logging
 from . import heaters
 
+# -*- coding: utf-8 -*-
+
 class PIDCalibrate:
     def __init__(self, config):
         self.printer = config.get_printer()
