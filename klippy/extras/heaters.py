@@ -478,7 +478,8 @@ class ProfileManager:
         if profile_config is None:
             raise self.gcode.error(
                 "pid_profile: Unknown profile [%s]" % current_heater)
-        current_heater.set_control(self.printerheaters.lookup_control(profile_config))
+        current_heater.set_control(
+            self.printerheaters.lookup_control(profile_config))
         self.gcode.respond_info(
             "PID Profile [%s] loaded."
             % ("default" if profile_name is None else profile_name))
