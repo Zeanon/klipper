@@ -488,7 +488,7 @@ class ProfileManager:
         heater_name = gcmd.get('HEATER')
         heater = self.printerheaters.lookup_heater(heater_name)
         self.gcode.respond_info(
-            heater.get_control().kp)
+            heater.get_control().Kp)
 
 def load_config(config):
     return PrinterHeaters(config)
