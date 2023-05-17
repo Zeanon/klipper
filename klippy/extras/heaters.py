@@ -474,20 +474,12 @@ class ProfileManager:
         config = (self.printer
                   .lookup_object('configfile')
                   .read_main_config())
-        if not config.has_section(
-                heater_name if profile_name == 'default'
-                else ("pid_profile " + heater_name + " " + profile_name)):
+        profile = (heater_name if profile_name == 'default'
+                   else ("pid_profile " + heater_name + " " + profile_name))
+        if not config.has_section(profile):
             raise self.gcode.error(
                 "pid_profile: Unknown profile [%s]" % profile_name)
-        profile_config = (self.printer
-                          .lookup_object('configfile')
-                          .read_main_config()
-                          .getsection(
-                           heater_name if profile_name == 'default'
-                           else ("pid_profile "
-                                 + heater_name
-                                 + " "
-                                 + profile_name)))
+        profile_config = (config.getsection(profile))
         if profile_config is None:
             raise self.gcode.error(
                 "pid_profile: Unknown profile [%s]" % profile_name)
