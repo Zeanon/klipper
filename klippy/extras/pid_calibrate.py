@@ -45,7 +45,7 @@ class PIDCalibrate:
             "Profile: [%s]\n"
             "The SAVE_CONFIG command will update the printer config file\n"
             "with these parameters and restart the printer."
-            % (profile, Kp, Ki, Kd))
+            % (Kp, Ki, Kd, profile))
         # Store results for SAVE_CONFIG
         configfile = self.printer.lookup_object('configfile')
         section_name = (
