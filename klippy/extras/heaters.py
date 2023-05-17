@@ -512,27 +512,27 @@ class ProfileManager:
         if control != 'pid' and control != 'pid_v':
             raise self.gcode.error(
                 "pid_profile: unsupported control mode [%s]" % control)
-        Kp = gcmd.get_float('Kp', 0.)
-        if Kp is None:
+        kp = gcmd.get_float('Kp', 0.)
+        if kp is None:
             raise self.gcode.error(
                 "pid_profile: Kp must be specified")
-        Ki = gcmd.get_float('Ki', 0.)
-        if Ki is None:
+        ki = gcmd.get_float('Ki', 0.)
+        if ki is None:
             raise self.gcode.error(
                 "pid_profile: Ki must be specified")
-        Kd = gcmd.get_float('Kd', 0.)
-        if Kd is None:
+        kd = gcmd.get_float('Kd', 0.)
+        if kd is None:
             raise self.gcode.error(
                 "pid_profile: Kd must be specified")
         gcmd.respond_info(
             "PID parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
             "The SAVE_CONFIG command will update the printer config file\n"
-            "with these parameters and restart the printer." % (Kp, Ki, Kd))
+            "with these parameters and restart the printer." % (kp, ki, kd))
         configfile = self.printer.lookup_object('configfile')
         configfile.set(section_name, 'control', control)
-        configfile.set(section_name, 'pid_Kp', "%.3f" % (Kp,))
-        configfile.set(section_name, 'pid_Ki', "%.3f" % (Ki,))
-        configfile.set(section_name, 'pid_Kd', "%.3f" % (Kd,))
+        configfile.set(section_name, 'pid_Kp', "%.3f" % (kp,))
+        configfile.set(section_name, 'pid_Ki', "%.3f" % (ki,))
+        configfile.set(section_name, 'pid_Kd', "%.3f" % (kd,))
         profile_config = (self.printer
                           .lookup_object('configfile')
                           .read_main_config()
