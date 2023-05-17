@@ -18,7 +18,7 @@ class PIDCalibrate:
         target = gcmd.get_float('TARGET')
         write_file = gcmd.get_int('WRITE_FILE', 0)
         tolerance = gcmd.get_float('TOLERANCE', TUNE_PID_TOL, above=0.)
-        profile = gcmd.get('PROFILE', None)
+        profile = gcmd.get('PROFILE', 'default')
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(heater_name)
@@ -47,7 +47,7 @@ class PIDCalibrate:
         # Store results for SAVE_CONFIG
         configfile = self.printer.lookup_object('configfile')
         section_name = (
-            heater_name if profile is None
+            heater_name if profile == 'default'
             else ("pid_profile " + heater_name + " " + profile))
         control = 'pid_v' if old_control.get_name() == 'pid_v' else 'pid'
         configfile.set(section_name, 'control', control)
