@@ -470,7 +470,7 @@ class ProfileManager:
                 "pid_profile: Unknown heater [%s]" % current_heater)
         profile_config = (self.printer
                           .lookup_object('configfile')
-                          .read_config()
+                          .read_main_config()
                           .getsection(
             heater_name if profile_name is None
             else ("pid_profile " + heater_name + " " + profile_name
