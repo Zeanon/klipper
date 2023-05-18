@@ -198,7 +198,7 @@ class ControlPID:
         self.Kd = config.getfloat('pid_Kd') / PID_PARAM_BASE
         self.dt = heater.pwm_delay
         self.smooth = 1. + heater.get_smooth_time() / self.dt
-        self.prev_temp = config.getfloat('ambient_temp', AMBIENT_TEMP)
+        self.prev_temp = AMBIENT_TEMP
         self.prev_err = 0.
         self.prev_der = 0.
         self.int_sum = 0.
