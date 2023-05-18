@@ -41,7 +41,8 @@ class PIDCalibrate:
         Kp, Ki, Kd = calibrate.calc_pid()
         logging.info("Autotune: final: Kp=%f Ki=%f Kd=%f", Kp, Ki, Kd)
         gcmd.respond_info(
-            "PID parameters for %.2fC: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
+            "PID parameters for %.2f\xb0C: "
+            "pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
             "Tolerance: [%.4f]\n"
             "Profile: [%s]\n"
             "The SAVE_CONFIG command will update the printer config file\n"
@@ -52,13 +53,14 @@ class PIDCalibrate:
         section_name = (
             heater_name if profile == 'default'
             else ("pid_profile " + heater_name + " " + profile))
-        control = 'pid_v' if old_control.get_name() == 'pid_v' else 'pid'
+        control = 'pid_v' if old_control.get_type() == 'pid_v' else 'pid'
+        configfile.set(section_name, 'pid_version', heaters.PID_PROFILE_VERSION)
+        configfile.set(section_name, 'pid_target', "%.2f" % target)
+        configfile.set(section_name, 'pid_tolerance', "%.4f" % tolerance)
         configfile.set(section_name, 'control', control)
         configfile.set(section_name, 'pid_Kp', "%.3f" % (Kp,))
         configfile.set(section_name, 'pid_Ki', "%.3f" % (Ki,))
         configfile.set(section_name, 'pid_Kd', "%.3f" % (Kd,))
-        configfile.set(section_name, 'pid_target', "%.2f" % target)
-        configfile.set(section_name, 'pid_tolerance', "%.4f" % tolerance)
 
 TUNE_PID_DELTA = 5.0
 TUNE_PID_TOL = 0.02

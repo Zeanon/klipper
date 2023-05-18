@@ -10,6 +10,7 @@ import os, logging, threading, collections
 # Heater
 ######################################################################
 
+PID_PROFILE_VERSION = 1
 KELVIN_TO_CELSIUS = -273.15
 MAX_HEAT_TIME = 5.0
 AMBIENT_TEMP = 25.
@@ -46,7 +47,7 @@ class Heater:
         self.next_pwm_time = 0.
         self.last_pwm_value = 0.
         # Setup control algorithm sub-class
-        self.control = self.lookup_control(config)
+        self.control = self.lookup_control(config, 'default')
         # Setup output heater pin
         heater_pin = config.get('heater_pin')
         ppins = self.printer.lookup_object('pins')
@@ -62,14 +63,14 @@ class Heater:
         gcode.register_mux_command("SET_HEATER_TEMPERATURE", "HEATER",
                                    self.name, self.cmd_SET_HEATER_TEMPERATURE,
                                    desc=self.cmd_SET_HEATER_TEMPERATURE_help)
-    def lookup_control(self, config):
+    def lookup_control(self, config, profile_name):
         algos = {
             'watermark': ControlBangBang,
             'pid': ControlPID,
             'pid_v': ControlVelocityPID,
         }
         algo = config.getchoice('control', algos)
-        return algo(self, config)
+        return algo(self, config, profile_name)
     def set_pwm(self, read_time, value):
         if self.target_temp <= 0.:
             value = 0.
@@ -158,7 +159,7 @@ class Heater:
 ######################################################################
 
 class ControlBangBang:
-    def __init__(self, heater, config):
+    def __init__(self, heater, config, profile_name):
         self.heater = heater
         self.heater_max_power = heater.get_max_power()
         self.max_delta = config.getfloat('max_delta', 2.0, above=0.)
@@ -174,7 +175,9 @@ class ControlBangBang:
             self.heater.set_pwm(read_time, 0.)
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         return smoothed_temp < target_temp-self.max_delta
-    def get_name(self):
+    def get_profile_name(self):
+        return 'default'
+    def get_type(self):
         return 'watermark'
 
 
@@ -186,7 +189,8 @@ PID_SETTLE_DELTA = 1.
 PID_SETTLE_SLOPE = .1
 
 class ControlPID:
-    def __init__(self, heater, config):
+    def __init__(self, heater, config, profile_name):
+        self.profile_name = profile_name
         self.heater = heater
         self.heater_max_power = heater.get_max_power()
         self.Kp = config.getfloat('pid_Kp') / PID_PARAM_BASE
@@ -238,8 +242,9 @@ class ControlPID:
         temp_diff = target_temp - smoothed_temp
         return (abs(temp_diff) > PID_SETTLE_DELTA
                 or abs(self.prev_der) > PID_SETTLE_SLOPE)
-
-    def get_name(self):
+    def get_profile_name(self):
+        return self.profile_name
+    def get_type(self):
         return 'pid'
 
 
@@ -248,7 +253,8 @@ class ControlPID:
 ######################################################################
 
 class ControlVelocityPID:
-    def __init__(self, heater, config):
+    def __init__(self, heater, config, profile_name):
+        self.profile_name = profile_name
         self.heater = heater
         self.heater_max_power = heater.get_max_power()
         self.dt = heater.pwm_delay
@@ -291,7 +297,9 @@ class ControlVelocityPID:
         temp_diff = target_temp - smoothed_temp
         return (abs(temp_diff) > PID_SETTLE_DELTA
                 or abs(self.d1) > PID_SETTLE_SLOPE)
-    def get_name(self):
+    def get_profile_name(self):
+        return self.profile_name
+    def get_type(self):
         return 'pid_v'
 
 
@@ -465,27 +473,42 @@ class ProfileManager:
             raise self.gcode.error(
                 "pid_profile: Unknown heater [%s]" % current_heater)
         profile_name = gcmd.get('PROFILE', 'default')
-        config = (self.printer
-                  .lookup_object('configfile')
-                  .read_main_config())
-        profile = (heater_name if profile_name == 'default'
-                   else ("pid_profile " + heater_name + " " + profile_name))
-        if not config.has_section(profile):
-            raise self.gcode.error(
-                "pid_profile: Unknown profile [%s]" % profile_name)
-        profile_config = (config.getsection(profile))
-        if profile_config is None:
-            raise self.gcode.error(
-                "pid_profile: Unknown profile [%s]" % profile_name)
-        control = current_heater.lookup_control(profile_config)
-        current_heater.set_control(control)
-        self.gcode.respond_info(
-            "PID Profile [%s] loaded.\n"
-            "PID parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f"
-            % (("default" if profile_name is None else profile_name),
-               profile_config.getfloat('pid_Kp'),
-               profile_config.getfloat('pid_Ki'),
-               profile_config.getfloat('pid_Kd')))
+        if profile_name == current_heater.get_control().get_profile_name():
+            self.gcode.respond_info(
+                "PID Profile [%s] already loaded."
+                % profile_name)
+        else:
+            config = (self.printer
+                      .lookup_object('configfile')
+                      .read_main_config())
+            section_name = (heater_name if profile_name == 'default'
+                       else ("pid_profile " + heater_name + " " + profile_name))
+            if not config.has_section(section_name):
+                raise self.gcode.error(
+                    "pid_profile: Unknown profile [%s]" % profile_name)
+            profile_config = (config.getsection(section_name))
+            if profile_config is None:
+                raise self.gcode.error(
+                    "pid_profile: Unknown profile [%s]" % profile_name)
+            pid_version = config.getint('pid_version', 0)
+            if pid_version != PID_PROFILE_VERSION:
+                raise self.gcode.error(
+                    "pid_profile: Profile [%s] not compatible with this version\n"
+                    "of pid_profile.  Profile Version: %d Current Version: %d "
+                    % (profile_name, pid_version, PID_PROFILE_VERSION))
+            control = current_heater.lookup_control(profile_config, profile_name)
+            current_heater.set_control(control)
+            self.gcode.respond_info(
+                "PID Profile [%s] loaded.\n"
+                "PID parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
+                "Tolerance: %.4f\n"
+                "Target: %.2f"
+                % (profile_name,
+                   profile_config.getfloat('pid_Kp'),
+                   profile_config.getfloat('pid_Ki'),
+                   profile_config.getfloat('pid_Kd'),
+                   profile_config.getfloat('pid_tolerance'),
+                   profile_config.getfloat('pid_target')))
 
 def load_config(config):
     return PrinterHeaters(config)
