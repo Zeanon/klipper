@@ -64,7 +64,7 @@ class PIDCalibrate:
 
 TUNE_PID_DELTA = 5
 TUNE_PID_TOL = 0.02
-TUNE_PID_SAMPLES = 3
+TUNE_PID_SAMPLES = 10
 TUNE_PID_MAX_PEAKS = 60
 
 class ControlAutoTune:
