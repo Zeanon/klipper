@@ -462,6 +462,12 @@ class ProfileManager:
         self.gcode.register_command(
             "PID_PROFILE_LOAD", self.cmd_PID_PROFILE_LOAD,
             desc=self.cmd_PID_PROFILE_LOAD_help)
+    def get_section_name(self, heater_name, profile_name):
+        return (heater_name if profile_name == 'default'
+                            else ("pid_profile "
+                                  + heater_name
+                                  + " "
+                                  + profile_name))
     cmd_PID_PROFILE_LOAD_help = "PID Profile Persistent Storage management"
     def cmd_PID_PROFILE_LOAD(self, gcmd):
         heater_name = gcmd.get('HEATER', None)
@@ -481,18 +487,15 @@ class ProfileManager:
             config = (self.printer
                       .lookup_object('configfile')
                       .read_main_config())
-            section_name = (heater_name if profile_name == 'default'
-                            else ("pid_profile "
-                                  + heater_name
-                                  + " "
-                                  + profile_name))
-            default_config = gcmd.get('DEFAULT', None)
+            section_name = self.get_section_name(heater_name, profile_name)
+            default_name = gcmd.get('DEFAULT', None)
             if not config.has_section(section_name):
-                if default_config is None:
+                if default_name is None:
                     raise self.gcode.error(
                         "pid_profile: Unknown profile [%s]" % profile_name)
                 else:
-                    section_name = profile_name = heater_name
+                    profile_name = default_name
+                    section_name = self.get_section_name(heater_name, profile_name)
             profile_config = (config.getsection(section_name))
             if profile_config is None:
                 raise self.gcode.error(
