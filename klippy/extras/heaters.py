@@ -493,10 +493,13 @@ class ProfileManager:
             pid_version = config.getint('pid_version', 0)
             if pid_version != PID_PROFILE_VERSION:
                 raise self.gcode.error(
-                    "pid_profile: Profile [%s] not compatible with this version\n"
+                    "pid_profile: Profile [%s] "
+                    "not compatible with this version\n"
                     "of pid_profile.  Profile Version: %d Current Version: %d "
                     % (profile_name, pid_version, PID_PROFILE_VERSION))
-            control = current_heater.lookup_control(profile_config, profile_name)
+            control = current_heater.lookup_control(
+                profile_config,
+                profile_name)
             current_heater.set_control(control)
             self.gcode.respond_info(
                 "PID Profile [%s] loaded.\n"
