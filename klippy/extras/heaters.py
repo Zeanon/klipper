@@ -492,7 +492,7 @@ class ProfileManager:
                     raise self.gcode.error(
                         "pid_profile: Unknown profile [%s]" % profile_name)
                 else:
-                    section_name = heater_name
+                    section_name = profile_name = heater_name
             profile_config = (config.getsection(section_name))
             if profile_config is None:
                 raise self.gcode.error(
@@ -502,7 +502,8 @@ class ProfileManager:
                 raise self.gcode.error(
                     "pid_profile: Profile [%s] "
                     "not compatible with this version\n"
-                    "of pid_profile.  Profile Version: %d Current Version: %d "
+                    "of pid_profile.\n"
+                    "Profile Version: %d Current Version: %d "
                     % (profile_name, pid_version, PID_PROFILE_VERSION))
             control = current_heater.lookup_control(
                 profile_config,
