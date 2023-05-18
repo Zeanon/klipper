@@ -57,8 +57,8 @@ class PIDCalibrate:
         configfile.set(section_name, 'pid_Kp', "%.3f" % (Kp,))
         configfile.set(section_name, 'pid_Ki', "%.3f" % (Ki,))
         configfile.set(section_name, 'pid_Kd', "%.3f" % (Kd,))
-        configfile.set(section_name, 'tolerance', "%.4f" % tolerance)
-        configfile.set(section_name, 'target', "%.2f" % target)
+        configfile.set(section_name, 'pid_target', "%.2f" % target)
+        configfile.set(section_name, 'pid_tolerance', "%.4f" % tolerance)
 
 TUNE_PID_DELTA = 5.0
 TUNE_PID_TOL = 0.02
