@@ -506,7 +506,7 @@ class ProfileManager:
             if profile_config is None:
                 raise self.gcode.error(
                     "pid_profile: Unknown profile [%s]" % profile_name)
-            pid_version = profile_config.getint('pid_version', 0)
+            pid_version = profile_config.getint('pid_version', 1)
             if pid_version != PID_PROFILE_VERSION:
                 raise self.gcode.error(
                     "pid_profile: Profile [%s] "
