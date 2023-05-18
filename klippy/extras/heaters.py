@@ -495,7 +495,13 @@ class ProfileManager:
                         "pid_profile: Unknown profile [%s]" % profile_name)
                 else:
                     profile_name = default_name
-                    section_name = self.get_section_name(heater_name, profile_name)
+                    section_name = self.get_section_name(
+                        heater_name,
+                        profile_name)
+                    if not config.has_section(section_name):
+                        raise self.gcode.error(
+                            "pid_profile: Unknown default profile [%s]"
+                            % profile_name)
             profile_config = (config.getsection(section_name))
             if profile_config is None:
                 raise self.gcode.error(
