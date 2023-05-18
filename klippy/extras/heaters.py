@@ -520,18 +520,18 @@ class ProfileManager:
             current_heater.set_control(control)
             self.gcode.respond_info(
                 "PID Profile [%s] loaded for heater [%s].\n"
-                "PID parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
-                "Control: %s\n"
-                "Tolerance: %.4f\n"
                 "Target: %.2f"
+                "Tolerance: %.4f\n"
+                "Control: %s\n"
+                "PID Parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
                 % (profile_name,
                    heater_name,
+                   profile_config.getfloat('pid_target'),
+                   profile_config.getfloat('pid_tolerance'),
                    profile_config.get('control'),
                    profile_config.getfloat('pid_Kp'),
                    profile_config.getfloat('pid_Ki'),
-                   profile_config.getfloat('pid_Kd'),
-                   profile_config.getfloat('pid_tolerance'),
-                   profile_config.getfloat('pid_target')))
+                   profile_config.getfloat('pid_Kd')))
 
 def load_config(config):
     return PrinterHeaters(config)
