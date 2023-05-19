@@ -6,4 +6,4 @@ out
 /*.old
 config.*
 klippy/.version
-.idea
+.idea/*
