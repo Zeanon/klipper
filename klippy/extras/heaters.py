@@ -478,7 +478,10 @@ class ProfileManager:
         if current_heater is None:
             raise self.gcode.error(
                 "pid_profile: Unknown heater [%s]" % current_heater)
-        profile_name = gcmd.get('PROFILE', 'default')
+        profile_name = gcmd.get('PROFILE', None)
+        if profile_name is None:
+            raise self.gcode.error(
+                "pid_profile: Profile must be specified")
         if profile_name == current_heater.get_control().get_profile_name():
             self.gcode.respond_info(
                 "PID Profile [%s] already loaded."
@@ -509,8 +512,7 @@ class ProfileManager:
             pid_version = profile_config.getint('pid_version', 1)
             if pid_version != PID_PROFILE_VERSION:
                 raise self.gcode.error(
-                    "pid_profile: Profile [%s] "
-                    "not compatible with this version\n"
+                    "Profile [%s] not compatible with this version "
                     "of pid_profile.\n"
                     "Profile Version: %d Current Version: %d "
                     % (profile_name, pid_version, PID_PROFILE_VERSION))
