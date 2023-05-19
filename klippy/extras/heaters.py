@@ -520,10 +520,10 @@ class ProfileManager:
             current_heater.set_control(control)
             self.gcode.respond_info(
                 "PID Profile [%s] loaded for heater [%s].\n"
-                "Target: %.2f"
+                "Target: %.2f\n"
                 "Tolerance: %.4f\n"
                 "Control: %s\n"
-                "PID Parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
+                "PID Parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f"
                 % (profile_name,
                    heater_name,
                    profile_config.getfloat('pid_target'),
