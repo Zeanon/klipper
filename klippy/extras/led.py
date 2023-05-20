@@ -61,6 +61,7 @@ class LEDHelper:
         if self.led_state[index - 1] == color:
             return
         new_led_state = list(self.led_state)
+        self.printer.lookup_object('gcode').respond_info(type(self.led_state))
         new_led_state[index - 1] = color
         self.led_state = new_led_state
         self.need_transmit = True
