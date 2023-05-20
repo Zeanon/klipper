@@ -61,6 +61,26 @@ class PIDCalibrate:
         configfile.set(section_name, 'pid_Kp', "%.3f" % (Kp,))
         configfile.set(section_name, 'pid_Ki', "%.3f" % (Ki,))
         configfile.set(section_name, 'pid_Kd', "%.3f" % (Kd,))
+    def cmd_HEAT_UP_DOWN(self, gcmd):
+        heater_name = gcmd.get('HEATER')
+        pheaters = self.printer.lookup_object('heaters')
+        try:
+            heater = pheaters.lookup_heater(heater_name)
+        except self.printer.config_error as e:
+            raise gcmd.error(str(e))
+        calibrate = ControlYoyo(heater)
+        old_control = heater.set_control(calibrate)
+        try:
+            logging.info("###$? HEATUP_CALIBRATION")
+            pheaters.set_temperature(heater, 260.0, True)
+        except self.printer.command_error as e:
+            heater.set_control(old_control)
+            raise
+        heater.set_control(old_control)
+        gcmd.respond_info("FEDDISCH")
+
+
+
 
 TUNE_PID_DELTA = 5
 TUNE_PID_TOL = 0.02
@@ -282,6 +302,27 @@ class ControlAutoTune:
         Ki = Kp / Ti
         Kd = Kp * Td
         return Kp, Ki, Kd
+
+class ControlYoyo:
+    def __init__(self, heater):
+        self.heater = heater
+        self.heater_max_power = heater.get_max_power()
+        self.heating = False
+        self.reached_top = False
+    def temperature_update(self, read_time, temp, target_temp):
+        if temp >= 260.0:
+            self.reached_top = True
+        if not self.reached_top:
+            self.heater.set_pwm(read_time, self.heater_max_power)
+        else:
+            self.heater.set_pwm(read_time, 0.)
+    def check_busy(self, eventtime, smoothed_temp, target_temp):
+        return self.reached_top and smoothed_temp < 30
+    def get_profile_name(self):
+        return 'default'
+    def get_type(self):
+        return 'yoyo'
+
 
 def load_config(config):
     return PIDCalibrate(config)
