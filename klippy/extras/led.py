@@ -180,7 +180,7 @@ class PrinterLED:
                     raise gcmd.error("Unable to parse '%s' as a literal" % (v,))
         if indices is not None:
             for i in indices:
-                self._activate_template(led_helper, i, template, lparams)
+                self._activate_template(led_helper, int(i), template, lparams)
         else:
             for i in range(led_count):
                 self._activate_template(led_helper, i+1, template, lparams)
