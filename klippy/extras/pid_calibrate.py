@@ -12,6 +12,8 @@ class PIDCalibrate:
         gcode = self.printer.lookup_object('gcode')
         gcode.register_command('PID_CALIBRATE', self.cmd_PID_CALIBRATE,
                                desc=self.cmd_PID_CALIBRATE_help)
+        gcode.register_command('HEAT_UP_DOWN', self.cmd_HEAT_UP_DOWN,
+                               desc=self.cmd_PID_CALIBRATE_help)
     cmd_PID_CALIBRATE_help = "Run PID calibration test"
     def cmd_PID_CALIBRATE(self, gcmd):
         heater_name = gcmd.get('HEATER')
@@ -78,8 +80,6 @@ class PIDCalibrate:
             raise
         heater.set_control(old_control)
         gcmd.respond_info("FEDDISCH")
-
-
 
 
 TUNE_PID_DELTA = 5
