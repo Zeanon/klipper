@@ -188,7 +188,7 @@ class PrinterLED:
                         raise gcmd.error("More than one '-' found in '%s', "
                                          "only one allowed" % index)
                     for i in range(int(group[0]), (int(group[1]) + 1)):
-                        self._activate_template(led_helper, int(index), template, lparams)
+                        self._activate_template(led_helper, int(i), template, lparams)
                 else:
                     self._activate_template(led_helper, int(index), template, lparams)
         else:
