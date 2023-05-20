@@ -75,10 +75,31 @@ class PIDCalibrate:
         calibrate = ControlGenerateSimulationData(heater)
         old_control = heater.set_control(calibrate)
         try:
-            for i in range(0, 5):
-                logging.info("###$? HEATUP_CALIBRATION START")
+            for i in range(0, 3):
+                logging.info("###$? HEATUP_CALIBRATION START 100")
                 pheaters.set_temperature(heater, target_temp, True)
-                logging.info("HEATUP_CALIBRATION DONE ?$###")
+                logging.info("HEATUP_CALIBRATION DONE 100 ?$###")
+                calibrate.reached_top = False
+                calibrate.altered = False
+            calibrate.heat_power = 0.75
+            for i in range(0, 3):
+                logging.info("###$? HEATUP_CALIBRATION START 75")
+                pheaters.set_temperature(heater, target_temp, True)
+                logging.info("HEATUP_CALIBRATION DONE 75 ?$###")
+                calibrate.reached_top = False
+                calibrate.altered = False
+            calibrate.heat_power = 0.5
+            for i in range(0, 3):
+                logging.info("###$? HEATUP_CALIBRATION START 50")
+                pheaters.set_temperature(heater, target_temp, True)
+                logging.info("HEATUP_CALIBRATION DONE 50 ?$###")
+                calibrate.reached_top = False
+                calibrate.altered = False
+            calibrate.heat_power = 0.25
+            for i in range(0, 3):
+                logging.info("###$? HEATUP_CALIBRATION START 25")
+                pheaters.set_temperature(heater, target_temp, True)
+                logging.info("HEATUP_CALIBRATION DONE 25 ?$###")
                 calibrate.reached_top = False
                 calibrate.altered = False
         except self.printer.command_error as e:
@@ -312,7 +333,7 @@ class ControlAutoTune:
 class ControlGenerateSimulationData:
     def __init__(self, heater):
         self.heater = heater
-        self.heater_max_power = heater.get_max_power()
+        self.heat_power = heater.get_max_power()
         self.ambient_temp = heater.last_temp + 5
         self.reached_top = False
         self.altered = False
@@ -320,7 +341,7 @@ class ControlGenerateSimulationData:
         if temp >= target_temp:
             self.reached_top = True
         if not self.reached_top:
-            self.heater.set_pwm(read_time, self.heater_max_power)
+            self.heater.set_pwm(read_time, self.heat_power)
         else:
             if not self.altered:
                 self.heater.alter_target(0)
