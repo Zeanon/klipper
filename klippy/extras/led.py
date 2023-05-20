@@ -45,7 +45,7 @@ class LEDHelper:
             for i in range(0, led_count):
                 indices.add(int(i+1))
             return indices
-        for index in command.split(','):
+        for index in command.split(';'):
             if '-' in index:
                 group = index.split('-')
                 if len(group) > 2:
