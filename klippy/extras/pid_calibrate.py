@@ -71,7 +71,7 @@ class PIDCalibrate:
             heater = pheaters.lookup_heater(heater_name)
         except self.printer.config_error as e:
             raise gcmd.error(str(e))
-        target_temp = gcmd.get_float('TARGET', heater.max_temp, minval=heater.min_extrude_temp, maxval=heater.max_temp)
+        target_temp = gcmd.get_float('TARGET', (heater.max_temp - 15), minval=heater.min_extrude_temp, maxval=(heater.max_temp - 15))
         calibrate = ControlGenerateSimulationData(heater)
         old_control = heater.set_control(calibrate)
         try:
