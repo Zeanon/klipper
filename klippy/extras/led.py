@@ -85,7 +85,6 @@ class LEDHelper:
         green = gcmd.get_float('GREEN', 0., minval=0., maxval=1.)
         blue = gcmd.get_float('BLUE', 0., minval=0., maxval=1.)
         white = gcmd.get_float('WHITE', 0., minval=0., maxval=1.)
-        # index = gcmd.get_int('INDEX', None, minval=1, maxval=self.led_count)
         transmit = gcmd.get_int('TRANSMIT', 1)
         sync = gcmd.get_int('SYNC', 1)
         color = (red, green, blue, white)
@@ -187,7 +186,6 @@ class PrinterLED:
         if led_helper is None:
             raise gcmd.error("Unknown LED '%s'" % (led_name,))
         led_count = led_helper.get_led_count()
-        # index = gcmd.get_int("INDEX", None, minval=1, maxval=led_count)
         template = None
         lparams = {}
         tpl_name = gcmd.get("TEMPLATE")
