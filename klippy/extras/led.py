@@ -34,17 +34,16 @@ class LEDHelper:
             raise gcmd.error("'%s' is not a number, "
                              "only numbers, ',' and '-' are allowed." % index)
         if i < 1:
-            raise gcmd.error("index can not be less than 1.")
+            raise gcmd.error("index can not be less than 1(was '%d')" % i)
         if i > led_count:
-            raise gcmd.error("index can not exceed amount of led in chain.")
+            raise gcmd.error("index can not exceed amount of "
+                             "led in chain(was '%d')" % i)
         return i
     def get_indices(self, gcmd, led_count):
         command = gcmd.get("INDEX", None)
-        indices = set()
         if command is None:
-            for i in range(0, led_count):
-                indices.add(int(i+1))
-            return indices
+            return range(1, (led_count + 1))
+        indices = set()
         for index in command.split(','):
             if '-' in index:
                 group = index.split('-')
