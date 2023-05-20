@@ -208,7 +208,7 @@ class PrinterLED:
                     lparams[p] = ast.literal_eval(v)
                 except ValueError as e:
                     raise gcmd.error("Unable to parse '%s' as a literal" % (v,))
-        for index in led_helper.get_indices(gcmd):
+        for index in led_helper.get_indices(gcmd, led_count):
             self._activate_template(led_helper, index, template, lparams)
         self._activate_timer()
 
