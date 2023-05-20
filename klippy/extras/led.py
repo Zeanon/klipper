@@ -60,10 +60,7 @@ class LEDHelper:
     def set_color(self, index, color):
         if self.led_state[index - 1] == color:
             return
-        new_led_state = list(self.led_state)
-        self.printer.lookup_object('gcode').respond_info(str(type(self.led_state)))
-        new_led_state[index - 1] = color
-        self.led_state = new_led_state
+        self.led_state[index - 1] = color
         self.need_transmit = True
     def check_transmit(self, print_time):
         if not self.need_transmit:
