@@ -74,34 +74,39 @@ class PIDCalibrate:
         target_temp = gcmd.get_float('TARGET', (heater.max_temp - 15), minval=heater.min_extrude_temp, maxval=(heater.max_temp - 15))
         calibrate = ControlGenerateSimulationData(heater)
         old_control = heater.set_control(calibrate)
+        accuracy = 1
         try:
-            for i in range(0, 3):
+            for i in range(0, accuracy):
                 logging.info("###$? HEATUP_CALIBRATION START 100")
                 pheaters.set_temperature(heater, target_temp, True)
                 logging.info("HEATUP_CALIBRATION DONE 100 ?$###")
                 calibrate.reached_top = False
                 calibrate.altered = False
+            gcmd.respond_info("Done calibrating for 100")
             calibrate.heat_power = 0.75
-            for i in range(0, 3):
+            for i in range(0, accuracy):
                 logging.info("###$? HEATUP_CALIBRATION START 75")
                 pheaters.set_temperature(heater, target_temp, True)
                 logging.info("HEATUP_CALIBRATION DONE 75 ?$###")
                 calibrate.reached_top = False
                 calibrate.altered = False
+            gcmd.respond_info("Done calibrating for 75")
             calibrate.heat_power = 0.5
-            for i in range(0, 3):
+            for i in range(0, accuracy):
                 logging.info("###$? HEATUP_CALIBRATION START 50")
                 pheaters.set_temperature(heater, target_temp, True)
                 logging.info("HEATUP_CALIBRATION DONE 50 ?$###")
                 calibrate.reached_top = False
                 calibrate.altered = False
+            gcmd.respond_info("Done calibrating for 50")
             calibrate.heat_power = 0.25
-            for i in range(0, 3):
+            for i in range(0, accuracy):
                 logging.info("###$? HEATUP_CALIBRATION START 25")
                 pheaters.set_temperature(heater, target_temp, True)
                 logging.info("HEATUP_CALIBRATION DONE 25 ?$###")
                 calibrate.reached_top = False
                 calibrate.altered = False
+            gcmd.respond_info("Done calibrating for 25")
         except self.printer.command_error as e:
             heater.set_control(old_control)
             raise
