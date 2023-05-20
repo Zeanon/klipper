@@ -66,30 +66,21 @@ class PIDCalibrate:
     cmd_GENERATE_SIMULATION_DATA_help = "Generate Data for PID Simulation"
     def cmd_GENERATE_SIMULATION_DATA(self, gcmd):
         heater_name = gcmd.get('HEATER')
-        target_temp = gcmd.get_float('TARGET')
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(heater_name)
         except self.printer.config_error as e:
             raise gcmd.error(str(e))
+        target_temp = gcmd.get_float('TARGET', heater.max_temp, minval=heater.min_extrude_temp, maxval=heater.max_temp)
         calibrate = ControlGenerateSimulationData(heater)
         old_control = heater.set_control(calibrate)
         try:
-            logging.info("###$? HEATUP_CALIBRATION START")
-            pheaters.set_temperature(heater, target_temp, True)
-            logging.info("HEATUP_CALIBRATION DONE ?$###")
-            logging.info("###$? HEATUP_CALIBRATION START")
-            pheaters.set_temperature(heater, target_temp, True)
-            logging.info("HEATUP_CALIBRATION DONE ?$###")
-            logging.info("###$? HEATUP_CALIBRATION START")
-            pheaters.set_temperature(heater, target_temp, True)
-            logging.info("HEATUP_CALIBRATION DONE ?$###")
-            logging.info("###$? HEATUP_CALIBRATION START")
-            pheaters.set_temperature(heater, target_temp, True)
-            logging.info("HEATUP_CALIBRATION DONE ?$###")
-            logging.info("###$? HEATUP_CALIBRATION START")
-            pheaters.set_temperature(heater, target_temp, True)
-            logging.info("HEATUP_CALIBRATION DONE ?$###")
+            for i in range(0, 5):
+                logging.info("###$? HEATUP_CALIBRATION START")
+                pheaters.set_temperature(heater, target_temp, True)
+                logging.info("HEATUP_CALIBRATION DONE ?$###")
+                calibrate.reached_top = False
+                calibrate.altered = False
         except self.printer.command_error as e:
             heater.set_control(old_control)
             raise
