@@ -74,7 +74,7 @@ class PIDCalibrate:
         target_temp = gcmd.get_float('TARGET', (heater.max_temp - 15), minval=heater.min_extrude_temp, maxval=(heater.max_temp - 15))
         calibrate = ControlGenerateSimulationData(heater)
         old_control = heater.set_control(calibrate)
-        accuracy = 1
+        accuracy = 3
         try:
             for i in range(0, accuracy):
                 logging.info("###$? HEATUP_CALIBRATION START 100")
