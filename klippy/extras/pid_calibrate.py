@@ -70,7 +70,6 @@ class PIDCalibrate:
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(heater_name)
-            heater.get_temp()
         except self.printer.config_error as e:
             raise gcmd.error(str(e))
         calibrate = ControlGenerateSimulationData(heater)
