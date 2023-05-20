@@ -63,8 +63,16 @@ class LEDHelper:
         color = (red, green, blue, white)
         # Update and transmit data
         def lookahead_bgfunc(print_time):
-            for i in indices:
-                self.set_color(int(i), color)
+            for index in indices:
+                if '-' in index:
+                    group = index.split('-')
+                    if len(group) > 2:
+                        raise gcmd.error("More than one '-' found in '%s', "
+                                         "only one allowed" % index)
+                    for i in range(int(group[0]), (int(group[1]) + 1)):
+                        self.set_color(int(i), color)
+                else:
+                    self.set_color(int(index), color)
             if transmit:
                 self.check_transmit(print_time)
         if sync:
