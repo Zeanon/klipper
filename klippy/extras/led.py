@@ -91,7 +91,7 @@ class LEDHelper:
         color = (red, green, blue, white)
         # Update and transmit data
         def lookahead_bgfunc(print_time):
-            for index in self.get_indices(gcmd):
+            for index in self.get_indices(gcmd, self.led_count):
                 self.set_color(index, color)
             if transmit:
                 self.check_transmit(print_time)
