@@ -317,7 +317,7 @@ class ControlYoyo:
         else:
             self.heater.set_pwm(read_time, 0.)
     def check_busy(self, eventtime, smoothed_temp, target_temp):
-        return self.reached_top and smoothed_temp < 30
+        return not self.reached_top or smoothed_temp > 30
     def get_profile_name(self):
         return 'default'
     def get_type(self):
