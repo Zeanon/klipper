@@ -12,7 +12,8 @@ class PIDCalibrate:
         gcode = self.printer.lookup_object('gcode')
         gcode.register_command('PID_CALIBRATE', self.cmd_PID_CALIBRATE,
                                desc=self.cmd_PID_CALIBRATE_help)
-        gcode.register_command('GENERATE_SIMULATION_DATA', self.cmd_GENERATE_SIMULATION_DATA,
+        gcode.register_command('GENERATE_SIMULATION_DATA',
+                               self.cmd_GENERATE_SIMULATION_DATA,
                                desc=self.cmd_GENERATE_SIMULATION_DATA_help)
     cmd_PID_CALIBRATE_help = "Run PID calibration test"
     def cmd_PID_CALIBRATE(self, gcmd):
@@ -71,7 +72,9 @@ class PIDCalibrate:
             heater = pheaters.lookup_heater(heater_name)
         except self.printer.config_error as e:
             raise gcmd.error(str(e))
-        target_temp = gcmd.get_float('TARGET', (heater.max_temp - 15), minval=heater.min_extrude_temp, maxval=(heater.max_temp - 15))
+        target_temp = gcmd.get_float('TARGET', (heater.max_temp - 15),
+                                     minval=heater.min_extrude_temp,
+                                     maxval=(heater.max_temp - 15))
         calibrate = ControlGenerateSimulationData(heater)
         old_control = heater.set_control(calibrate)
         accuracy = 1
