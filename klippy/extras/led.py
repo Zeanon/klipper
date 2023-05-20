@@ -56,13 +56,15 @@ class LEDHelper:
         green = gcmd.get_float('GREEN', 0., minval=0., maxval=1.)
         blue = gcmd.get_float('BLUE', 0., minval=0., maxval=1.)
         white = gcmd.get_float('WHITE', 0., minval=0., maxval=1.)
-        index = gcmd.get_int('INDEX', None, minval=1, maxval=self.led_count)
+        # index = gcmd.get_int('INDEX', None, minval=1, maxval=self.led_count)
+        indices = gcmd.get("INDEX", None).split(',')
         transmit = gcmd.get_int('TRANSMIT', 1)
         sync = gcmd.get_int('SYNC', 1)
         color = (red, green, blue, white)
         # Update and transmit data
         def lookahead_bgfunc(print_time):
-            self.set_color(index, color)
+            for i in indices:
+                self.set_color(int(i), color)
             if transmit:
                 self.check_transmit(print_time)
         if sync:
@@ -179,8 +181,16 @@ class PrinterLED:
                 except ValueError as e:
                     raise gcmd.error("Unable to parse '%s' as a literal" % (v,))
         if indices is not None:
-            for i in indices:
-                self._activate_template(led_helper, int(i), template, lparams)
+            for index in indices:
+                if '-' in index:
+                    group = index.split('-')
+                    if len(group) > 2:
+                        raise gcmd.error("More than one '-' found in '%s', "
+                                         "only one allowed" % index)
+                    for i in range(group[0], (group[1] + 1)):
+                        self._activate_template(led_helper, int(index), template, lparams)
+                else:
+                    self._activate_template(led_helper, int(index), template, lparams)
         else:
             for i in range(led_count):
                 self._activate_template(led_helper, i+1, template, lparams)
