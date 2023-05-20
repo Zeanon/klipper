@@ -309,12 +309,16 @@ class ControlYoyo:
         self.heater_max_power = heater.get_max_power()
         self.heating = False
         self.reached_top = False
+        self.altered = False
     def temperature_update(self, read_time, temp, target_temp):
         if temp >= 260.0:
             self.reached_top = True
         if not self.reached_top:
             self.heater.set_pwm(read_time, self.heater_max_power)
         else:
+            if not self.altered:
+                self.heater.alter_target(0)
+                self.altered = True
             self.heater.set_pwm(read_time, 0.)
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         return not self.reached_top or smoothed_temp > 30
