@@ -59,15 +59,10 @@ class LEDHelper:
     def get_led_count(self):
         return self.led_count
     def set_color(self, index, color):
-        if index is None:
-            new_led_state = [color] * self.led_count
-            if self.led_state == new_led_state:
-                return
-        else:
-            if self.led_state[index - 1] == color:
-                return
-            new_led_state = list(self.led_state)
-            new_led_state[index - 1] = color
+        if self.led_state[index - 1] == color:
+            return
+        new_led_state = list(self.led_state)
+        new_led_state[index - 1] = color
         self.led_state = new_led_state
         self.need_transmit = True
     def check_transmit(self, print_time):
