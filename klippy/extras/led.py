@@ -188,7 +188,6 @@ class PrinterLED:
             raise gcmd.error("Unknown LED '%s'" % (led_name,))
         led_count = led_helper.get_led_count()
         # index = gcmd.get_int("INDEX", None, minval=1, maxval=led_count)
-        indices = gcmd.get("INDEX", None).split(',')
         template = None
         lparams = {}
         tpl_name = gcmd.get("TEMPLATE")
