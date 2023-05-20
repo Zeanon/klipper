@@ -12,8 +12,8 @@ class PIDCalibrate:
         gcode = self.printer.lookup_object('gcode')
         gcode.register_command('PID_CALIBRATE', self.cmd_PID_CALIBRATE,
                                desc=self.cmd_PID_CALIBRATE_help)
-        gcode.register_command('HEAT_UP_DOWN', self.cmd_HEAT_UP_DOWN,
-                               desc=self.cmd_PID_CALIBRATE_help)
+        gcode.register_command('GENERATE_SIMULATION_DATA', self.cmd_GENERATE_SIMULATION_DATA,
+                               desc=self.cmd_GENERATE_SIMULATION_DATA_help)
     cmd_PID_CALIBRATE_help = "Run PID calibration test"
     def cmd_PID_CALIBRATE(self, gcmd):
         heater_name = gcmd.get('HEATER')
@@ -63,23 +63,39 @@ class PIDCalibrate:
         configfile.set(section_name, 'pid_Kp', "%.3f" % (Kp,))
         configfile.set(section_name, 'pid_Ki', "%.3f" % (Ki,))
         configfile.set(section_name, 'pid_Kd', "%.3f" % (Kd,))
-    def cmd_HEAT_UP_DOWN(self, gcmd):
+    cmd_GENERATE_SIMULATION_DATA_help = "Generate Data for PID Simulation"
+    def cmd_GENERATE_SIMULATION_DATA(self, gcmd):
         heater_name = gcmd.get('HEATER')
+        target_temp = gcmd.get_float('TARGET')
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(heater_name)
+            heater.get_temp()
         except self.printer.config_error as e:
             raise gcmd.error(str(e))
-        calibrate = ControlYoyo(heater)
+        calibrate = ControlGenerateSimulationData(heater)
         old_control = heater.set_control(calibrate)
         try:
-            logging.info("###$? HEATUP_CALIBRATION")
-            pheaters.set_temperature(heater, 260.0, True)
+            logging.info("###$? HEATUP_CALIBRATION START")
+            pheaters.set_temperature(heater, target_temp, True)
+            logging.info("HEATUP_CALIBRATION DONE ?$###")
+            logging.info("###$? HEATUP_CALIBRATION START")
+            pheaters.set_temperature(heater, target_temp, True)
+            logging.info("HEATUP_CALIBRATION DONE ?$###")
+            logging.info("###$? HEATUP_CALIBRATION START")
+            pheaters.set_temperature(heater, target_temp, True)
+            logging.info("HEATUP_CALIBRATION DONE ?$###")
+            logging.info("###$? HEATUP_CALIBRATION START")
+            pheaters.set_temperature(heater, target_temp, True)
+            logging.info("HEATUP_CALIBRATION DONE ?$###")
+            logging.info("###$? HEATUP_CALIBRATION START")
+            pheaters.set_temperature(heater, target_temp, True)
+            logging.info("HEATUP_CALIBRATION DONE ?$###")
         except self.printer.command_error as e:
             heater.set_control(old_control)
             raise
         heater.set_control(old_control)
-        gcmd.respond_info("FEDDISCH")
+        gcmd.respond_info("Done generating calibration data")
 
 
 TUNE_PID_DELTA = 5
@@ -303,15 +319,15 @@ class ControlAutoTune:
         Kd = Kp * Td
         return Kp, Ki, Kd
 
-class ControlYoyo:
+class ControlGenerateSimulationData:
     def __init__(self, heater):
         self.heater = heater
         self.heater_max_power = heater.get_max_power()
-        self.heating = False
+        self.ambient_temp = heater.last_temp + 5
         self.reached_top = False
         self.altered = False
     def temperature_update(self, read_time, temp, target_temp):
-        if temp >= 260.0:
+        if temp >= target_temp:
             self.reached_top = True
         if not self.reached_top:
             self.heater.set_pwm(read_time, self.heater_max_power)
@@ -320,12 +336,8 @@ class ControlYoyo:
                 self.heater.alter_target(0)
                 self.altered = True
             self.heater.set_pwm(read_time, 0.)
-    def check_busy(self, eventtime, smoothed_temp, target_temp):
-        return not self.reached_top or smoothed_temp > 30
-    def get_profile_name(self):
-        return 'default'
-    def get_type(self):
-        return 'yoyo'
+    def check_busy(self, eventtime, temp, target_temp):
+        return not self.reached_top or temp > self.ambient_temp
 
 
 def load_config(config):
