@@ -157,7 +157,8 @@ class PrinterLED:
         if led_helper is None:
             raise gcmd.error("Unknown LED '%s'" % (led_name,))
         led_count = led_helper.get_led_count()
-        index = gcmd.get_int("INDEX", None, minval=1, maxval=led_count)
+        # index = gcmd.get_int("INDEX", None, minval=1, maxval=led_count)
+        indices = gcmd.get("INDEX", None).split(',')
         template = None
         lparams = {}
         tpl_name = gcmd.get("TEMPLATE")
@@ -177,8 +178,9 @@ class PrinterLED:
                     lparams[p] = ast.literal_eval(v)
                 except ValueError as e:
                     raise gcmd.error("Unable to parse '%s' as a literal" % (v,))
-        if index is not None:
-            self._activate_template(led_helper, index, template, lparams)
+        if indices is not None:
+            for i in indices:
+                self._activate_template(led_helper, i, template, lparams)
         else:
             for i in range(led_count):
                 self._activate_template(led_helper, i+1, template, lparams)
