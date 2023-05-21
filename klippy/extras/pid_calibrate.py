@@ -90,8 +90,6 @@ class PIDCalibrate:
                              % heater.get_max_power())
                 calibrate.write_tag("HEATUP_CALIBRATION DONE %.3f ?$###\n"
                                     % heater.get_max_power())
-                calibrate.reached_top = False
-                calibrate.altered = False
             gcmd.respond_info("Done calibrating for 100")
             calibrate.heat_power = heater.get_max_power() * (3 / 4)
             for i in range(0, accuracy):
@@ -104,8 +102,6 @@ class PIDCalibrate:
                              % calibrate.heat_power)
                 calibrate.write_tag("HEATUP_CALIBRATION DONE %.3f ?$###\n"
                                     % calibrate.heat_power)
-                calibrate.reached_top = False
-                calibrate.altered = False
             gcmd.respond_info("Done calibrating for 75")
             calibrate.heat_power = heater.get_max_power() * (1 / 2)
             for i in range(0, accuracy):
@@ -118,8 +114,6 @@ class PIDCalibrate:
                              % calibrate.heat_power)
                 calibrate.write_tag("HEATUP_CALIBRATION DONE %.3f ?$###\n"
                                     % calibrate.heat_power)
-                calibrate.reached_top = False
-                calibrate.altered = False
             gcmd.respond_info("Done calibrating for 50")
         except self.printer.command_error as e:
             heater.set_control(old_control)
@@ -363,19 +357,20 @@ class ControlGenerateSimulationData:
     def write_tag(self, tag):
         self.file.write(tag)
     def temperature_update(self, read_time, temp, target_temp):
+        if temp >= target_temp and not self.reached_top:
+            self.reached_top = True
+            self.heat_power = 0.
+            self.heater.alter_target(0)
         self.file.write("time=%.3f|target=%.1f|temp=%.3f|power=%.3f\n"
                         % (read_time, target_temp, temp, self.heat_power))
-        if temp >= target_temp:
-            self.reached_top = True
-        if not self.reached_top:
-            self.heater.set_pwm(read_time, self.heat_power)
-        else:
-            if not self.altered:
-                self.heater.alter_target(0)
-                self.altered = True
-            self.heater.set_pwm(read_time, 0.)
+        self.heater.set_pwm(read_time, self.heat_power)
     def check_busy(self, eventtime, temp, target_temp):
-        return not self.reached_top or temp > self.ambient_temp
+        if self.reached_top and temp < self.ambient_temp:
+            self.reached_top = False
+            self.altered = False
+            return False
+        else:
+            return True
 
 
 def load_config(config):
