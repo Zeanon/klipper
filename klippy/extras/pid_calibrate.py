@@ -81,31 +81,43 @@ class PIDCalibrate:
         accuracy = 1
         try:
             for i in range(0, accuracy):
-                logging.info("###$? HEATUP_CALIBRATION START 100")
-                calibrate.write_tag("###$? HEATUP_CALIBRATION START 75\n")
+                logging.info("###$? HEATUP_CALIBRATION START %.3f"
+                             % heater.get_max_power())
+                calibrate.write_tag("###$? HEATUP_CALIBRATION START %.3f\n"
+                                    % heater.get_max_power())
                 pheaters.set_temperature(heater, target_temp, True)
-                logging.info("HEATUP_CALIBRATION DONE 100 ?$###")
-                calibrate.write_tag("HEATUP_CALIBRATION DONE 100 ?$###\n")
+                logging.info("HEATUP_CALIBRATION DONE %.3f ?$###"
+                             % heater.get_max_power())
+                calibrate.write_tag("HEATUP_CALIBRATION DONE %.3f ?$###\n"
+                                    % heater.get_max_power())
                 calibrate.reached_top = False
                 calibrate.altered = False
             gcmd.respond_info("Done calibrating for 100")
-            calibrate.heat_power = 0.75
+            calibrate.heat_power = heater.get_max_power() * (3 / 4)
             for i in range(0, accuracy):
-                logging.info("###$? HEATUP_CALIBRATION START 75")
-                calibrate.write_tag("###$? HEATUP_CALIBRATION START 75\n")
+                logging.info("###$? HEATUP_CALIBRATION START %.3f"
+                             % calibrate.heat_power)
+                calibrate.write_tag("###$? HEATUP_CALIBRATION START %.3f\n"
+                                    % calibrate.heat_power)
                 pheaters.set_temperature(heater, target_temp, True)
-                logging.info("HEATUP_CALIBRATION DONE 75 ?$###")
-                calibrate.write_tag("HEATUP_CALIBRATION DONE 75 ?$###\n")
+                logging.info("HEATUP_CALIBRATION DONE %.3f ?$###"
+                             % calibrate.heat_power)
+                calibrate.write_tag("HEATUP_CALIBRATION DONE %.3f ?$###\n"
+                                    % calibrate.heat_power)
                 calibrate.reached_top = False
                 calibrate.altered = False
             gcmd.respond_info("Done calibrating for 75")
-            calibrate.heat_power = 0.5
+            calibrate.heat_power = heater.get_max_power() * (1 / 2)
             for i in range(0, accuracy):
-                logging.info("###$? HEATUP_CALIBRATION START 50")
-                calibrate.write_tag("###$? HEATUP_CALIBRATION START 50\n")
+                logging.info("###$? HEATUP_CALIBRATION START %.3f"
+                             % calibrate.heat_power)
+                calibrate.write_tag("###$? HEATUP_CALIBRATION START %.3f\n"
+                                    % calibrate.heat_power)
                 pheaters.set_temperature(heater, target_temp, True)
-                logging.info("HEATUP_CALIBRATION DONE 50 ?$###")
-                calibrate.write_tag("HEATUP_CALIBRATION DONE 50 ?$###\n")
+                logging.info("HEATUP_CALIBRATION DONE %.3f ?$###"
+                             % calibrate.heat_power)
+                calibrate.write_tag("HEATUP_CALIBRATION DONE %.3f ?$###\n"
+                                    % calibrate.heat_power)
                 calibrate.reached_top = False
                 calibrate.altered = False
             gcmd.respond_info("Done calibrating for 50")
@@ -351,7 +363,8 @@ class ControlGenerateSimulationData:
     def write_tag(self, tag):
         self.file.write(tag)
     def temperature_update(self, read_time, temp, target_temp):
-        self.file.write("time=" + str(read_time) + "|target=" + str(target_temp) + "|temp=" + str(temp) + "|power=" + str(self.heat_power) + "\n")
+        self.file.write("time=%.3f|target=%.1f|temp=%.3f|power=%.3f\n"
+                        % (read_time, target_temp, temp, self.heat_power))
         if temp >= target_temp:
             self.reached_top = True
         if not self.reached_top:
