@@ -82,30 +82,30 @@ class PIDCalibrate:
         try:
             for i in range(0, accuracy):
                 logging.info("###$? HEATUP_CALIBRATION START 100")
-                calibrate.write_tag("###$? HEATUP_CALIBRATION START 75")
+                calibrate.write_tag("###$? HEATUP_CALIBRATION START 75\n")
                 pheaters.set_temperature(heater, target_temp, True)
                 logging.info("HEATUP_CALIBRATION DONE 100 ?$###")
-                calibrate.write_tag("HEATUP_CALIBRATION DONE 100 ?$###")
+                calibrate.write_tag("HEATUP_CALIBRATION DONE 100 ?$###\n")
                 calibrate.reached_top = False
                 calibrate.altered = False
             gcmd.respond_info("Done calibrating for 100")
             calibrate.heat_power = 0.75
             for i in range(0, accuracy):
                 logging.info("###$? HEATUP_CALIBRATION START 75")
-                calibrate.write_tag("###$? HEATUP_CALIBRATION START 75")
+                calibrate.write_tag("###$? HEATUP_CALIBRATION START 75\n")
                 pheaters.set_temperature(heater, target_temp, True)
                 logging.info("HEATUP_CALIBRATION DONE 75 ?$###")
-                calibrate.write_tag("HEATUP_CALIBRATION DONE 75 ?$###")
+                calibrate.write_tag("HEATUP_CALIBRATION DONE 75 ?$###\n")
                 calibrate.reached_top = False
                 calibrate.altered = False
             gcmd.respond_info("Done calibrating for 75")
             calibrate.heat_power = 0.5
             for i in range(0, accuracy):
                 logging.info("###$? HEATUP_CALIBRATION START 50")
-                calibrate.write_tag("###$? HEATUP_CALIBRATION START 50")
+                calibrate.write_tag("###$? HEATUP_CALIBRATION START 50\n")
                 pheaters.set_temperature(heater, target_temp, True)
                 logging.info("HEATUP_CALIBRATION DONE 50 ?$###")
-                calibrate.write_tag("HEATUP_CALIBRATION DONE 50 ?$###")
+                calibrate.write_tag("HEATUP_CALIBRATION DONE 50 ?$###\n")
                 calibrate.reached_top = False
                 calibrate.altered = False
             gcmd.respond_info("Done calibrating for 50")
@@ -351,7 +351,7 @@ class ControlGenerateSimulationData:
     def write_tag(self, tag):
         self.file.write(tag)
     def temperature_update(self, read_time, temp, target_temp):
-        self.file.write("time=" + read_time + "|target=" + target_temp + "|temp=" + temp + "|power=" + self.heat_power)
+        self.file.write("time=" + read_time + "|target=" + target_temp + "|temp=" + temp + "|power=" + self.heat_power + "\n")
         if temp >= target_temp:
             self.reached_top = True
         if not self.reached_top:
