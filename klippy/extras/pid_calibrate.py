@@ -351,7 +351,7 @@ class ControlGenerateSimulationData:
     def write_tag(self, tag):
         self.file.write(tag)
     def temperature_update(self, read_time, temp, target_temp):
-        self.file.write("time=" + read_time + "|target=" + target_temp + "|temp=" + temp + "|power=" + self.heat_power + "\n")
+        self.file.write("time=" + str(read_time) + "|target=" + str(target_temp) + "|temp=" + str(temp) + "|power=" + str(self.heat_power) + "\n")
         if temp >= target_temp:
             self.reached_top = True
         if not self.reached_top:
