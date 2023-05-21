@@ -114,6 +114,7 @@ class PIDCalibrate:
             heater.set_control(old_control)
             raise
         heater.set_control(old_control)
+        heater.set_temp(0.0)
         gcmd.respond_info("Done generating calibration data")
 
 
