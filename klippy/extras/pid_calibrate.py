@@ -75,44 +75,45 @@ class PIDCalibrate:
         target_temp = gcmd.get_float('TARGET', (heater.max_temp - 15),
                                      minval=heater.min_extrude_temp,
                                      maxval=(heater.max_temp - 15))
-        calibrate = ControlGenerateSimulationData(heater)
+        file = open('/tmp/simulation.txt', "w")
+        calibrate = ControlGenerateSimulationData(heater, file)
         old_control = heater.set_control(calibrate)
         accuracy = 1
         try:
             for i in range(0, accuracy):
                 logging.info("###$? HEATUP_CALIBRATION START 100")
+                calibrate.write_tag("###$? HEATUP_CALIBRATION START 75")
                 pheaters.set_temperature(heater, target_temp, True)
                 logging.info("HEATUP_CALIBRATION DONE 100 ?$###")
+                calibrate.write_tag("HEATUP_CALIBRATION DONE 100 ?$###")
                 calibrate.reached_top = False
                 calibrate.altered = False
             gcmd.respond_info("Done calibrating for 100")
             calibrate.heat_power = 0.75
             for i in range(0, accuracy):
                 logging.info("###$? HEATUP_CALIBRATION START 75")
+                calibrate.write_tag("###$? HEATUP_CALIBRATION START 75")
                 pheaters.set_temperature(heater, target_temp, True)
                 logging.info("HEATUP_CALIBRATION DONE 75 ?$###")
+                calibrate.write_tag("HEATUP_CALIBRATION DONE 75 ?$###")
                 calibrate.reached_top = False
                 calibrate.altered = False
             gcmd.respond_info("Done calibrating for 75")
             calibrate.heat_power = 0.5
             for i in range(0, accuracy):
                 logging.info("###$? HEATUP_CALIBRATION START 50")
+                calibrate.write_tag("###$? HEATUP_CALIBRATION START 50")
                 pheaters.set_temperature(heater, target_temp, True)
                 logging.info("HEATUP_CALIBRATION DONE 50 ?$###")
+                calibrate.write_tag("HEATUP_CALIBRATION DONE 50 ?$###")
                 calibrate.reached_top = False
                 calibrate.altered = False
             gcmd.respond_info("Done calibrating for 50")
-            calibrate.heat_power = 0.25
-            for i in range(0, accuracy):
-                logging.info("###$? HEATUP_CALIBRATION START 25")
-                pheaters.set_temperature(heater, target_temp, True)
-                logging.info("HEATUP_CALIBRATION DONE 25 ?$###")
-                calibrate.reached_top = False
-                calibrate.altered = False
-            gcmd.respond_info("Done calibrating for 25")
         except self.printer.command_error as e:
             heater.set_control(old_control)
+            file.close()
             raise
+        file.close()
         heater.set_control(old_control)
         heater.set_temp(0.0)
         gcmd.respond_info("Done generating calibration data")
@@ -340,13 +341,17 @@ class ControlAutoTune:
         return Kp, Ki, Kd
 
 class ControlGenerateSimulationData:
-    def __init__(self, heater):
+    def __init__(self, heater, file):
         self.heater = heater
         self.heat_power = heater.get_max_power()
         self.ambient_temp = heater.last_temp + 5
         self.reached_top = False
         self.altered = False
+        self.file = file
+    def write_tag(self, tag):
+        self.file.write(tag)
     def temperature_update(self, read_time, temp, target_temp):
+        self.file.write("time=" + read_time + "|target=" + target_temp + "|temp=" + temp + "|power=" + self.heat_power)
         if temp >= target_temp:
             self.reached_top = True
         if not self.reached_top:
