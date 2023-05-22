@@ -31,15 +31,25 @@ class LEDHelper:
         try:
             i = int(index)
         except ValueError:
-            raise gcmd.error("'%s' is not a number, "
+            raise gcmd.error("index '%s' is not a number, "
                              "only numbers, ',', '-' and '|' are allowed."
                              % index)
         if i < 1:
             raise gcmd.error("index can not be less than 1(was '%d')" % i)
         if i > led_count:
             raise gcmd.error("index can not exceed amount of "
-                             "led in chain(was '%d')"
+                             "leds in chain(was '%d')"
                              % i)
+        return i
+    def check_step(self, step, gcmd, led_count):
+        try:
+            i = int(step)
+        except ValueError:
+            raise gcmd.error("step '%s' is not a number, "
+                             "only numbers are allowed."
+                             % step)
+        if i < 1:
+            raise gcmd.error("step can not be less than 1(was '%d')" % i)
         return i
     def get_indices(self, gcmd, led_count):
         given_indices = gcmd.get("INDEX", None)
@@ -56,7 +66,7 @@ class LEDHelper:
                 max_val = led_range[1]
                 range_steps = max_val.split('|')
                 if len(range_steps) == 2:
-                    step = self.check_index(range_steps[1], gcmd, led_count)
+                    step = self.check_step(range_steps[1], gcmd, led_count)
                     max_val = range_steps[0]
                 elif len(range_steps) > 2:
                     raise gcmd.error("More than one '|' found in '%s', "
