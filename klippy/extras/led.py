@@ -71,13 +71,13 @@ class LEDHelper:
                 elif len(range_steps) > 2:
                     raise gcmd.error("More than one '|' found in '%s', "
                                      "only one allowed" % index)
+                else:
+                    raise gcmd.error("More than one '-' found in '%s', "
+                                     "only one allowed" % index)
                 for i in range(self.check_index(min_val, gcmd, led_count),
                                (self.check_index(max_val, gcmd, led_count) + 1),
                                self.check_step(step, gcmd)):
                     indices.add(i)
-                else:
-                    raise gcmd.error("More than one '-' found in '%s', "
-                                     "only one allowed" % index)
         return indices
     def get_led_count(self):
         return self.led_count
