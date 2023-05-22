@@ -32,7 +32,7 @@ class LEDHelper:
             i = int(index)
         except ValueError:
             raise gcmd.error("'%s' is not a number, "
-                             "only numbers, ',' and '-' are allowed." % index)
+                             "only numbers, ',', '-' and '|' are allowed." % index)
         if i < 1:
             raise gcmd.error("index can not be less than 1(was '%d')" % i)
         if i > led_count:
@@ -40,20 +40,32 @@ class LEDHelper:
                              "led in chain(was '%d')" % i)
         return i
     def get_indices(self, gcmd, led_count):
-        command = gcmd.get("INDEX", None)
-        if command is None:
+        given_indices = gcmd.get("INDEX", None)
+        if given_indices is None:
             return range(1, (led_count + 1))
         indices = set()
-        for index in command.split(','):
-            if '-' in index:
-                group = index.split('-')
-                if len(group) > 2:
+        for index in given_indices.split(','):
+            led_range = index.split('-')
+            if len(led_range) < 2:
+                indices.add(self.check_index(index, gcmd, led_count))
+            elif len(led_range) == 2:
+                step = 1
+                min_val = led_range[0]
+                max_val = led_range[1]
+                range_steps = max_val.split('|')
+                if len(range_steps) == 2:
+                    step = self.check_index(range_steps[1], gcmd, led_count)
+                    max_val = range_steps[0]
+                elif len(range_steps) > 2:
+                    raise gcmd.error("More than one '|' found in '%s', "
+                                     "only one allowed" % index)
+                for i in range(self.check_index(min_val, gcmd, led_count),
+                               (self.check_index(max_val, gcmd, led_count) + 1),
+                               step):
+                    indices.add(i)
+                else:
                     raise gcmd.error("More than one '-' found in '%s', "
                                      "only one allowed" % index)
-                for i in range(int(group[0]), (int(group[1]) + 1)):
-                    indices.add(self.check_index(i, gcmd, led_count))
-            else:
-                indices.add(self.check_index(index, gcmd, led_count))
         return indices
     def get_led_count(self):
         return self.led_count
