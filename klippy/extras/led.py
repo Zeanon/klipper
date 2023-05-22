@@ -58,22 +58,22 @@ class LEDHelper:
         indices = set()
         for index in given_indices.split(','):
             led_range = index.split('-')
-            if len(led_range) < 2:
+            if len(led_range) > 2:
+                raise gcmd.error("More than one '-' found in '%s', "
+                                 "only one allowed" % index)
+            elif len(led_range) == 1:
                 indices.add(self.check_index(index, gcmd, led_count))
-            elif len(led_range) == 2:
+            else:
                 step = 1
                 min_val = led_range[0]
                 max_val = led_range[1]
                 range_steps = max_val.split('|')
-                if len(range_steps) == 2:
-                    step = range_steps[1]
-                    max_val = range_steps[0]
-                elif len(range_steps) > 2:
+                if len(range_steps) > 2:
                     raise gcmd.error("More than one '|' found in '%s', "
                                      "only one allowed" % index)
-                else:
-                    raise gcmd.error("More than one '-' found in '%s', "
-                                     "only one allowed" % index)
+                elif len(range_steps) == 2:
+                    step = range_steps[1]
+                    max_val = range_steps[0]
                 for i in range(self.check_index(min_val, gcmd, led_count),
                                (self.check_index(max_val, gcmd, led_count) + 1),
                                self.check_step(step, gcmd)):
