@@ -524,7 +524,7 @@ class ProfileManager:
             name)
         heater.set_control(control)
         if defaulted:
-            self.gcode.respond_info("Couldn't find profile [%s],"
+            self.gcode.respond_info("Couldn't find profile [%s], "
                                     "defaulted to [%s]."
                                     % (profile_name, default))
         self.gcode.respond_info(
