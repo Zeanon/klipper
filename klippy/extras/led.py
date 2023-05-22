@@ -41,7 +41,7 @@ class LEDHelper:
                              "leds in chain(was '%d')"
                              % i)
         return i
-    def check_step(self, step, gcmd, led_count):
+    def check_step(self, step, gcmd):
         try:
             i = int(step)
         except ValueError:
@@ -66,14 +66,14 @@ class LEDHelper:
                 max_val = led_range[1]
                 range_steps = max_val.split('|')
                 if len(range_steps) == 2:
-                    step = self.check_step(range_steps[1], gcmd, led_count)
+                    step = range_steps[1]
                     max_val = range_steps[0]
                 elif len(range_steps) > 2:
                     raise gcmd.error("More than one '|' found in '%s', "
                                      "only one allowed" % index)
                 for i in range(self.check_index(min_val, gcmd, led_count),
                                (self.check_index(max_val, gcmd, led_count) + 1),
-                               step):
+                               self.check_step(step, gcmd)):
                     indices.add(i)
                 else:
                     raise gcmd.error("More than one '-' found in '%s', "
