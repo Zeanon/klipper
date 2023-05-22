@@ -79,7 +79,6 @@ class LEDHelper:
                     raise gcmd.error("More than one '-' found in '%s', "
                                      "only one allowed" % index)
         return indices
-    
     def get_led_count(self):
         return self.led_count
     def set_color(self, index, color):
