@@ -32,12 +32,14 @@ class LEDHelper:
             i = int(index)
         except ValueError:
             raise gcmd.error("'%s' is not a number, "
-                             "only numbers, ',', '-' and '|' are allowed." % index)
+                             "only numbers, ',', '-' and '|' are allowed."
+                             % index)
         if i < 1:
             raise gcmd.error("index can not be less than 1(was '%d')" % i)
         if i > led_count:
             raise gcmd.error("index can not exceed amount of "
-                             "led in chain(was '%d')" % i)
+                             "led in chain(was '%d')"
+                             % i)
         return i
     def get_indices(self, gcmd, led_count):
         given_indices = gcmd.get("INDEX", None)
