@@ -460,9 +460,6 @@ class ProfileManager:
         self.gcode = self.printer.lookup_object('gcode')
         self.printerheaters = printerheaters
         self.gcode.register_command(
-            "PID_PROFILE_LOAD", self.cmd_PID_PROFILE_LOAD,
-            desc=self.cmd_PID_PROFILE_LOAD_help)
-        self.gcode.register_command(
             "PID_PROFILE", self.cmd_PID_PROFILE,
             desc=self.cmd_PID_PROFILE_help)
     def get_section_name(self, heater_name, profile_name):
@@ -589,72 +586,6 @@ class ProfileManager:
         raise self.gcode.error(
             "pid_profile: Profile must be specified"
         )
-    cmd_PID_PROFILE_LOAD_help = "PID Profile Persistent Storage management"
-    def cmd_PID_PROFILE_LOAD(self, gcmd):
-        heater_name = gcmd.get('HEATER', None)
-        if heater_name is None:
-            raise self.gcode.error(
-                "pid_profile: Heater must be specified")
-        current_heater = self.printerheaters.lookup_heater(heater_name)
-        if current_heater is None:
-            raise self.gcode.error(
-                "pid_profile: Unknown heater [%s]" % current_heater)
-        profile_name = gcmd.get('PROFILE', None)
-        if profile_name is None:
-            raise self.gcode.error(
-                "pid_profile: Profile must be specified")
-        if profile_name == current_heater.get_control().get_profile_name():
-            self.gcode.respond_info(
-                "PID Profile [%s] already loaded."
-                % profile_name)
-        else:
-            config = (self.printer
-                      .lookup_object('configfile')
-                      .read_main_config())
-            section_name = self.get_section_name(heater_name, profile_name)
-            default_name = gcmd.get('DEFAULT', None)
-            if not config.has_section(section_name):
-                if default_name is None:
-                    raise self.gcode.error(
-                        "pid_profile: Unknown profile [%s]" % profile_name)
-                else:
-                    profile_name = default_name
-                    section_name = self.get_section_name(
-                        heater_name,
-                        profile_name)
-                    if not config.has_section(section_name):
-                        raise self.gcode.error(
-                            "pid_profile: Unknown default profile [%s]"
-                            % profile_name)
-            profile_config = (config.getsection(section_name))
-            if profile_config is None:
-                raise self.gcode.error(
-                    "pid_profile: Unknown profile [%s]" % profile_name)
-            pid_version = profile_config.getint('pid_version', 1)
-            if pid_version != PID_PROFILE_VERSION:
-                raise self.gcode.error(
-                    "Profile [%s] not compatible with this version "
-                    "of pid_profile.\n"
-                    "Profile Version: %d Current Version: %d "
-                    % (profile_name, pid_version, PID_PROFILE_VERSION))
-            control = current_heater.lookup_control(
-                profile_config,
-                profile_name)
-            current_heater.set_control(control)
-            self.gcode.respond_info(
-                "PID Profile [%s] loaded for heater [%s].\n"
-                "Target: %.2f\n"
-                "Tolerance: %.4f\n"
-                "Control: %s\n"
-                "PID Parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f"
-                % (profile_name,
-                   heater_name,
-                   profile_config.getfloat('pid_target'),
-                   profile_config.getfloat('pid_tolerance'),
-                   profile_config.get('control'),
-                   profile_config.getfloat('pid_Kp'),
-                   profile_config.getfloat('pid_Ki'),
-                   profile_config.getfloat('pid_Kd')))
 
 def load_config(config):
     return PrinterHeaters(config)
