@@ -484,26 +484,30 @@ class ProfileManager:
                   .read_main_config()
                   )
         section_name = self.get_section_name(heater.name, profile_name)
+        defaulted = False
+        name = profile_name
         if not config.has_section(section_name):
             if default is None:
                 raise self.gcode.error(
                     "pid_profile: Unknown profile [%s]" % profile_name
                 )
             else:
-                profile_name = default
                 section_name = self.get_section_name(
                     heater.name,
-                    profile_name
+                    default
                 )
+                name = default
+                defaulted = True
                 if not config.has_section(section_name):
                     raise self.gcode.error(
                         "pid_profile: Unknown default profile [%s]"
-                        % profile_name
+                        % default
                     )
         profile_config = (config.getsection(section_name))
         if profile_config is None:
             raise self.gcode.error(
-                "pid_profile: Unknown profile [%s]" % profile_name
+                "pid_profile: Unknown profile [%s]"
+                % name
             )
         pid_version = profile_config.getint('pid_version', 1)
         if pid_version != PID_PROFILE_VERSION:
@@ -511,19 +515,25 @@ class ProfileManager:
                 "Profile [%s] not compatible with this version "
                 "of pid_profile.\n"
                 "Profile Version: %d Current Version: %d "
-                % (profile_name, pid_version, PID_PROFILE_VERSION)
+                % (name,
+                   pid_version,
+                   PID_PROFILE_VERSION)
             )
         control = heater.lookup_control(
             profile_config,
-            profile_name)
+            name)
         heater.set_control(control)
+        if defaulted:
+            self.gcode.respond_info("Couldn't find profile [%s],"
+                                    "defaulted to [%s]."
+                                    % (profile_name, default))
         self.gcode.respond_info(
             "PID Profile [%s] loaded for heater [%s].\n"
             "Target: %.2f\n"
             "Tolerance: %.4f\n"
             "Control: %s\n"
             "PID Parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f"
-            % (profile_name,
+            % (name,
                heater.name,
                profile_config.getfloat('pid_target'),
                profile_config.getfloat('pid_tolerance'),
