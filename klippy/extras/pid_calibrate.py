@@ -18,6 +18,7 @@ class PIDCalibrate:
         target = gcmd.get_float('TARGET')
         write_file = gcmd.get_int('WRITE_FILE', 0)
         tolerance = gcmd.get_float('TOLERANCE', TUNE_PID_TOL, above=0.)
+        profile = gcmd.get('PROFILE', 'default')
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(heater_name)
@@ -40,16 +41,26 @@ class PIDCalibrate:
         Kp, Ki, Kd = calibrate.calc_pid()
         logging.info("Autotune: final: Kp=%f Ki=%f Kd=%f", Kp, Ki, Kd)
         gcmd.respond_info(
-            "PID parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
+            "PID parameters for %.2f\xb0C: "
+            "pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
+            "Tolerance: [%.4f]\n"
+            "Profile: [%s]\n"
             "The SAVE_CONFIG command will update the printer config file\n"
-            "with these parameters and restart the printer." % (Kp, Ki, Kd))
+            "with these parameters and restart the printer."
+            % (target, Kp, Ki, Kd, tolerance, profile))
         # Store results for SAVE_CONFIG
         configfile = self.printer.lookup_object('configfile')
-        control = 'pid_v' if old_control.get_name() == 'pid_v' else 'pid'
-        configfile.set(heater_name, 'control', control)
-        configfile.set(heater_name, 'pid_Kp', "%.3f" % (Kp,))
-        configfile.set(heater_name, 'pid_Ki', "%.3f" % (Ki,))
-        configfile.set(heater_name, 'pid_Kd', "%.3f" % (Kd,))
+        section_name = (
+            heater_name if profile == 'default'
+            else ("pid_profile " + heater_name + " " + profile))
+        control = 'pid_v' if old_control.get_type() == 'pid_v' else 'pid'
+        configfile.set(section_name, 'pid_version', heaters.PID_PROFILE_VERSION)
+        configfile.set(section_name, 'pid_target', "%.2f" % target)
+        configfile.set(section_name, 'pid_tolerance', "%.4f" % tolerance)
+        configfile.set(section_name, 'control', control)
+        configfile.set(section_name, 'pid_Kp', "%.3f" % (Kp,))
+        configfile.set(section_name, 'pid_Ki', "%.3f" % (Ki,))
+        configfile.set(section_name, 'pid_Kd', "%.3f" % (Kd,))
 
 TUNE_PID_DELTA = 5.0
 TUNE_PID_TOL = 0.02
