@@ -62,7 +62,7 @@ class PIDCalibrate:
         configfile.set(section_name, 'pid_Ki', "%.3f" % (Ki,))
         configfile.set(section_name, 'pid_Kd', "%.3f" % (Kd,))
 
-TUNE_PID_DELTA = 5
+TUNE_PID_DELTA = 5.0
 TUNE_PID_TOL = 0.02
 TUNE_PID_SAMPLES = 3
 TUNE_PID_MAX_PEAKS = 60
