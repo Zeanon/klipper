@@ -63,7 +63,7 @@ gpio_adc_setup(uint8_t pin)
         if (READP(adc_pins[chan]) == pin)
             break;
     }
-    
+
     // Enable ADC
     ADCSRA = ADC_ENABLE;
 
