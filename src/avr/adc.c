@@ -18,7 +18,7 @@ static const uint8_t adc_pins[] PROGMEM = {
     GPIO('C', 4), GPIO('C', 5), GPIO('E', 2), GPIO('E', 3),
 #elif CONFIG_MACH_atmega328 || CONFIG_MACH_atmega328p
     GPIO('C', 0), GPIO('C', 1), GPIO('C', 2), GPIO('C', 3),
-    GPIO('C', 4), GPIO('C', 5), GPIO('E', 2), GPIO('E', 3),GPIO('E', 4),
+    GPIO('C', 4), GPIO('C', 5), GPIO('E', 2), GPIO('E', 3), GPIO('E', 4),
 #elif CONFIG_MACH_atmega644p || CONFIG_MACH_atmega1284p
     GPIO('A', 0), GPIO('A', 1), GPIO('A', 2), GPIO('A', 3),
     GPIO('A', 4), GPIO('A', 5), GPIO('A', 6), GPIO('A', 7),
@@ -63,6 +63,7 @@ gpio_adc_setup(uint8_t pin)
         if (READP(adc_pins[chan]) == pin)
             break;
     }
+    
     // Enable ADC
     ADCSRA = ADC_ENABLE;
 
