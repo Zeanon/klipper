@@ -243,7 +243,9 @@ class VirtualSD:
                     self.current_file.close()
                     self.current_file = None
                     logging.info("Finished SD card print")
-                    self.gcode.respond_raw("Done printing file")
+                    # self.gcode.respond_raw("Done printing file")
+                    self.gcode.respond_raw(
+                        "<span class=success--text>Done printing file</span>")
                     break
                 lines = data.split('\n')
                 lines[0] = partial_input + lines[0]
