@@ -640,8 +640,8 @@ class ProfileManager:
     def load_profile(self, profile_name, heater, gcmd, verbose):
         if profile_name == heater.get_control().get_profile_name():
             self.gcode.respond_info(
-                "PID Profile [%s] already loaded."
-                % profile_name
+                "PID Profile [%s] already loaded for heater [%s]."
+                % (profile_name, heater.name)
             )
             return
         profile = self.profiles.get(heater.name, None).get(profile_name, None)
@@ -650,23 +650,24 @@ class ProfileManager:
         if profile is None:
             if default is None:
                 raise self.gcode.error(
-                    "pid_profile: Unknown profile [%s]" % profile_name
+                    "pid_profile: Unknown profile [%s] for heater [%s]."
+                    % (profile_name, heater.name)
                 )
             profile = self.profiles.get(heater.name, None).get(default, None)
             defaulted = True
             if profile is None:
                 raise self.gcode.error(
-                    "pid_profile: Unknown default profile [%s]"
-                    % default
+                    "pid_profile: Unknown default profile [%s] for heater [%s]."
+                    % (default, heater.name)
                 )
         control = heater.lookup_control(profile)
         heater.set_control(control)
         if self._check_value_gcmd('VERBOSE', 'TRUE', gcmd, 'lower') != 'true':
             return
         if defaulted:
-            self.gcode.respond_info("Couldn't find profile [%s], "
-                                    "defaulted to [%s]."
-                                    % (profile_name, default))
+            self.gcode.respond_info("Couldn't find profile [%s] for heater [%s]"
+                                    ", defaulted to [%s]."
+                                    % (profile_name, heater.name, default))
         self.gcode.respond_info(
             "PID Profile [%s] loaded for heater [%s].\n"
             "Target: %.2f\n"
