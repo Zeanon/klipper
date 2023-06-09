@@ -18,7 +18,7 @@ class PIDCalibrate:
         target = gcmd.get_float('TARGET')
         write_file = gcmd.get_int('WRITE_FILE', 0)
         tolerance = gcmd.get_float('TOLERANCE', TUNE_PID_TOL, above=0.)
-        profile = gcmd.get('PROFILE', 'default')
+        profile_name = gcmd.get('PROFILE', 'default')
         pheaters = self.printer.lookup_object('heaters')
         try:
             heater = pheaters.lookup_heater(heater_name)
@@ -32,7 +32,6 @@ class PIDCalibrate:
         except self.printer.command_error as e:
             heater.set_control(old_control)
             raise
-        heater.set_control(old_control)
         if write_file:
             calibrate.write_file('/tmp/heattest.csv')
         if calibrate.check_busy(0., 0., 0.):
@@ -43,24 +42,23 @@ class PIDCalibrate:
         gcmd.respond_info(
             "PID parameters for %.2f\xb0C: "
             "pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
-            "Tolerance: [%.4f]\n"
-            "Profile: [%s]\n"
-            "The SAVE_CONFIG command will update the printer config file\n"
-            "with these parameters and restart the printer."
-            % (target, Kp, Ki, Kd, tolerance, profile))
-        # Store results for SAVE_CONFIG
-        configfile = self.printer.lookup_object('configfile')
-        section_name = (
-            heater_name if profile == 'default'
-            else ("pid_profile " + heater_name + " " + profile))
+            "Heater: %s\n"
+            "Tolerance: %.4f\n"
+            "Profile: %s"
+            % (target, Kp, Ki, Kd, heater_name, tolerance, profile_name))
         control = 'pid_v' if old_control.get_type() == 'pid_v' else 'pid'
-        configfile.set(section_name, 'pid_version', heaters.PID_PROFILE_VERSION)
-        configfile.set(section_name, 'pid_target', "%.2f" % target)
-        configfile.set(section_name, 'pid_tolerance', "%.4f" % tolerance)
-        configfile.set(section_name, 'control', control)
-        configfile.set(section_name, 'pid_Kp', "%.3f" % (Kp,))
-        configfile.set(section_name, 'pid_Ki', "%.3f" % (Ki,))
-        configfile.set(section_name, 'pid_Kd', "%.3f" % (Kd,))
+
+        profile = {'pid_target': target,
+                   'pid_tolerance': tolerance,
+                   'control': control,
+                   'pid_kp': Kp,
+                   'pid_ki': Ki,
+                   'pid_kd': Kd,
+                   'name': profile_name}
+
+        heater.set_control(heater.lookup_control(profile))
+
+        pheaters.pmgr.save_profile(profile_name, heater, None, False)
 
 TUNE_PID_DELTA = 5.0
 TUNE_PID_TOL = 0.02
