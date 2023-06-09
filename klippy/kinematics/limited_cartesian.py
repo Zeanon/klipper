@@ -67,7 +67,13 @@ class LimitedCartKinematics(cartesian.CartKinematics):
         self.xy_hypot_accel = hypot(*self.max_accels[:2])
         self.scale_per_axis = config.getboolean('scale_xy_accel', False)
         config.get_printer().lookup_object('gcode').register_command(
-            'SET_KINEMATICS_LIMIT', self.cmd_SET_KINEMATICS_LIMIT)
+            'SET_KINEMATICS_LIMIT',
+            self.cmd_SET_KINEMATICS_LIMIT,
+            desc=self.cmd_SET_KINEMATICS_LIMIT_help)
+    cmd_SET_KINEMATICS_LIMIT_help = "Report the maximum possible " \
+                                    "acceleration and velocity with " \
+                                    "the given x and y accelerations and " \
+                                    "velocities."
     def cmd_SET_KINEMATICS_LIMIT(self,gcmd):
         self.max_velocities = [
             gcmd.get_float('%s_VELOCITY' % ax, max_v, above=0.)
@@ -79,7 +85,9 @@ class LimitedCartKinematics(cartesian.CartKinematics):
         ]
         self.xy_hypot_accel = hypot(*self.max_accels[:2])
         self.scale_per_axis = bool(gcmd.get_int('SCALE',
-            self.scale_per_axis, minval=0, maxval=1))
+                                                self.scale_per_axis,
+                                                minval=0,
+                                                maxval=1))
         msg = ("x,y,z max_velocities: %r\n"
                "x,y,z max_accels: %r\n") % (
                    self.max_velocities,
