@@ -867,13 +867,47 @@ The pid_calibrate module is automatically loaded if a heater is defined
 in the config file.
 
 #### PID_CALIBRATE
-`PID_CALIBRATE HEATER=<config_name> TARGET=<temperature>
-[WRITE_FILE=1]`: Perform a PID calibration test. The specified heater
-will be enabled until the specified target temperature is reached, and
-then the heater will be turned off and on for several cycles. If the
-WRITE_FILE parameter is enabled, then the file /tmp/heattest.txt will
-be created with a log of all temperature samples taken during the
-test.
+`PID_CALIBRATE HEATER=<config_name> TARGET=<temperature> [TOLERANCE=<tolerance>]
+[WRITE_FILE=1] [PROFILE=<profile_name>]`: Perform a PID calibration test. The
+specified heater will be enabled until the specified target temperature
+is reached, and then the heater will be turned off and on for several
+cycles. If the WRITE_FILE parameter is enabled, then the file
+/tmp/heattest.txt will be created with a log of all temperature samples
+taken during the test. TOLERANCE defaults to 0.02 if not passed in. The
+tighter the tolerance the better the calibration result will be, but how
+tight you can achieve depends on how clean your sensor readings are. low
+noise readings might allow 0.01, to be used, while noisy reading might
+require a value of 0.03 or higher. If PROFILE is specified, the calibration
+results will be saved to the given profile, otherwise they will be saved to the
+default profile.
+
+### [pid_profile]
+
+The PID_PROFILE module is automatically loaded if a heater is defined
+in the config file.
+
+#### PID_PROFILE
+`PID_PROFILE LOAD=<profile_name> HEATER=<config_name> [DEFAULT=<profile_name>]
+[VERBOSE=<verbosity>]`:
+Loads the given PID_PROFILE for the specified heater. If DEFAULT is specified,
+the Profile specified in DEFAULT will be loaded when then given Profile for LOAD
+can't be found (like a getOrDefault method). If VERBOSE is set to FALSE,
+no console outputs will be given.
+
+`PID_PROFILE SAVE=<profile_name> HEATER=<config_name>`:
+Saves the currently loaded profile of the specified heater to the config under
+the given name.
+
+`PID_PROFILE REMOVE=<profile_name> HEATER=<config_name>`:
+Removes the given profile from the profiles List for the current session and config if SAVE_CONFIG is issued afterwards.
+
+`PID_PROFILE SET_VALUES=<profile_name> TARGET=<target_temp> TOLERANCE=<tolerance>
+CONTROL=<control_type> KP=<kp> KI=<ki> KD=<kd>`:
+Creates a new profile with the given PID values, CONTROL must either be `pid` or
+`pid_v`, TOLERANCE and TARGET must be specified to create a valid profile,
+though the values themselves don't matter.
+
+
 
 ### [pause_resume]
 
