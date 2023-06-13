@@ -207,7 +207,7 @@ class ManualProbeHelper:
     def cmd_ACCEPT(self, gcmd):
         pos = self.toolhead.get_position()
         start_pos = self.start_position
-        if pos[:2] != start_pos[:2] or pos[2] >= start_pos[2]:
+        if pos[:2] != start_pos[:2]: # or pos[2] >= start_pos[2]:
             gcmd.respond_info(
                 "Manual probe failed! Use TESTZ commands to position the\n"
                 "nozzle prior to running ACCEPT.")
