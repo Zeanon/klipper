@@ -3,4 +3,7 @@ out
 *.pyc
 .config
 .config.old
+/*.old
+config.*
 klippy/.version
+.idea/*
