@@ -413,11 +413,19 @@ class PrinterConfig:
             f = open(temp_name, 'w')
             f.write(data)
             f.close()
-            os.rename(cfgname, backup_name)
+            if gcmd.get_int('BACKUP', 1, minval=0, maxval=1):
+                os.rename(cfgname, backup_name)
             os.rename(temp_name, cfgname)
         except:
             msg = "Unable to write config file during SAVE_CONFIG"
             logging.exception(msg)
             raise gcode.error(msg)
-        # Request a restart
-        gcode.request_restart('restart')
+        # If requested restart or no restart just flag config saved
+        require_restart = gcmd.get_int('RESTART', 1, minval=0, maxval=1)
+        if require_restart:
+            # Request a restart
+            gcode.request_restart('restart')
+        else:
+            # flag config updated to false since config saved with no restart
+            self.save_config_pending = False
+            gcode.respond_info("Config File update without restart successful")
