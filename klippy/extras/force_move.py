@@ -126,11 +126,24 @@ class ForceMove:
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.get_last_move_time()
         curpos = toolhead.get_position()
-        x = gcmd.get_float('X', curpos[0])
-        y = gcmd.get_float('Y', curpos[1])
-        z = gcmd.get_float('Z', curpos[2])
+        homing_axes = []
+        x = gcmd.get_float('X', None)
+        y = gcmd.get_float('Y', None)
+        z = gcmd.get_float('Z', None)
+        if x is None:
+            x = curpos[0]
+        else:
+            homing_axes.append(0)
+        if y is None:
+            y = curpos[1]
+        else:
+            homing_axes.append(1)
+        if z is None:
+            z = curpos[2]
+        else:
+            homing_axes.append(2)
         logging.info("SET_KINEMATIC_POSITION pos=%.3f,%.3f,%.3f", x, y, z)
-        toolhead.set_position([x, y, z, curpos[3]], homing_axes=(0, 1, 2))
+        toolhead.set_position([x, y, z, curpos[3]], homing_axes=homing_axes)
 
 def load_config(config):
     return ForceMove(config)
