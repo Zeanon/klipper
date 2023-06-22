@@ -308,10 +308,12 @@ class PrinterRail:
         self.endstops = []
         self.endstop_map = {}
         self.add_extra_stepper(config)
-        mcu_stepper = self.steppers[0]
-        self.get_name = mcu_stepper.get_name
-        self.get_commanded_position = mcu_stepper.get_commanded_position
-        self.calc_position_from_coord = mcu_stepper.calc_position_from_coord
+        self.mcu_stepper = self.steppers[0]
+        self.get_name = self.mcu_stepper.get_name
+        self.get_commanded_position = self.mcu_stepper.get_commanded_position
+        self.calc_position_from_coord = (self
+                                         .mcu_stepper
+                                         .calc_position_from_coord)
         # Primary endstop position
         mcu_endstop = self.endstops[0][0]
         if hasattr(mcu_endstop, "get_position_endstop"):
@@ -406,7 +408,7 @@ class PrinterRail:
             changed_invert = pin_params['invert'] != endstop['invert']
             changed_pullup = pin_params['pullup'] != endstop['pullup']
             if changed_invert or changed_pullup:
-                raise error("Pinter rail %s shared endstop pin %s "
+                raise error("Printer rail %s shared endstop pin %s "
                             "must specify the same pullup/invert settings" % (
                                 self.get_name(), pin_name))
         mcu_endstop.add_stepper(stepper)
@@ -425,7 +427,7 @@ class PrinterRail:
 
 # Wrapper for dual stepper motor support
 def LookupMultiRail(config, need_position_minmax=True,
-                 default_position_endstop=None, units_in_radians=False):
+                    default_position_endstop=None, units_in_radians=False):
     rail = PrinterRail(config, need_position_minmax,
                        default_position_endstop, units_in_radians)
     for i in range(1, 99):
