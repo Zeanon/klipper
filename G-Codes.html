@@ -618,6 +618,20 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Axis_Twist_Compensation.html" class="md-nav__link">
+        Axis Twist Compensation
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -1352,6 +1366,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#get_gcode_variable" class="md-nav__link">
+    GET_GCODE_VARIABLE
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1485,6 +1506,13 @@
           <li class="md-nav__item">
   <a href="#set_heater_temperature" class="md-nav__link">
     SET_HEATER_TEMPERATURE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cold_extrude" class="md-nav__link">
+    COLD_EXTRUDE
   </a>
   
 </li>
@@ -2247,6 +2275,33 @@
           <li class="md-nav__item">
   <a href="#sdcard_reset_file" class="md-nav__link">
     SDCARD_RESET_FILE
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#axis_twist_compensation" class="md-nav__link">
+    [axis_twist_compensation]
+  </a>
+  
+    <nav class="md-nav" aria-label="[axis_twist_compensation]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#axis_twist_compensation_calibrate" class="md-nav__link">
+    AXIS_TWIST_COMPENSATION_CALIBRATE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#axis_twist_compensation_clear" class="md-nav__link">
+    AXIS_TWIST_COMPENSATION_CLEAR
   </a>
   
 </li>
@@ -3449,6 +3504,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#get_gcode_variable" class="md-nav__link">
+    GET_GCODE_VARIABLE
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3582,6 +3644,13 @@
           <li class="md-nav__item">
   <a href="#set_heater_temperature" class="md-nav__link">
     SET_HEATER_TEMPERATURE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cold_extrude" class="md-nav__link">
+    COLD_EXTRUDE
   </a>
   
 </li>
@@ -4354,6 +4423,33 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#axis_twist_compensation" class="md-nav__link">
+    [axis_twist_compensation]
+  </a>
+  
+    <nav class="md-nav" aria-label="[axis_twist_compensation]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#axis_twist_compensation_calibrate" class="md-nav__link">
+    AXIS_TWIST_COMPENSATION_CALIBRATE
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#axis_twist_compensation_clear" class="md-nav__link">
+    AXIS_TWIST_COMPENSATION_CLEAR
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#z_thermal_adjust" class="md-nav__link">
     [z_thermal_adjust]
   </a>
@@ -4444,6 +4540,7 @@ commands that one may enter into the OctoPrint terminal tab.</p>
   value</li>
 </ul>
 </li>
+<li>Enable Cold Extrusion: `M302 [T<index>] [P<enable>] [S<min_extrude_temp>]</li>
 <li>Set bed temperature: <code>M140 [S&lt;temperature&gt;]</code></li>
 <li>Set bed temperature and wait: <code>M190 S&lt;temperature&gt;</code><ul>
 <li>Note: M190 always waits for temperature to settle at requested
@@ -4893,6 +4990,10 @@ enabled (also see the
 <p><code>SET_GCODE_VARIABLE MACRO=&lt;macro_name&gt; VARIABLE=&lt;name&gt; VALUE=&lt;value&gt;</code>:
 This command allows one to change the value of a gcode_macro variable
 at run-time. The provided VALUE is parsed as a Python literal.</p>
+<h4 id="get_gcode_variable">GET_GCODE_VARIABLE<a class="headerlink" href="#get_gcode_variable" title="Permanent link">&para;</a></h4>
+<p><code>GET_GCODE_VARIABLE MACRO=&lt;macro_name&gt; VARIABLE=&lt;name&gt;</code>:
+This command allows one to display the value of a gcode_macro variable
+at run-time to the console. It is useful for debugging gcode macros.</p>
 <h3 id="gcode_move">[gcode_move]<a class="headerlink" href="#gcode_move" title="Permanent link">&para;</a></h3>
 <p>The gcode_move module is automatically loaded.</p>
 <h4 id="get_position">GET_POSITION<a class="headerlink" href="#get_position" title="Permanent link">&para;</a></h4>
@@ -4972,6 +5073,12 @@ above the supplied MINIMUM and/or at or below the supplied MAXIMUM.</p>
 <p><code>SET_HEATER_TEMPERATURE HEATER=&lt;heater_name&gt;
 [TARGET=&lt;target_temperature&gt;]</code>: Sets the target temperature for a
 heater. If a target temperature is not supplied, the target is 0.</p>
+<h4 id="cold_extrude">COLD_EXTRUDE<a class="headerlink" href="#cold_extrude" title="Permanent link">&para;</a></h4>
+<p>`COLD_EXTRUDE HEATER=<heater_name> [ENABLE=&lt;0 or 1&gt;]
+[MIN_EXTRUDE_TEMP=<min_extrude_temp>]: Enables or disables cold extrusion.
+If neither ENABLE nor MIN_EXTRUDE_TEMP are supplied, it
+will report the current state. If ENABLE is 0, cold extrusion is disabled,
+if it is 1 it is enabled.</p>
 <h3 id="idle_timeout">[idle_timeout]<a class="headerlink" href="#idle_timeout" title="Permanent link">&para;</a></h3>
 <p>The idle_timeout module is automatically loaded.</p>
 <h4 id="set_idle_timeout">SET_IDLE_TIMEOUT<a class="headerlink" href="#set_idle_timeout" title="Permanent link">&para;</a></h4>
@@ -5544,6 +5651,16 @@ enabled:</p>
 print.</p>
 <h4 id="sdcard_reset_file">SDCARD_RESET_FILE<a class="headerlink" href="#sdcard_reset_file" title="Permanent link">&para;</a></h4>
 <p><code>SDCARD_RESET_FILE</code>: Unload file and clear SD state.</p>
+<h3 id="axis_twist_compensation">[axis_twist_compensation]<a class="headerlink" href="#axis_twist_compensation" title="Permanent link">&para;</a></h3>
+<p>The following commands are available when the
+<a href="Config_Reference.html#axis_twist_compensation">axis_twist_compensation config
+section</a> is enabled.</p>
+<h4 id="axis_twist_compensation_calibrate">AXIS_TWIST_COMPENSATION_CALIBRATE<a class="headerlink" href="#axis_twist_compensation_calibrate" title="Permanent link">&para;</a></h4>
+<p><code>AXIS_TWIST_COMPENSATION_CALIBRATE [N_POINTS=&lt;value&gt;]</code>: Initiates the X twist calibration
+wizard. <code>N_POINTS</code> specifies the number of points along the X axis to calibrate
+at and defaults to 3.</p>
+<h4 id="axis_twist_compensation_clear">AXIS_TWIST_COMPENSATION_CLEAR<a class="headerlink" href="#axis_twist_compensation_clear" title="Permanent link">&para;</a></h4>
+<p><code>AXIS_TWIST_COMPENSATION_CLEAR</code>: Clears the current compensation values.</p>
 <h3 id="z_thermal_adjust">[z_thermal_adjust]<a class="headerlink" href="#z_thermal_adjust" title="Permanent link">&para;</a></h3>
 <p>The following commands are available when the
 <a href="Config_Reference.html#z_thermal_adjust">z_thermal_adjust config section</a>
