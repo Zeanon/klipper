@@ -117,11 +117,11 @@ class ManualProbe:
 def verify_no_manual_probe(printer):
     gcode = printer.lookup_object('gcode')
     try:
-        gcode.register_command('ACCEPT', 'dummy')
+        gcode.register_command('QUERY_MANUAL_PROBE_RUNNING', 'dummy')
+        gcode.register_command('QUERY_MANUAL_PROBE_RUNNING', None)
     except printer.config_error as e:
         raise gcode.error(
             "Already in a manual Z probe. Use ABORT to abort it.")
-    gcode.register_command('ACCEPT', None)
 
 Z_BOB_MINIMUM = 0.500
 BISECT_MAX = 0.200
@@ -146,6 +146,10 @@ class ManualProbeHelper:
                                     desc=self.cmd_ABORT_help)
         self.gcode.register_command('TESTZ', self.cmd_TESTZ,
                                     desc=self.cmd_TESTZ_help)
+        self.gcode.register_command('QUERY_MANUAL_PROBE_RUNNING',
+                                    self.cmd_QUERY_MANUAL_PROBE_RUNNING,
+                                    desc=
+                                    self.cmd_QUERY_MANUAL_PROBE_RUNNING_help)
         self.gcode.respond_info(
             "Starting manual Z probe. Use TESTZ to adjust position.\n"
             "Finish with ACCEPT or ABORT command.")
@@ -205,9 +209,19 @@ class ManualProbeHelper:
                                 % (prev_str, z_pos, next_str))
     cmd_ACCEPT_help = "Accept the current Z position"
     def cmd_ACCEPT(self, gcmd):
+        xy_check = not gcmd.get_int('IGNORE_XY_CHECK',
+                                    0,
+                                    minval=0,
+                                    maxval=1)
+        height_check = not gcmd.get_int('IGNORE_HEIGHT_CHECK',
+                                        0,
+                                        minval=0,
+                                        maxval=1)
         pos = self.toolhead.get_position()
         start_pos = self.start_position
-        if pos[:2] != start_pos[:2] or pos[2] >= start_pos[2]:
+        if ((xy_check and pos[:2] != start_pos[:2])
+                or
+                (height_check and pos[2] >= start_pos[2])):
             gcmd.respond_info(
                 "Manual probe failed! Use TESTZ commands to position the\n"
                 "nozzle prior to running ACCEPT.")
@@ -247,12 +261,16 @@ class ManualProbeHelper:
         # Move to given position and report it
         self.move_z(next_z_pos)
         self.report_z_status(next_z_pos != z_pos, z_pos)
+    cmd_QUERY_MANUAL_PROBE_RUNNING_help = "Query if we are probing"
+    def cmd_QUERY_MANUAL_PROBE_RUNNING(self, gcmd):
+        return
     def finalize(self, success):
         self.manual_probe.reset_status()
         self.gcode.register_command('ACCEPT', None)
         self.gcode.register_command('NEXT', None)
         self.gcode.register_command('ABORT', None)
         self.gcode.register_command('TESTZ', None)
+        self.gcode.register_command('QUERY_MANUAL_PROBE_RUNNING', None)
         kin_pos = None
         if success:
             kin_pos = self.get_kinematics_pos()
