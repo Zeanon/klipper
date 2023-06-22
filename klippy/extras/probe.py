@@ -19,6 +19,9 @@ class PrinterProbe:
         self.name = config.get_name()
         self.mcu_probe = mcu_probe
         self.speed = config.getfloat('speed', 5.0, above=0.)
+        self.horizontal_move_speed = config.getfloat('horizontal_move_speed',
+                                                     self.speed,
+                                                     above=0.)
         self.lift_speed = config.getfloat('lift_speed', self.speed, above=0.)
         self.x_offset = config.getfloat('x_offset', 0.)
         self.y_offset = config.getfloat('y_offset', 0.)
@@ -272,10 +275,11 @@ class PrinterProbe:
         # Move the nozzle over the probe point
         curpos[0] += self.x_offset
         curpos[1] += self.y_offset
-        self._move(curpos, self.speed)
+        self._move(curpos, self.horizontal_move_speed)
         # Start manual probe
         manual_probe.ManualProbeHelper(self.printer, gcmd,
                                        self.probe_calibrate_finalize)
+    cmd_Z_OFFSET_APPLY_PROBE_help = "Adjust the probe's z_offset"
     def cmd_Z_OFFSET_APPLY_PROBE(self,gcmd):
         offset = self.gcode_move.get_status()['homing_origin'].z
         configfile = self.printer.lookup_object('configfile')
@@ -289,7 +293,6 @@ class PrinterProbe:
                 "with the above and restart the printer."
                 % (self.name, new_calibrate))
             configfile.set(self.name, 'z_offset', "%.3f" % (new_calibrate,))
-    cmd_Z_OFFSET_APPLY_PROBE_help = "Adjust the probe's z_offset"
 
 # Endstop wrapper that enables probe specific features
 class ProbeEndstopWrapper:
