@@ -11,6 +11,7 @@ SLOW_RATIO = 3.
 
 class DeltaKinematics:
     def __init__(self, toolhead, config):
+        self.printer = config.get_printer()
         # Setup tower rails
         stepper_configs = [config.getsection('stepper_' + a) for a in 'abc']
         rail_a = stepper.LookupMultiRail(
@@ -23,8 +24,23 @@ class DeltaKinematics:
             stepper_configs[2], need_position_minmax = False,
             default_position_endstop=a_endstop)
         self.rails = [rail_a, rail_b, rail_c]
-        config.get_printer().register_event_handler("stepper_enable:motor_off",
-                                                    self._motor_off)
+        self.printer.register_event_handler("stepper_enable:motor_off",
+                                            self._motor_off)
+
+        self.printer.register_event_handler("stepper_enable:unhome_x",
+                                            self._unhome)
+        self.printer.register_event_handler("stepper_enable:unhome_y",
+                                            self._unhome)
+        self.printer.register_event_handler("stepper_enable:unhome_z",
+                                            self._unhome)
+
+        self.printer.register_event_handler("stepper_enable:disable_a",
+                                            self._unhome)
+        self.printer.register_event_handler("stepper_enable:disable_b",
+                                            self._unhome)
+        self.printer.register_event_handler("stepper_enable:disable_c",
+                                            self._unhome)
+
         # Setup max velocity
         self.max_velocity, self.max_accel = toolhead.get_max_velocity()
         self.max_z_velocity = config.getfloat(
@@ -91,6 +107,8 @@ class DeltaKinematics:
         self.axes_min = toolhead.Coord(-max_xy, -max_xy, self.min_z, 0.)
         self.axes_max = toolhead.Coord(max_xy, max_xy, self.max_z, 0.)
         self.set_position([0., 0., 0.], ())
+    def get_rails(self):
+        return self.rails
     def get_steppers(self):
         return [s for rail in self.rails for s in rail.get_steppers()]
     def _actuator_to_cartesian(self, spos):
@@ -112,6 +130,9 @@ class DeltaKinematics:
         forcepos[2] = -1.5 * math.sqrt(max(self.arm2)-self.max_xy2)
         homing_state.home_rails(self.rails, forcepos, self.home_position)
     def _motor_off(self, print_time):
+        self.limit_xy2 = -1.
+        self.need_home = True
+    def _unhome(self, print_time):
         self.limit_xy2 = -1.
         self.need_home = True
     def check_move(self, move):

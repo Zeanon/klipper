@@ -71,6 +71,10 @@ class ZAdjustStatus:
         self.applied = False
         printer.register_event_handler("stepper_enable:motor_off",
                                         self._motor_off)
+        printer.register_event_handler("stepper_enable:disable_z",
+                                        self._motor_off)
+        printer.register_event_handler("stepper_enable:unhome_z",
+                                        self._motor_off)
     def check_retry_result(self, retry_result):
         if retry_result == "done":
             self.applied = True

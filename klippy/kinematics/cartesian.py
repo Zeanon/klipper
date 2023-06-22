@@ -9,6 +9,7 @@ import stepper
 class CartKinematics:
     def __init__(self, toolhead, config):
         self.printer = config.get_printer()
+        self.gcode = self.printer.lookup_object('gcode')
         # Setup axis rails
         self.dual_carriage_axis = None
         self.dual_carriage_rails = []
@@ -21,6 +22,21 @@ class CartKinematics:
             toolhead.register_step_generator(s.generate_steps)
         self.printer.register_event_handler("stepper_enable:motor_off",
                                             self._motor_off)
+
+        self.printer.register_event_handler("stepper_enable:unhome_x",
+                                            self._unhome_x)
+        self.printer.register_event_handler("stepper_enable:unhome_y",
+                                            self._unhome_y)
+        self.printer.register_event_handler("stepper_enable:unhome_z",
+                                            self._unhome_z)
+
+        self.printer.register_event_handler("stepper_enable:disable_x",
+                                            self._unhome_x)
+        self.printer.register_event_handler("stepper_enable:disable_y",
+                                            self._unhome_y)
+        self.printer.register_event_handler("stepper_enable:disable_z",
+                                            self._unhome_z)
+
         # Setup boundary checks
         max_velocity, max_accel = toolhead.get_max_velocity()
         self.max_z_velocity = config.getfloat('max_z_velocity', max_velocity,
@@ -45,6 +61,8 @@ class CartKinematics:
             self.printer.lookup_object('gcode').register_command(
                 'SET_DUAL_CARRIAGE', self.cmd_SET_DUAL_CARRIAGE,
                 desc=self.cmd_SET_DUAL_CARRIAGE_help)
+    def get_rails(self):
+        return self.rails
     def get_steppers(self):
         rails = self.rails
         if self.dual_carriage_axis is not None:
@@ -89,6 +107,12 @@ class CartKinematics:
                 self._home_axis(homing_state, axis, self.rails[axis])
     def _motor_off(self, print_time):
         self.limits = [(1.0, -1.0)] * 3
+    def _unhome_x(self, print_time):
+        self.limits[0] = (1.0, -1.0)
+    def _unhome_y(self, print_time):
+        self.limits[1] = (1.0, -1.0)
+    def _unhome_z(self, print_time):
+        self.limits[2] = (1.0, -1.0)
     def _check_endstops(self, move):
         end_pos = move.end_pos
         for i in (0, 1, 2):

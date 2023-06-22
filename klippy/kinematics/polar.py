@@ -8,6 +8,7 @@ import stepper
 
 class PolarKinematics:
     def __init__(self, toolhead, config):
+        self.printer = config.get_printer()
         # Setup axis steppers
         stepper_bed = stepper.PrinterStepper(config.getsection('stepper_bed'),
                                              units_in_radians=True)
@@ -22,8 +23,23 @@ class PolarKinematics:
         for s in self.get_steppers():
             s.set_trapq(toolhead.get_trapq())
             toolhead.register_step_generator(s.generate_steps)
-        config.get_printer().register_event_handler("stepper_enable:motor_off",
+        self.printer.register_event_handler("stepper_enable:motor_off",
                                                     self._motor_off)
+
+        self.printer.register_event_handler("stepper_enable:unhome_x",
+                                            self._unhome_xy)
+        self.printer.register_event_handler("stepper_enable:unhome_y",
+                                            self._unhome_xy)
+        self.printer.register_event_handler("stepper_enable:unhome_z",
+                                            self._unhome_z)
+
+        self.printer.register_event_handler("stepper_enable:disable_bed",
+                                            self._unhome_xy)
+        self.printer.register_event_handler("stepper_enable:disable_arm",
+                                            self._unhome_xy)
+        self.printer.register_event_handler("stepper_enable:disable_z",
+                                            self._unhome_z)
+
         # Setup boundary checks
         max_velocity, max_accel = toolhead.get_max_velocity()
         self.max_z_velocity = config.getfloat(
@@ -36,6 +52,8 @@ class PolarKinematics:
         min_z, max_z = self.rails[1].get_range()
         self.axes_min = toolhead.Coord(-max_xy, -max_xy, min_z, 0.)
         self.axes_max = toolhead.Coord(max_xy, max_xy, max_z, 0.)
+    def get_rails(self):
+        return self.rails
     def get_steppers(self):
         return list(self.steppers)
     def calc_position(self, stepper_positions):
@@ -88,6 +106,10 @@ class PolarKinematics:
     def _motor_off(self, print_time):
         self.limit_z = (1.0, -1.0)
         self.limit_xy2 = -1.
+    def _unhome_xy(self, print_time):
+        self.limit_xy2 = -1.
+    def _unhome_z(self, print_time):
+        self.limit_z = (1.0, -1.0)
     def check_move(self, move):
         end_pos = move.end_pos
         xy2 = end_pos[0]**2 + end_pos[1]**2

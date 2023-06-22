@@ -48,7 +48,22 @@ class HybridCoreXZKinematics:
             s.set_trapq(toolhead.get_trapq())
             toolhead.register_step_generator(s.generate_steps)
         self.printer.register_event_handler("stepper_enable:motor_off",
-                                                    self._motor_off)
+                                            self._motor_off)
+
+        self.printer.register_event_handler("stepper_enable:unhome_x",
+                                            self._unhome_x)
+        self.printer.register_event_handler("stepper_enable:unhome_y",
+                                            self._unhome_y)
+        self.printer.register_event_handler("stepper_enable:unhome_z",
+                                            self._unhome_z)
+
+        self.printer.register_event_handler("stepper_enable:disable_x",
+                                            self._disable_xz)
+        self.printer.register_event_handler("stepper_enable:disable_y",
+                                            self._unhome_y)
+        self.printer.register_event_handler("stepper_enable:disable_z",
+                                            self._unhome_z)
+
         # Setup boundary checks
         max_velocity, max_accel = toolhead.get_max_velocity()
         self.max_z_velocity = config.getfloat(
@@ -56,6 +71,8 @@ class HybridCoreXZKinematics:
         self.max_z_accel = config.getfloat(
             'max_z_accel', max_accel, above=0., maxval=max_accel)
         self.limits = [(1.0, -1.0)] * 3
+    def get_rails(self):
+        return self.rails
     def get_steppers(self):
         return [s for rail in self.rails for s in rail.get_steppers()]
     def calc_position(self, stepper_positions):
@@ -105,6 +122,15 @@ class HybridCoreXZKinematics:
                 self._home_axis(homing_state, axis, self.rails[axis])
     def _motor_off(self, print_time):
         self.limits = [(1.0, -1.0)] * 3
+    def _unhome_x(self, print_time):
+        self.limits[0] = (1.0, -1.0)
+    def _unhome_y(self, print_time):
+        self.limits[1] = (1.0, -1.0)
+    def _unhome_z(self, print_time):
+        self.limits[2] = (1.0, -1.0)
+    def _disable_xz(self, print_time):
+        self.limits[0] = (1.0, -1.0)
+        self.limits[2] = (1.0, -1.0)
     def _check_endstops(self, move):
         end_pos = move.end_pos
         for i in (0, 1, 2):
