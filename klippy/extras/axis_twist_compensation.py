@@ -161,13 +161,26 @@ class AxisTwistCompensation:
         self.gcode.register_command(
             'AXIS_TWIST_COMPENSATION_CLEAR',
             self.cmd_AXIS_TWIST_COMPENSATION_CLEAR,
-            desc=self.cmd_AXIS_TWIST_COMPENSATION_CLEAR_help)
+            desc=self.cmd_AXIS_TWIST_COMPENSATION_CLEAR_help
+        )
+        self.gcode.register_command(
+            'AXIS_TWIST_COMPENSATION_LOAD',
+            self.cmd_AXIS_TWIST_COMPENSATION_LOAD,
+            desc=self.cmd_AXIS_TWIST_COMPENSATION_LOAD_help
+        )
 
-    cmd_AXIS_TWIST_COMPENSATION_CLEAR_help = \
+    cmd_AXIS_TWIST_COMPENSATION_CLEAR_help = (
         "Clears the active axis twist compensation"
-
+    )
     def cmd_AXIS_TWIST_COMPENSATION_CLEAR(self, gcmd):
         self.clear_compensations()
+
+    cmd_AXIS_TWIST_COMPENSATION_LOAD_help = (
+        "Reloads the twist compensation values from the config"
+    )
+    def cmd_AXIS_TWIST_COMPENSATION_LOAD(self, gcmd):
+        self.z_compensations = Helpers.parse_comma_separated_floats(
+            self.config.get('z_compensations', default=""))
 
 
 class Calibrater:
