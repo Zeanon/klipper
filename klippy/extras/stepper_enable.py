@@ -106,7 +106,7 @@ class PrinterStepperEnable:
         el = self.enable_lines[stepper_name]
         el.motor_disable(print_time)
         if rail_name != 'extruder':
-            self.printer.send_event("stepper_enable:unhome_%s"
+            self.printer.send_event("stepper_enable:disable_%s"
                                     % rail_name.lower(),
                                     print_time)
     def motor_off(self):
