@@ -5,27 +5,70 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import logging
 
+PIN_MIN_TIME = 0.100
+RESEND_HOST_TIME = 0.300 + PIN_MIN_TIME
+MAX_ENABLE_TIME = 5.0
 DISABLE_STALL_TIME = 0.100
 
 # Tracking of shared stepper enable pins
 class StepperEnablePin:
-    def __init__(self, mcu_enable, enable_count):
+    def __init__(self, mcu_enable,
+                 enable_count,
+                 printer,
+                 disable_on_error=True):
+        self.printer = printer
+        self.reactor = self.printer.get_reactor()
+        self.mcu = self.printer.lookup_object('mcu')
         self.mcu_enable = mcu_enable
         self.enable_count = enable_count
         self.is_dedicated = True
+        self.last_value = 1 if self.enable_count else 0
+        self.resend_timer = None
+        self.resend_interval = (MAX_ENABLE_TIME - RESEND_HOST_TIME
+                                if
+                                disable_on_error else 0.)
+        self.last_print_time = 0.
     def set_enable(self, print_time):
-        if not self.enable_count:
-            self.mcu_enable.set_digital(print_time, 1)
         self.enable_count += 1
+        if self.enable_count == 1:
+            self._set_pin(print_time, 1)
     def set_disable(self, print_time):
         self.enable_count -= 1
         if not self.enable_count:
-            self.mcu_enable.set_digital(print_time, 0)
+            self._set_pin(print_time, 0)
 
-def setup_enable_pin(printer, pin):
+    def _set_pin(self, print_time, value, is_resend=False):
+        if value == self.last_value:
+            if not is_resend:
+                return
+        print_time = max(print_time, self.last_print_time + PIN_MIN_TIME)
+        self.mcu_enable.set_digital(print_time, value)
+        self.last_value = value
+        self.last_print_time = print_time
+        if self.resend_interval and self.resend_timer is None:
+            self.resend_timer = self.reactor.register_timer(
+                self._resend_current_val, self.reactor.NOW)
+    def _resend_current_val(self, eventtime):
+        if self.last_value == 0:
+            self.reactor.unregister_timer(self.resend_timer)
+            self.resend_timer = None
+            return self.reactor.NEVER
+
+        systime = self.reactor.monotonic()
+        print_time = self.mcu.estimated_print_time(systime)
+        time_diff = (self.last_print_time + self.resend_interval) - print_time
+        if time_diff > 0.:
+            # Reschedule for resend time
+            return systime + time_diff
+        self._set_pin(print_time + PIN_MIN_TIME,
+                      self.last_value, True)
+        return systime + self.resend_interval
+
+
+def setup_enable_pin(printer, pin, disable_on_error=True):
     if pin is None:
         # No enable line (stepper always enabled)
-        enable = StepperEnablePin(None, 9999)
+        enable = StepperEnablePin(None, 9999, printer)
         enable.is_dedicated = False
         return enable
     ppins = printer.lookup_object('pins')
@@ -37,8 +80,11 @@ def setup_enable_pin(printer, pin):
         enable.is_dedicated = False
         return enable
     mcu_enable = pin_params['chip'].setup_pin('digital_out', pin_params)
-    mcu_enable.setup_max_duration(0.)
-    enable = pin_params['class'] = StepperEnablePin(mcu_enable, 0)
+    mcu_enable.setup_max_duration(MAX_ENABLE_TIME if disable_on_error else 0.)
+    enable = pin_params['class'] = StepperEnablePin(mcu_enable,
+                                                    0,
+                                                    printer,
+                                                    disable_on_error)
     return enable
 
 # Enable line tracking for each stepper motor
@@ -91,7 +137,10 @@ class PrinterStepperEnable:
                                desc=self.cmd_UNHOME_help)
     def register_stepper(self, config, mcu_stepper):
         name = mcu_stepper.get_name()
-        enable = setup_enable_pin(self.printer, config.get('enable_pin', None))
+        enable = setup_enable_pin(self.printer,
+                                  config.get('enable_pin', None),
+                                  config.getboolean('disable_on_error',
+                                                    True))
         self.enable_lines[name] = EnableTracking(mcu_stepper, enable)
     def _unhome_axes(self, axes):
         toolhead = self.printer.lookup_object('toolhead')
