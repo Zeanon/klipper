@@ -18,29 +18,30 @@ class StepperEnablePin:
                  disable_on_error=True):
         self.printer = printer
         self.reactor = self.printer.get_reactor()
-        self.mcu = self.printer.lookup_object('mcu')
         self.mcu_enable = mcu_enable
         self.enable_count = enable_count
         self.is_dedicated = True
-        self.last_value = 1 if self.enable_count else 0
+        self.last_value = 0
         self.resend_timer = None
         self.resend_interval = (MAX_ENABLE_TIME - RESEND_HOST_TIME
                                 if
                                 disable_on_error else 0.)
         self.last_print_time = 0.
     def set_enable(self, print_time):
-        self.enable_count += 1
-        if self.enable_count == 1:
+        if self.mcu_enable is not None:
+            self.enable_count += 1
             self._set_pin(print_time, 1)
-    def set_disable(self, print_time):
-        self.enable_count -= 1
-        if not self.enable_count:
-            self._set_pin(print_time, 0)
-
+    def set_disable(self):
+        if self.mcu_enable is not None:
+            self.enable_count -= 1
+            if not self.enable_count:
+                toolhead = self.printer.lookup_object('toolhead')
+                toolhead.wait_moves()
+                toolhead.register_lookahead_callback(
+                    lambda print_time: self._set_pin(print_time, 0))
     def _set_pin(self, print_time, value, is_resend=False):
-        if value == self.last_value:
-            if not is_resend:
-                return
+        if value == self.last_value and not is_resend:
+            return
         print_time = max(print_time, self.last_print_time + PIN_MIN_TIME)
         self.mcu_enable.set_digital(print_time, value)
         self.last_value = value
@@ -48,6 +49,7 @@ class StepperEnablePin:
         if self.resend_interval and self.resend_timer is None:
             self.resend_timer = self.reactor.register_timer(
                 self._resend_current_val, self.reactor.NOW)
+
     def _resend_current_val(self, eventtime):
         if self.last_value == 0:
             self.reactor.unregister_timer(self.resend_timer)
@@ -55,7 +57,7 @@ class StepperEnablePin:
             return self.reactor.NEVER
 
         systime = self.reactor.monotonic()
-        print_time = self.mcu.estimated_print_time(systime)
+        print_time = self.mcu_enable.get_mcu().estimated_print_time(systime)
         time_diff = (self.last_print_time + self.resend_interval) - print_time
         if time_diff > 0.:
             # Reschedule for resend time
