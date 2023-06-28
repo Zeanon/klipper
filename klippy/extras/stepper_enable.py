@@ -110,7 +110,7 @@ class EnableTracking:
             # Enable stepper on future stepper movement
             for cb in self.callbacks:
                 cb(print_time, False)
-            self.enable.set_disable(print_time)
+            self.enable.set_disable()
             self.is_enabled = False
             self.stepper.add_active_callback(self.motor_enable)
     def is_motor_enabled(self):
