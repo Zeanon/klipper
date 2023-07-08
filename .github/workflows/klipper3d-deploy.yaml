@@ -9,11 +9,6 @@ on:
       - docs/**
       - .github/workflows/klipper3d-deploy.yaml
   workflow_dispatch:  # click the button on Github repo!
-  
-permissions:
-  pull-requests: write
-  issues: write
-  repository-projects: write
 
 jobs:
   deploy:
