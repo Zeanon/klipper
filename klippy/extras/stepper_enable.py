@@ -130,13 +130,9 @@ class PrinterStepperEnable:
         gcode = self.printer.lookup_object('gcode')
         gcode.register_command("M18", self.cmd_M18)
         gcode.register_command("M84", self.cmd_M18)
-        gcode.register_command("D28", self.cmd_D28)
         gcode.register_command("SET_STEPPER_ENABLE",
                                self.cmd_SET_STEPPER_ENABLE,
                                desc=self.cmd_SET_STEPPER_ENABLE_help)
-        gcode.register_command("UNHOME",
-                               self.cmd_UNHOME,
-                               desc=self.cmd_UNHOME_help)
     def register_stepper(self, config, mcu_stepper):
         name = mcu_stepper.get_name()
         enable = setup_enable_pin(self.printer,
@@ -144,15 +140,6 @@ class PrinterStepperEnable:
                                   config.getboolean('disable_on_error',
                                                     True))
         self.enable_lines[name] = EnableTracking(mcu_stepper, enable)
-    def _unhome_axes(self, axes):
-        toolhead = self.printer.lookup_object('toolhead')
-        toolhead.dwell(DISABLE_STALL_TIME)
-        print_time = toolhead.get_last_move_time()
-        for axis in axes:
-            self.printer.send_event("stepper_enable:unhome_%s"
-                                    % axis.lower(),
-                                    print_time)
-        toolhead.dwell(DISABLE_STALL_TIME)
     def stepper_off(self, stepper_name, print_time, rail_name):
         el = self.enable_lines[stepper_name]
         el.motor_disable(print_time)
@@ -192,6 +179,10 @@ class PrinterStepperEnable:
                                      rail_name)
             except IndexError:
                 continue
+        self.printer.send_event(
+            "stepper_enable:axes_off",
+            print_time
+        )
         toolhead.dwell(DISABLE_STALL_TIME)
     def motor_debug_enable(self, steppers, enable, notify=True):
         toolhead = self.printer.lookup_object('toolhead')
@@ -233,28 +224,6 @@ class PrinterStepperEnable:
             axes = [0, 1, 2, 3]
         # Turn off motors
         self.axes_off(axes)
-    def cmd_D28(self, gcmd):
-        axes = []
-        for axis in ['X', 'Y', 'Z']:
-            if gcmd.get(axis, None) is not None:
-                axes.append(axis)
-        if not axes:
-            axes = ['X', 'Y', 'Z']
-        self._unhome_axes(axes)
-    cmd_UNHOME_help = "Manually set a specific axis as unhomed"
-    def cmd_UNHOME(self, gcmd):
-        axes_str = gcmd.get('AXES', None)
-        if axes_str is None:
-            axes = ['X', 'Y', 'Z']
-        else:
-            axes = axes_str.split(',')
-        for axis in axes:
-            if (axis.lower() != 'x'
-                    and axis.lower() != 'y'
-                    and axis.lower() != 'z'):
-                gcmd.respond_info('UNHOME: Invalid axis "%s"'
-                                  % axis)
-        self._unhome_axes(axes)
     cmd_SET_STEPPER_ENABLE_help = "Enable/disable individual stepper by name"
     def cmd_SET_STEPPER_ENABLE(self, gcmd):
         steppers_str = gcmd.get('STEPPERS', None)

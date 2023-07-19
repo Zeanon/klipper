@@ -280,5 +280,11 @@ class ControlAutoTune:
         Kd = Kp * Td
         return Kp, Ki, Kd
 
+    def get_profile(self):
+        return []
+
+    def get_type(self):
+        return 'autotune'
+
 def load_config(config):
     return PIDCalibrate(config)

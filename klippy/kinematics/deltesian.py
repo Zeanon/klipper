@@ -45,19 +45,26 @@ class DeltesianKinematics:
         self.printer.register_event_handler("stepper_enable:motor_off",
                                             self._motor_off)
 
-        self.printer.register_event_handler("stepper_enable:unhome_x",
-                                            self._unhome_x)
-        self.printer.register_event_handler("stepper_enable:unhome_y",
-                                            self._unhome_y)
-        self.printer.register_event_handler("stepper_enable:unhome_z",
-                                            self._unhome_z)
+        self.printer.register_event_handler("unhome:mark_as_unhomed_x",
+                                            self._set_unhomed_x)
+        self.printer.register_event_handler("unhome:mark_as_unhomed_y",
+                                            self._set_unhomed_y)
+        self.printer.register_event_handler("unhome:mark_as_unhomed_z",
+                                            self._set_unhomed_z)
 
         self.printer.register_event_handler("stepper_enable:disable_left",
                                             self._disable_towers)
         self.printer.register_event_handler("stepper_enable:disable_right",
                                             self._disable_towers)
         self.printer.register_event_handler("stepper_enable:disable_y",
-                                            self._unhome_y)
+                                            self._set_unhomed_y)
+
+        self.printer.register_event_handler("force_move:mark_as_homed_x",
+                                            self._set_homed_x)
+        self.printer.register_event_handler("force_move:mark_as_homed_y",
+                                            self._set_homed_y)
+        self.printer.register_event_handler("force_move:mark_as_homed_z",
+                                            self._set_homed_z)
 
         self.limits = [(1.0, -1.0)] * 3
         # X axis limits
@@ -162,12 +169,18 @@ class DeltesianKinematics:
             homing_state.home_rails([self.rails[2]], forcepos, homepos)
     def _motor_off(self, print_time):
         self.homed_axis = [False] * 3
-    def _unhome_x(self, print_time):
+    def _set_unhomed_x(self, print_time):
         self.homed_axis[0] = False
-    def _unhome_y(self, print_time):
+    def _set_unhomed_y(self, print_time):
         self.homed_axis[1] = False
-    def _unhome_z(self, print_time):
+    def _set_unhomed_z(self, print_time):
         self.homed_axis[2] = False
+    def _set_homed_x(self, print_time):
+        self.homed_axis[0] = True
+    def _set_homed_y(self, print_time):
+        self.homed_axis[1] = True
+    def _set_homed_z(self, print_time):
+        self.homed_axis[2] = True
     def _disable_towers(self, print_time):
         self.homed_axis[0] = False
         self.homed_axis[2] = False

@@ -7,10 +7,12 @@
 [axis_twist_compensation]
 horizontal_move_z: 5
 speed: 50
-start_x: 0 ; nozzle's x coordinate at the start of the calibration ! required
-end_x: 200 ; nozzle's x coordinate at the end of the calibration ! required
-y: 100 ; nozzle's y coordinate during the calibration ! required
-type: multilinear
+calibrate_start_x: 0 ; nozzle's x coordinate at the start of the calibration
+    ! required
+calibrate_end_x: 200 ; nozzle's x coordinate at the end of the calibration
+    ! required
+calibrate_y: 100 ; nozzle's y coordinate during the calibration ! required
+compensation_type: multilinear
 wait_for_continue: false
 start_gcode:
 end_gcode:
@@ -22,138 +24,107 @@ import math
 from . import manual_probe as ManualProbe, bed_mesh as BedMesh
 
 
-DEFAULT_N_POINTS = 3
-
-
-class Config:
-    DEFAULT_SPEED = 50.
-    DEFAULT_HORIZONTAL_MOVE_Z = 5.
-    REQUIRED = True
-    OPTIONAL = False
-    CONFIG_OPTIONS = {
-        'horizontal_move_z': (float, OPTIONAL, DEFAULT_HORIZONTAL_MOVE_Z),
-        'speed': (float, OPTIONAL, DEFAULT_SPEED),
-        'start_x': (float, REQUIRED, None),
-        'end_x': (float, REQUIRED, None),
-        'y': (float, REQUIRED, None),
-        'type': (str, OPTIONAL, 'multilinear'),
-        'z_compensations': (str, OPTIONAL, None),
-        'wait_for_continue': (bool, OPTIONAL, False),
-        'start_gcode': ('gcode', OPTIONAL, ''),
-        'end_gcode': ('gcode', OPTIONAL, ''),
-        'abort_gcode': (str, OPTIONAL, None),
-    }
-
-    @staticmethod
-    def save_to_config(name, z_compensations, configfile):
-        values_as_str = ', '.join([Helpers.format_float_to_n_decimals(x)
-                                   for x in z_compensations])
-        configfile.set(name, 'z_compensations', values_as_str)
+DEFAULT_SAMPLE_COUNT = 3
+DEFAULT_SPEED = 50.
+DEFAULT_HORIZONTAL_MOVE_Z = 5.
 
 
 class AxisTwistCompensation:
     def __init__(self, config):
         # get printer
-        self.config = config
         self.printer = config.get_printer()
         self.gcode = self.printer.lookup_object('gcode')
         gcode_macro = self.printer.load_object(config, 'gcode_macro')
 
-        # get values from [axis_twist_compensation] section in printer .cfg
-        for (config_key, (config_type,
-                          required,
-                          default)) in Config.CONFIG_OPTIONS.items():
-            value = None
-            if config_type == float:
-                value = config.getfloat(config_key, default)
-            elif config_type == bool:
-                value = config.getboolean(config_key, default)
-            elif config_type == 'gcode':
-                value = gcode_macro.load_template(config,
-                                                  config_key,
-                                                  default)
-            elif config_key == 'z_compensations':
-                value = Helpers.parse_comma_separated_floats(
-                    config.get('z_compensations', default=""))
-            else:
-                value = config.get(config_key, default)
-            if required and value is None:
-                raise config.error(
-                    "Missing required config option for section [{}]: {}"
-                    .format(config.get_name(), config_key))
-            setattr(self, config_key, value)
+        self.horizontal_move_z = config.getfloat('horizontal_move_z',
+                                                 DEFAULT_HORIZONTAL_MOVE_Z)
+        self.speed = config.getfloat('speed', DEFAULT_SPEED)
+        self.calibrate_start_x = config.getfloat('calibrate_start_x')
+        self.calibrate_end_x = config.getfloat('calibrate_end_x')
+        self.calibrate_y = config.getfloat('calibrate_y')
 
-        if self.type not in ['linear', 'multilinear']:
-            raise config.error(
-                    "Invalid axis_twist_compensation.type value: {}"
-                    .format(self.type))
+        TYPES = ['linear', 'multilinear']
+        self.compensation_type = config.getchoice('compensation_type',
+                                                  {t: t for t in TYPES})
 
+        self.wait_for_continue = config.getboolean('wait_for_continue', True)
+        self.start_gcode = gcode_macro.load_template(config, 'start_gcode', '')
+        self.end_gcode = gcode_macro.load_template(config, 'end_gcode', '')
         self.abort_gcode = (
             self.end_gcode
-            if self.abort_gcode is None
+            if config.get('abort_gcode', None) is None
             else gcode_macro.load_template(config, 'abort_gcode', '')
         )
 
+        self.z_compensations = config.getfloatlist('z_compensations',
+                                                   default=[])
+        self.compensation_start_x = config.getfloat('compensation_start_x',
+                                                    default=None)
+        self.compensation_end_x = config.getfloat('compensation_start_y',
+                                                  default=None)
+
+        self.loaded_compensations = self.z_compensations
         self.m = None
         self.b = None
 
         # setup calibrater
-        self.calibrater = Calibrater(self)
+        self.calibrater = Calibrater(self, config)
 
         self._register_gcode_handlers()
 
-    def get_z_compensation_value(self, x_coord):
-        if not self.z_compensations:
+    def get_z_compensation_value(self, pos):
+        if not self.loaded_compensations:
             return 0
         self._ensure_init()
 
-        if self.type == 'linear':
-            return self._get_z_compensation_value_linear(x_coord)
-        elif self.type == 'multilinear':
-            return self._get_z_compensation_value_multilinear(x_coord)
+        if self.compensation_type == 'linear':
+            return self._get_z_compensation_value_linear(pos[0])
+        elif self.compensation_type == 'multilinear':
+            return self._get_z_compensation_value_multilinear(pos[0])
 
     def _get_z_compensation_value_linear(self, x_coord):
         return self.m * x_coord + self.b
 
-
     def _get_z_compensation_value_multilinear(self, x_coord):
-        z_compensations = self.z_compensations
-        n_points = len(z_compensations)
-        spacing = (self.end_x - self.start_x) / (n_points - 1)
-        interpolate_t = (x_coord - self.start_x) / spacing
+        loaded_compensations = self.loaded_compensations
+        sample_count = len(loaded_compensations)
+        spacing = ((self.calibrate_end_x - self.calibrate_start_x)
+                   / (sample_count - 1))
+        interpolate_t = (x_coord - self.calibrate_start_x) / spacing
         interpolate_i = int(math.floor(interpolate_t))
-        interpolate_i = BedMesh.constrain(interpolate_i, 0, n_points - 2)
+        interpolate_i = BedMesh.constrain(interpolate_i, 0, sample_count - 2)
         interpolate_t -= interpolate_i
         interpolated_z_compensation = BedMesh.lerp(
-            interpolate_t, z_compensations[interpolate_i],
-            z_compensations[interpolate_i + 1])
+            interpolate_t, loaded_compensations[interpolate_i],
+            loaded_compensations[interpolate_i + 1])
         return interpolated_z_compensation
 
     def _ensure_init(self):
-        if self.type == 'linear' and self.m is None:
-            z_compensations = self.z_compensations
-            n_points = len(z_compensations)
-            interval_dist = \
-                (self.end_x - self.start_x) / (n_points - 1)
-            indexes = [self.start_x + i*interval_dist
-                       for i in range(0, n_points)]
+        if self.compensation_type == 'linear' and self.m is None:
+            loaded_compensations = self.loaded_compensations
+            sample_count = len(loaded_compensations)
+            interval_dist = ((self.calibrate_end_x - self.calibrate_start_x)
+                             / (sample_count - 1))
+            indexes = [self.calibrate_start_x + i*interval_dist
+                       for i in range(0, sample_count)]
 
             # Calculate the mean of x and y values
-            mean_indexes = sum(indexes) / n_points
-            mean_z_compensations = sum(z_compensations) / n_points
+            mean_indexes = sum(indexes) / sample_count
+            mean_z_compensations = sum(loaded_compensations) / sample_count
 
             # Calculate the covariance and variance
             covar = sum((indexes[i] - mean_indexes) *
-                        (z_compensations[i] - mean_z_compensations)
-                        for i in range(n_points))
-            var = sum((indexes[i] - mean_indexes)**2 for i in range(n_points))
+                        (loaded_compensations[i] - mean_z_compensations)
+                        for i in range(sample_count))
+            var = sum((indexes[i] - mean_indexes)**2
+                      for i in range(sample_count))
 
             # Compute the slope (m) and intercept (b) of the best-fit line
             self.m = covar / var
             self.b = mean_z_compensations - self.m * mean_indexes
 
     def clear_compensations(self):
-        self.z_compensations = []
+        self.loaded_compensations = []
         self.m = None
         self.b = None
 
@@ -169,6 +140,9 @@ class AxisTwistCompensation:
             desc=self.cmd_AXIS_TWIST_COMPENSATION_LOAD_help
         )
 
+    def load_compensations(self, z_compensations):
+        self.loaded_compensations = z_compensations
+
     cmd_AXIS_TWIST_COMPENSATION_CLEAR_help = (
         "Clears the active axis twist compensation"
     )
@@ -179,31 +153,31 @@ class AxisTwistCompensation:
         "Reloads the twist compensation values from the config"
     )
     def cmd_AXIS_TWIST_COMPENSATION_LOAD(self, gcmd):
-        self.z_compensations = Helpers.parse_comma_separated_floats(
-            self.config.get('z_compensations', default=""))
+        self.loaded_compensations = self.z_compensations
 
 
 class Calibrater:
-    def __init__(self, compensation):
+    def __init__(self, compensation, config):
         # setup self attributes
         self.compensation = compensation
         self.printer = compensation.printer
-        self.config = compensation.config
         self.gcode = self.printer.lookup_object('gcode')
         self.probe = None
         # probe settings are set to none, until they are available
         self.lift_speed, self.probe_x_offset, self.probe_y_offset, _ = \
             None, None, None, None
         self.printer.register_event_handler("klippy:connect",
-                                            self._handle_connect())
+                                            self._handle_connect)
         self.speed = compensation.speed
         self.horizontal_move_z = compensation.horizontal_move_z
         self.start_gcode = compensation.start_gcode
         self.end_gcode = compensation.end_gcode
         self.abort_gcode = compensation.abort_gcode
         self.wait_for_continue = compensation.wait_for_continue
-        self.start_point = (compensation.start_x, compensation.y)
-        self.end_point = (compensation.end_x, compensation.y)
+        self.start_point = (compensation.calibrate_start_x,
+                            compensation.calibrate_y)
+        self.end_point = (compensation.calibrate_end_x,
+                          compensation.calibrate_y)
         self.results = None
         self.current_point_index = None
         self.gcmd = None
@@ -212,20 +186,20 @@ class Calibrater:
         self.probe_points = None
         self.interval = None
 
+        self.configname = config.get_name()
+
         # register gcode handlers
         self._register_gcode_handlers()
 
     def _handle_connect(self):
-        # gets probe settings when they are available
-        def callback():
-            self.probe = self.printer.lookup_object('probe', None)
-            if self.probe is None:
-                raise self.config.error(
-                    "AXIS_TWIST_COMPENSATION requires [probe] to be defined")
-            self.lift_speed = self.probe.get_lift_speed()
-            self.probe_x_offset, self.probe_y_offset, _ = \
-                self.probe.get_offsets()
-        return callback
+        self.probe = self.printer.lookup_object('probe', None)
+        if (self.probe is None):
+            config = self.printer.lookup_object('configfile')
+            raise config.error(
+                "AXIS_TWIST_COMPENSATION requires [probe] to be defined")
+        self.lift_speed = self.probe.get_lift_speed()
+        self.probe_x_offset, self.probe_y_offset, _ = \
+            self.probe.get_offsets()
 
     def _register_gcode_handlers(self):
         # register gcode handlers
@@ -253,20 +227,20 @@ class Calibrater:
         self.start_gcode.run_gcode_from_command()
 
         self.gcmd = gcmd
-        n_points = gcmd.get_int('N_POINTS', DEFAULT_N_POINTS)
+        sample_count = gcmd.get_int('SAMPLE_COUNT', DEFAULT_SAMPLE_COUNT)
 
-        # check for valid n_points
-        if n_points is None or n_points < 2:
+        # check for valid sample_count
+        if sample_count is None or sample_count < 2:
             raise self.gcmd.error(
-                "N_POINTS to probe must be at least 2")
+                "SAMPLE_COUNT to probe must be at least 2")
 
         # clear the current config
         self.compensation.clear_compensations()
 
         # calculate some values
         x_range = self.end_point[0] - self.start_point[0]
-        interval_dist = x_range / (n_points - 1)
-        self.nozzle_points = self._calculate_nozzle_points(n_points,
+        interval_dist = x_range / (sample_count - 1)
+        self.nozzle_points = self._calculate_nozzle_points(sample_count,
                                                            interval_dist)
         self.probe_points = self._calculate_probe_points(
             self.nozzle_points,
@@ -282,10 +256,10 @@ class Calibrater:
         self.results = []
         self._calibration(self.probe_points, self.nozzle_points, self.interval)
 
-    def _calculate_nozzle_points(self, n_points, interval_dist):
+    def _calculate_nozzle_points(self, sample_count, interval_dist):
         # calculate the points to put the probe at, returned as a list of tuples
         nozzle_points = []
-        for i in range(n_points):
+        for i in range(sample_count):
             x = self.start_point[0] + i * interval_dist
             y = self.start_point[1]
             nozzle_points.append((x, y))
@@ -400,6 +374,7 @@ class Calibrater:
     cmd_QUERY_TWIST_COMPENSATION_RUNNING_help = """Query if we are running a
                                                    twist compensation"""
     def cmd_QUERY_TWIST_COMPENSATION_RUNNING(self, gcmd):
+        gcmd.respond_info("Twist Compensation running")
         return
 
     cmd_ABORT_help = "Abort the running probe calibration"
@@ -424,7 +399,21 @@ class Calibrater:
         self.results = [avg - x for x in self.results]
         # save the config
         configfile = self.printer.lookup_object('configfile')
-        Config.save_to_config(self.config.get_name(), self.results, configfile)
+        values_as_str = ', '.join(["{:.6f}".format(x)
+                                   for x in self.results])
+        configfile.set(self.configname, 'z_compensations', values_as_str)
+        configfile.set(self.configname, 'compensation_start_x',
+                       self.start_point[0])
+        configfile.set(self.configname, 'compensation_end_x',
+                       self.end_point[0])
+        self.compensation.z_compensations = self.results
+        self.compensation.compensation_start_x = self.start_point[0]
+        self.compensation.compensation_end_x = self.end_point[0]
+        self.gcode.respond_info(
+            "AXIS_TWIST_COMPENSATION state has been saved "
+            "for the current session. The SAVE_CONFIG command will "
+            "update the printer config file and restart the printer.")
+        self.compensation.load_compensations(self.results)
 
         self.nozzle_points = None
         self.probe_points = None
@@ -442,7 +431,7 @@ class Calibrater:
             % (self.results, avg))
         self.gcode.respond_info(
             "AXIS_TWIST_COMPENSATION state has been saved "
-            "for the current session.  The SAVE_CONFIG command will "
+            "for the current session. The SAVE_CONFIG command will "
             "update the printer config file and restart the printer.")
         self.end_gcode.run_gcode_from_command()
         self.gcode.register_command('QUERY_TWIST_COMPENSATION_RUNNING',
@@ -455,13 +444,6 @@ class Helpers:
     def format_float_to_n_decimals(raw_float, n=6):
         # format float to n decimals, defaults to 6
         return "{:.{}f}".format(raw_float, n)
-
-    @staticmethod
-    def parse_comma_separated_floats(comma_separated_floats):
-        if not comma_separated_floats:
-            return []
-        # parse comma separated floats into list of floats
-        return [float(value) for value in comma_separated_floats.split(', ')]
 
 
 def verify_no_compensation(printer):

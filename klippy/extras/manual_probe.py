@@ -263,6 +263,7 @@ class ManualProbeHelper:
         self.report_z_status(next_z_pos != z_pos, z_pos)
     cmd_QUERY_MANUAL_PROBE_RUNNING_help = "Query if we are probing"
     def cmd_QUERY_MANUAL_PROBE_RUNNING(self, gcmd):
+        gcmd.respond_info("Manual Probe running")
         return
     def finalize(self, success):
         self.manual_probe.reset_status()

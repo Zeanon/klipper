@@ -660,7 +660,7 @@ class BedMeshCalibrate:
         x_offset, y_offset, z_offset = offsets
         positions = [[round(p[0], 2), round(p[1], 2), p[2]]
                      for p in positions]
-        if self.zero_reference_mode == ZrefMode.PROBE :
+        if self.zero_reference_mode == ZrefMode.PROBE:
             ref_pos = positions.pop()
             logging.info(
                 "bed_mesh: z-offset replaced with probed z value at "
@@ -669,10 +669,18 @@ class BedMeshCalibrate:
             )
             z_offset = ref_pos[2]
         params = dict(self.mesh_config)
-        params['min_x'] = min(positions, key=lambda p: p[0])[0] + x_offset
-        params['max_x'] = max(positions, key=lambda p: p[0])[0] + x_offset
-        params['min_y'] = min(positions, key=lambda p: p[1])[1] + y_offset
-        params['max_y'] = max(positions, key=lambda p: p[1])[1] + y_offset
+        params['min_x'] = round(min(positions,
+                                    key=lambda p: p[0])[0] + x_offset,
+                                3)
+        params['max_x'] = round(max(positions,
+                                    key=lambda p: p[0])[0] + x_offset,
+                                3)
+        params['min_y'] = round(min(positions,
+                                    key=lambda p: p[1])[1] + y_offset,
+                                3)
+        params['max_y'] = round(max(positions,
+                                    key=lambda p: p[1])[1] + y_offset,
+                                3)
         x_cnt = params['x_count']
         y_cnt = params['y_count']
 
@@ -1244,7 +1252,10 @@ class ProfileManager:
         configfile.set(cfg_name, 'version', PROFILE_VERSION)
         configfile.set(cfg_name, 'points', z_values)
         for key, value in mesh_params.items():
-            configfile.set(cfg_name, key, value)
+            if value is float:
+                configfile.set(cfg_name, key, "%.3f" % value)
+            else:
+                configfile.set(cfg_name, key, value)
         # save copy in local storage
         # ensure any self.profiles returned as status remains immutable
         profiles = dict(self.profiles)

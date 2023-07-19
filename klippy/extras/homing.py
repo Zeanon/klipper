@@ -204,6 +204,15 @@ class Homing:
                 raise self.printer.command_error(
                     "Endstop %s still triggered after retract"
                     % (hmove.check_no_movement(),))
+        if hi.resting_retract_dist:
+            startpos = self._fill_coord(forcepos)
+            homepos = self._fill_coord(movepos)
+            axes_d = [hp - sp for hp, sp in zip(homepos, startpos)]
+            move_d = math.sqrt(sum([d*d for d in axes_d[:3]]))
+            retract_r = min(1., hi.retract_dist / move_d)
+            retractpos = [hp - ad * retract_r
+                          for hp, ad in zip(homepos, axes_d)]
+            self.toolhead.move(retractpos, hi.retract_speed)
         # Signal home operation complete
         self.toolhead.flush_step_generation()
         self.trigger_mcu_pos = {sp.stepper_name: sp.trig_pos
@@ -255,17 +264,31 @@ class PrinterHoming:
         return epos
     def cmd_G28(self, gcmd):
         # Move to origin
+        toolhead = self.printer.lookup_object('toolhead')
+        curtime = self.printer.get_reactor().monotonic()
         axes = []
+        home_all = True
         for pos, axis in enumerate('XYZ'):
-            if gcmd.get(axis, None) is not None:
-                axes.append(pos)
-        if not axes:
+            a = gcmd.get(axis, None)
+            if a is not None:
+                home_all = False
+                if (a != '0'
+                        or
+                        axis.lower()
+                        not in
+                        toolhead.get_status(curtime)['homed_axes']):
+                    axes.append(pos)
+        if home_all and not axes:
             axes = [0, 1, 2]
         homing_state = Homing(self.printer)
         homing_state.set_axes(axes)
         kin = self.printer.lookup_object('toolhead').get_kinematics()
         try:
             kin.home(homing_state)
+            self.printer.send_event(
+                "homing:home",
+                curtime
+            )
         except self.printer.command_error:
             if self.printer.is_shutdown():
                 raise self.printer.command_error(

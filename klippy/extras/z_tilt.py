@@ -73,7 +73,7 @@ class ZAdjustStatus:
                                         self._motor_off)
         printer.register_event_handler("stepper_enable:disable_z",
                                         self._motor_off)
-        printer.register_event_handler("stepper_enable:unhome_z",
+        printer.register_event_handler("unhome:mark_as_unhomed_z",
                                         self._motor_off)
     def check_retry_result(self, retry_result):
         if retry_result == "done":
@@ -87,7 +87,7 @@ class ZAdjustStatus:
         self.reset()
 
 class RetryHelper:
-    def __init__(self, config, error_msg_extra = ""):
+    def __init__(self, config, error_msg_extra=""):
         self.gcode = config.get_printer().lookup_object('gcode')
         self.default_max_retries = config.getint("retries", 0, minval=0)
         self.default_retry_tolerance = \

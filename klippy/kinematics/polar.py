@@ -26,19 +26,26 @@ class PolarKinematics:
         self.printer.register_event_handler("stepper_enable:motor_off",
                                                     self._motor_off)
 
-        self.printer.register_event_handler("stepper_enable:unhome_x",
-                                            self._unhome_xy)
-        self.printer.register_event_handler("stepper_enable:unhome_y",
-                                            self._unhome_xy)
-        self.printer.register_event_handler("stepper_enable:unhome_z",
-                                            self._unhome_z)
+        self.printer.register_event_handler("unhome:mark_as_unhomed_x",
+                                            self._set_unhomed_xy)
+        self.printer.register_event_handler("unhome:mark_as_unhomed_y",
+                                            self._set_unhomed_xy)
+        self.printer.register_event_handler("unhome:mark_as_unhomed_z",
+                                            self._set_unhomed_z)
 
         self.printer.register_event_handler("stepper_enable:disable_bed",
-                                            self._unhome_xy)
+                                            self._set_unhomed_xy)
         self.printer.register_event_handler("stepper_enable:disable_arm",
-                                            self._unhome_xy)
+                                            self._set_unhomed_xy)
         self.printer.register_event_handler("stepper_enable:disable_z",
-                                            self._unhome_z)
+                                            self._set_unhomed_z)
+
+        self.printer.register_event_handler("force_move:mark_as_homed_x",
+                                            self._set_homed_xy)
+        self.printer.register_event_handler("force_move:mark_as_homed_y",
+                                            self._set_homed_xy)
+        self.printer.register_event_handler("force_move:mark_as_homed_z",
+                                            self._set_homed_z)
 
         # Setup boundary checks
         max_velocity, max_accel = toolhead.get_max_velocity()
@@ -106,10 +113,14 @@ class PolarKinematics:
     def _motor_off(self, print_time):
         self.limit_z = (1.0, -1.0)
         self.limit_xy2 = -1.
-    def _unhome_xy(self, print_time):
+    def _set_unhomed_xy(self, print_time):
         self.limit_xy2 = -1.
-    def _unhome_z(self, print_time):
+    def _set_unhomed_z(self, print_time):
         self.limit_z = (1.0, -1.0)
+    def _set_homed_xy(self, print_time):
+        self.limit_xy2 = self.rails[0].get_range()[1]**2
+    def _set_homed_z(self, print_time):
+        self.limit_z = self.rails[1].get_range()
     def check_move(self, move):
         end_pos = move.end_pos
         xy2 = end_pos[0]**2 + end_pos[1]**2

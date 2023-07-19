@@ -16,11 +16,12 @@ AMBIENT_TEMP = 25.
 PID_PARAM_BASE = 255.
 PID_PROFILE_VERSION = 1
 PID_PROFILE_OPTIONS = {
-    'pid_target': float,
-    'pid_tolerance': float,
-    'pid_kp': float,
-    'pid_ki': float,
-    'pid_kd': float
+    'pid_target': (float, "%.2f"),
+    'pid_tolerance': (float, "%.4f"),
+    'control': (str, "%s"),
+    'pid_kp': (float, "%.3f"),
+    'pid_ki': (float, "%.3f"),
+    'pid_kd': (float, "%.3f")
 }
 
 class Heater:
@@ -84,11 +85,6 @@ class Heater:
                                         self.cmd_SET_HEATER_TEMPERATURE,
                                         desc=
                                         self.cmd_SET_HEATER_TEMPERATURE_help)
-        self.gcode.register_mux_command("COLD_EXTRUDE",
-                                        "HEATER",
-                                        self.name,
-                                        self.cmd_COLD_EXTRUDE,
-                                        desc=self.cmd_COLD_EXTRUDE_help)
         self.gcode.register_mux_command("PID_PROFILE",
                                         "HEATER",
                                         self
@@ -184,41 +180,13 @@ class Heater:
             smoothed_temp = self.smoothed_temp
             last_pwm_value = self.last_pwm_value
         return {'temperature': round(smoothed_temp, 2), 'target': target_temp,
-                'power': last_pwm_value}
-    def set_cold_extrude(self, cold_extrude, min_extrude_temp):
-        if cold_extrude is None and min_extrude_temp is None:
-            self.gcode.respond_info("Cold extrudes are %s (min temp %.2fC)"
-                                    % ("enabled" if self.cold_extrude
-                                       else "disabled",
-                                       self.min_extrude_temp))
-            return
-        self.cold_extrude = True if cold_extrude else False
-        if min_extrude_temp is not None:
-            self.min_extrude_temp = min_extrude_temp
-            self.configfile.set(self.name,
-                                'min_extrude_temp',
-                                self.min_extrude_temp)
-            self.gcode.respond_info("min_extrude_temp has been set to %.2fC "
-                                    "for [%s] for the current session.\n"
-                                    "The SAVE_CONFIG command will update the "
-                                    "printer config file and restart the "
-                                    "printer."
-                                    % (self.min_extrude_temp, self.name))
-        self.can_extrude = (self.smoothed_temp >= self.min_extrude_temp
-                            or self.cold_extrude)
+                'power': last_pwm_value,
+                'pid_profile': self.get_control().get_profile()['name']}
     cmd_SET_HEATER_TEMPERATURE_help = "Sets a heater temperature"
     def cmd_SET_HEATER_TEMPERATURE(self, gcmd):
         temp = gcmd.get_float('TARGET', 0.)
         pheaters = self.printer.lookup_object('heaters')
         pheaters.set_temperature(self, temp)
-    cmd_COLD_EXTRUDE_help = "Control cold extrusions"
-    def cmd_COLD_EXTRUDE(self, gcmd):
-        cold_extrude = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
-        min_extrude_temp = gcmd.get_float('MIN_EXTRUDE_TEMP',
-                                          None,
-                                          minval=self.min_temp,
-                                          maxval=self.max_temp)
-        self.set_cold_extrude(cold_extrude, min_extrude_temp)
     class ProfileManager:
         def __init__(self, outer_instance):
             self.outer_instance = outer_instance
@@ -252,7 +220,8 @@ class Heater:
                                                                     2.0,
                                                                     above=0.)
             elif control == 'pid' or control == 'pid_v':
-                for key, type in PID_PROFILE_OPTIONS.items():
+                for key, (type,
+                          placeholder) in PID_PROFILE_OPTIONS.items():
                     can_be_none = (key != 'pid_kp'
                                    and key != 'pid_ki'
                                    and key != 'pid_kd')
@@ -362,13 +331,12 @@ class Heater:
             self.outer_instance.configfile.set(section_name,
                                                'pid_version',
                                                PID_PROFILE_VERSION)
-            self.outer_instance.configfile.set(section_name,
-                                               'control',
-                                               temp_profile['control'])
-            for key, type in PID_PROFILE_OPTIONS.items():
+            for key, (type,
+                      placeholder) in PID_PROFILE_OPTIONS.items():
                 self.outer_instance.configfile.set(section_name,
                                                    key,
-                                                   temp_profile[key])
+                                                   placeholder
+                                                   % temp_profile[key])
             temp_profile['name'] = profile_name
             self.profiles[profile_name] = temp_profile
             if verbose:
@@ -385,7 +353,7 @@ class Heater:
                                              'lower')
             if (profile_name
                     ==
-                    self.outer_instance.get_control().get_profile_name()
+                    self.outer_instance.get_control().get_profile()['name']
                     and
                     (verbose == 'high' or verbose == 'low')):
                 self.outer_instance.gcode.respond_info(
@@ -495,6 +463,7 @@ class ControlBangBang:
         self.heater_max_power = self.heater.get_max_power()
         self.max_delta = profile['max_delta']
         self.heating = False
+
     def temperature_update(self, read_time, temp, target_temp):
         if self.heating and temp >= target_temp+self.max_delta:
             self.heating = False
@@ -504,12 +473,13 @@ class ControlBangBang:
             self.heater.set_pwm(read_time, self.heater_max_power)
         else:
             self.heater.set_pwm(read_time, 0.)
+
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         return smoothed_temp < target_temp-self.max_delta
-    def get_profile_name(self):
-        return self.profile['name']
+
     def get_profile(self):
         return self.profile
+
     def get_type(self):
         return 'watermark'
 
@@ -564,21 +534,20 @@ class ControlPID:
                 self.int_sum = i
             else:
                 # saturated, so conditionally integrate
-                if (o>0.)-(o<0.) != (ic>0.)-(ic<0.):
+                if (o > 0.)-(o < 0.) != (ic > 0.)-(ic < 0.):
                     # the signs are opposite so an update is allowed
                     self.int_sum = i
         else:
             self.prev_err = 0.
             self.int_sum = 0.
-
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         temp_diff = target_temp - smoothed_temp
         return (abs(temp_diff) > PID_SETTLE_DELTA
                 or abs(self.prev_der) > PID_SETTLE_SLOPE)
-    def get_profile_name(self):
-        return self.profile['name']
+
     def get_profile(self):
         return self.profile
+
     def get_type(self):
         return 'pid'
 
@@ -592,37 +561,52 @@ class ControlVelocityPID:
         self.profile = profile
         self.heater = heater
         self.heater_max_power = self.heater.get_max_power()
-        self.dt = self.heater.pwm_delay
         self.Kp = profile['pid_kp'] / PID_PARAM_BASE
         self.Ki = profile['pid_ki'] / PID_PARAM_BASE
         self.Kd = profile['pid_kd'] / PID_PARAM_BASE
-        self.smooth = 1. + self.heater.get_smooth_time() / self.dt
-        self.t = [0.] * 3 # temperature readings
-        self.d1 = 0. # previous 1st derivative
-        self.d2 = 0. # previous 2nd derivative
-        self.pwm = 0.
+        self.smooth_time = heater.get_smooth_time()  # smoothing window
+        self.temps = [AMBIENT_TEMP] * 3  # temperature readings
+        self.times = [0.] * 3  # temperature reading times
+        self.d1 = 0.  # previous smoothed 1st derivative
+        self.d2 = 0.  # previous smoothed 2nd derivative
+        self.pwm = 0.  # the previous pwm setting
 
     def temperature_update(self, read_time, temp, target_temp):
-        self.t.pop(0)
-        self.t.append(temp)
+        # update the temp and time lists
+        self.temps.pop(0)
+        self.temps.append(temp)
+        self.times.pop(0)
+        self.times.append(read_time)
 
-        # calculate the derivatives using a modified moving average,
-        # also account for derivative and proportional kick
-        d1 = self.t[-1] - self.t[-2]
-        self.d1 = ((self.smooth - 1.) * self.d1 + d1)/self.smooth
-        d2 = (self.t[-1] - 2.*self.t[-2] + self.t[-3])/self.dt
-        self.d2 = ((self.smooth - 1.) * self.d2 + d2)/self.smooth
+        # calculate the 1st derivative: p part in velocity form
+        # note the derivative is of the temp and not the error
+        # this is to prevent derivative kick
+        d1 = self.temps[-1] - self.temps[-2]
 
-        # calcualte the output
-        p = self.Kp * -self.d1
-        i = self.Ki * self.dt * (target_temp - self.t[-1])
-        d = self.Kd * -self.d2
-        self.pwm = max(0., min(self.heater_max_power, self.pwm + p + i + d))
+        # calculate the error : i part in velocity form
+        error = self.times[-1] - self.times[-2]
+        error = error * (target_temp - self.temps[-1])
 
-        # ensure no weird artifacts
-        if target_temp == 0.:
-            self.d1 = 0.
-            self.d2 = 0.
+        # calculate the 2nd derivative: d part in velocity form
+        # note the derivative is of the temp and not the error
+        # this is to prevent derivative kick
+        d2 = self.temps[-1] - 2. * self.temps[-2] + self.temps[-3]
+        d2 = d2 / (self.times[-1] - self.times[-2])
+
+        # smooth both the derivatives using a modified moving average
+        # that handles unevenly spaced data points
+        n = max(1., self.smooth_time / (self.times[-1] - self.times[-2]))
+        self.d1 = ((n - 1.) * self.d1 + d1) / n
+        self.d2 = ((n - 1.) * self.d2 + d2) / n
+
+        # calculate the output
+        p = self.Kp * -self.d1  # invert sign to prevent derivative kick
+        i = self.Ki * error
+        d = self.Kd * -self.d2  # invert sign to prevent derivative kick
+
+        if target_temp > 0.:
+            self.pwm = max(0., min(self.heater_max_power, self.pwm + p + i + d))
+        else:
             self.pwm = 0.
 
         # update the heater
@@ -632,10 +616,10 @@ class ControlVelocityPID:
         temp_diff = target_temp - smoothed_temp
         return (abs(temp_diff) > PID_SETTLE_DELTA
                 or abs(self.d1) > PID_SETTLE_SLOPE)
-    def get_profile_name(self):
-        return self.profile['name']
+
     def get_profile(self):
         return self.profile
+
     def get_type(self):
         return 'pid_v'
 
