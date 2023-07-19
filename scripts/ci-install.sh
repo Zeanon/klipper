@@ -16,7 +16,7 @@ mkdir -p ${BUILD_DIR} ${CACHE_DIR}
 ######################################################################
 
 echo -e "\n\n=============== Install system dependencies\n\n"
-PKGS="virtualenv python2-dev libffi-dev build-essential"
+PKGS="virtualenv libffi-dev build-essential"
 PKGS="${PKGS} gcc-avr avr-libc"
 PKGS="${PKGS} libnewlib-arm-none-eabi gcc-arm-none-eabi binutils-arm-none-eabi"
 PKGS="${PKGS} pv libmpfr-dev libgmp-dev libmpc-dev texinfo bison flex"
@@ -62,6 +62,7 @@ if [ ! -f ${CACHE_DIR}/${TOOLCHAIN_ZIP_V} ]; then
 fi
 cd ${BUILD_DIR}
 tar xf ${CACHE_DIR}/${TOOLCHAIN_ZIP_V}
+
 ######################################################################
 # Create python3 virtualenv environment
 ######################################################################
@@ -70,13 +71,3 @@ echo -e "\n\n=============== Install python3 virtualenv\n\n"
 cd ${MAIN_DIR}
 virtualenv -p python3 ${BUILD_DIR}/python-env
 ${BUILD_DIR}/python-env/bin/pip install -r ${MAIN_DIR}/scripts/klippy-requirements.txt
-
-
-######################################################################
-# Create python2 virtualenv environment
-######################################################################
-
-echo -e "\n\n=============== Install python2 virtualenv\n\n"
-cd ${MAIN_DIR}
-virtualenv -p python2 ${BUILD_DIR}/python2-env
-${BUILD_DIR}/python2-env/bin/pip install -r ${MAIN_DIR}/scripts/klippy-requirements.txt
