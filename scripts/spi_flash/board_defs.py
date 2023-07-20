@@ -65,6 +65,13 @@ BOARD_DEFS = {
         'cs_pin': "PC11",
         'skip_verify': True
     },
+    'btt-octopus-pro-h723-v1.1': {
+        'mcu': "stm32h723xx",
+        'spi_bus': "swspi",
+        'spi_pins': "PC8,PD2,PC12",
+        'cs_pin': "PC11",
+        'skip_verify': True
+    },
     'btt-skr-pro': {
         'mcu': "stm32f407xx",
         'spi_bus': "swspi",
