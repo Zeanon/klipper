@@ -53,7 +53,7 @@ class ExtruderStepper:
     def get_status(self, eventtime):
         return {'pressure_advance': self.pressure_advance,
                 'pressure_advance_enabled': self.pa_enabled,
-                'smooth_time': self.pressure_advance_smooth_time,
+                'smooth_time': self.pa_smooth_time,
                 'motion_queue': self.motion_queue}
     def find_past_position(self, print_time):
         mcu_pos = self.stepper.get_past_mcu_position(print_time)
