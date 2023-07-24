@@ -61,7 +61,8 @@ class ScrewsTiltAdjust:
 
     def get_status(self, eventtime):
         return {'error': self.max_diff_error,
-            'results': self.results}
+                'max_diff': self.max_diff,
+                'results': self.results}
 
     def probe_finalize(self, offsets, positions):
         self.results = {}
