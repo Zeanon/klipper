@@ -16,6 +16,7 @@ class PrinterNeoPixel:
     def __init__(self, config):
         self.printer = printer = config.get_printer()
         self.mutex = printer.get_reactor().mutex()
+        gcode_macro = self.printer.load_object(config, 'gcode_macro')
         # Configure neopixel
         ppins = printer.lookup_object('pins')
         pin_params = ppins.lookup_pin(config.get('pin'))
@@ -27,6 +28,7 @@ class PrinterNeoPixel:
         # Build color map
         chain_count = config.getint('chain_count', 1, minval=1)
         color_order = config.getlist("color_order", ["GRB"])
+        self.init_gcode = gcode_macro.load_template(config, 'init_gcode', '')
         if len(color_order) == 1:
             color_order = [color_order[0]] * chain_count
         if len(color_order) != chain_count:
@@ -99,6 +101,7 @@ class PrinterNeoPixel:
                 break
         else:
             logging.info("Neopixel update did not succeed")
+        self.init_gcode.run_gcode_from_command()
     def update_leds(self, led_state, print_time):
         def reactor_bgfunc(eventtime):
             with self.mutex:
