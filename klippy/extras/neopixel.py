@@ -28,7 +28,7 @@ class PrinterNeoPixel:
         # Build color map
         chain_count = config.getint('chain_count', 1, minval=1)
         color_order = config.getlist("color_order", ["GRB"])
-        self.init_gcode = gcode_macro.load_template(config, 'init_gcode', 'SET_LIGHTS_BOOT')
+        self.init_gcode = gcode_macro.load_template(config, 'init_gcode', '')
         if len(color_order) == 1:
             color_order = [color_order[0]] * chain_count
         if len(color_order) != chain_count:
