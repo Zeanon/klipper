@@ -25,6 +25,8 @@ class ControllerTemperatureFan:
         pheaters.register_sensor(config, self)
         self.heaters = []
         self.heater_names = config.getlist("heater", ("extruder",))
+        self.stepper_names = config.getlist("stepper", None)
+        self.stepper_enable = self.printer.load_object(config, 'stepper_enable')
         self.speed_delay = self.sensor.get_report_time_delta()
         self.max_speed_conf = config.getfloat(
             'max_speed', 1., above=0., maxval=1.)
@@ -57,6 +59,16 @@ class ControllerTemperatureFan:
         # Heater lookup
         pheaters = self.printer.lookup_object('heaters')
         self.heaters = [pheaters.lookup_heater(n) for n in self.heater_names]
+        # Stepper lookup
+        all_steppers = self.stepper_enable.get_steppers()
+        if self.stepper_names is None:
+            self.stepper_names = all_steppers
+            return
+        if not all(x in all_steppers for x in self.stepper_names):
+            raise self.printer.config_error(
+                "One or more of these steppers are unknown: "
+                "%s (valid steppers are: %s)"
+                % (self.stepper_names, ", ".join(all_steppers)))
     def handle_ready(self):
         reactor = self.printer.get_reactor()
         reactor.register_timer(self.callback, reactor.monotonic()+PIN_MIN_TIME)
@@ -77,6 +89,8 @@ class ControllerTemperatureFan:
         self.fan.set_speed(speed_time, value)
     def callback(self, eventtime):
         active = False
+        for name in self.stepper_names:
+            active |= self.stepper_enable.lookup_enable(name).is_motor_enabled()
         for heater in self.heaters:
             _, target_temp = heater.get_temp(eventtime)
             if target_temp:
