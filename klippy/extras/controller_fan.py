@@ -23,35 +23,23 @@ class ControllerFan:
         self.idle_speed = config.getfloat(
             'idle_speed', default=self.fan_speed, minval=0., maxval=1.)
         self.idle_timeout = config.getint("idle_timeout", default=30, minval=0)
-        self.heater_names = config.getlist("heater", None)
+        self.heater_names = config.getlist("heater", ("extruder",))
         self.last_on = self.idle_timeout
         self.last_speed = 0.
     def handle_connect(self):
         # Heater lookup
         pheaters = self.printer.lookup_object('heaters')
+        self.heaters = [pheaters.lookup_heater(n) for n in self.heater_names]
         # Stepper lookup
         all_steppers = self.stepper_enable.get_steppers()
-        if self.heater_names is None and self.stepper_names is None:
-            self.heaters = [pheaters.lookup_heater(n) for n in
-                            ("extruder",)]
-            self.stepper_names = all_steppers
-            return
-
-        if self.heater_names is None:
-            self.heaters = [pheaters.lookup_heater(n) for n in
-                            ("extruder",)]
-        else:
-            self.heaters = [pheaters.lookup_heater(n) for n in
-                            self.heater_names]
-
         if self.stepper_names is None:
             self.stepper_names = all_steppers
-        else:
-            if not all(x in all_steppers for x in self.stepper_names):
-                raise self.printer.config_error(
-                    "One or more of these steppers are unknown: "
-                    "%s (valid steppers are: %s)"
-                    % (self.stepper_names, ", ".join(all_steppers)))
+            return
+        if not all(x in all_steppers for x in self.stepper_names):
+            raise self.printer.config_error(
+                "One or more of these steppers are unknown: "
+                "%s (valid steppers are: %s)"
+                % (self.stepper_names, ", ".join(all_steppers)))
     def handle_ready(self):
         reactor = self.printer.get_reactor()
         reactor.register_timer(self.callback, reactor.monotonic()+PIN_MIN_TIME)
