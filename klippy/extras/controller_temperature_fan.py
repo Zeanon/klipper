@@ -28,6 +28,13 @@ class ControllerTemperatureFan:
         self.stepper_names = config.getlist("stepper", None)
         self.stepper_enable = self.printer.load_object(config, 'stepper_enable')
         self.speed_delay = self.sensor.get_report_time_delta()
+
+        self.fan_speed = config.getfloat('fan_speed', default=1.,
+                                         minval=0., maxval=1.)
+        self.idle_speed = config.getfloat('idle_speed', default=self.fan_speed,
+                                          minval=0., maxval=1.)
+        self.idle_timeout = config.getint("idle_timeout", default=30, minval=0)
+
         self.max_speed_conf = config.getfloat(
             'max_speed', 1., above=0., maxval=1.)
         self.max_speed = self.max_speed_conf
@@ -45,7 +52,8 @@ class ControllerTemperatureFan:
         self.control = algo(self, config)
         self.next_speed_time = 0.
         self.last_speed_value = 0.
-        self.heater_active = False
+
+        self.controller_speed = 0.
         gcode = self.printer.lookup_object('gcode')
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
         self.printer.register_event_handler("klippy:connect",
@@ -88,6 +96,7 @@ class ControllerTemperatureFan:
         self.last_speed_value = value
         self.fan.set_speed(speed_time, value)
     def callback(self, eventtime):
+        speed = 0.
         active = False
         for name in self.stepper_names:
             active |= self.stepper_enable.lookup_enable(name).is_motor_enabled()
@@ -95,13 +104,20 @@ class ControllerTemperatureFan:
             _, target_temp = heater.get_temp(eventtime)
             if target_temp:
                 active = True
-        self.heater_active = active
+        if active:
+            self.last_on = 0
+            speed = self.fan_speed
+        elif self.last_on < self.idle_timeout:
+            speed = self.idle_speed
+            self.last_on += 1
+        if speed != self.controller_speed:
+            self.controller_speed = speed
         return eventtime + 1.
     def temperature_callback(self, read_time, temp):
         self.last_temp = temp
         self.control.temperature_callback(read_time,
                                           temp,
-                                          1.0 if self.heater_active else None)
+                                          self.controller_speed)
     def get_temp(self, eventtime):
         return self.last_temp, self.target_temp
     def get_min_speed(self):
@@ -157,7 +173,7 @@ class ControlBangBang:
         self.temperature_fan = temperature_fan
         self.max_delta = config.getfloat('max_delta', 2.0, above=0.)
         self.heating = False
-    def temperature_callback(self, read_time, temp, speed=None):
+    def temperature_callback(self, read_time, temp, speed=0.):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         if (self.heating
             and temp >= target_temp+self.max_delta):
@@ -165,15 +181,9 @@ class ControlBangBang:
         elif (not self.heating
               and temp <= target_temp-self.max_delta):
             self.heating = True
-        if speed is None:
-            if self.heating:
-                self.temperature_fan.set_speed(read_time, 0.)
-            else:
-                self.temperature_fan.set_speed(read_time,
-                                               self.temperature_fan
-                                               .get_max_speed())
-        else:
-            self.temperature_fan.set_speed(read_time, speed)
+        tempspeed = 0. if self.heating else self.temperature_fan.get_max_speed()
+        finalspeed = speed if speed > tempspeed else tempspeed
+        self.temperature_fan.set_speed(read_time, finalspeed)
 
 ######################################################################
 # Proportional Integral Derivative (PID) control algo
@@ -196,7 +206,7 @@ class ControlPID:
         self.prev_temp_time = 0.
         self.prev_temp_deriv = 0.
         self.prev_temp_integ = 0.
-    def temperature_callback(self, read_time, temp, speed=None):
+    def temperature_callback(self, read_time, temp, speed=0.):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         time_diff = read_time - self.prev_temp_time
         # Calculate change of temperature
@@ -213,14 +223,10 @@ class ControlPID:
         # Calculate output
         co = self.Kp*temp_err + self.Ki*temp_integ - self.Kd*temp_deriv
         bounded_co = max(0., min(self.temperature_fan.get_max_speed(), co))
-        if speed is None:
-            self.temperature_fan.set_speed(
-                read_time, max(self.temperature_fan.get_min_speed(),
-                               self.temperature_fan.get_max_speed()
-                               -
-                               bounded_co))
-        else:
-            self.temperature_fan.set_speed(read_time, speed)
+        tempspeed = max(self.temperature_fan.get_min_speed(),
+                        self.temperature_fan.get_max_speed() - bounded_co)
+        finalspeed = speed if speed > tempspeed else tempspeed
+        self.temperature_fan.set_speed(read_time, finalspeed)
         # Store state for next measurement
         self.prev_temp = temp
         self.prev_temp_time = read_time
