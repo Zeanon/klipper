@@ -281,7 +281,7 @@ class ControlAutoTune:
         return Kp, Ki, Kd
 
     def get_profile(self):
-        return []
+        return {'name': 'autotune'}
 
     def get_type(self):
         return 'autotune'
