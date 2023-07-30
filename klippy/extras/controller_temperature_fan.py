@@ -129,8 +129,9 @@ class ControllerTemperatureFan:
         status["temperature"] = round(self.last_temp, 2)
         status["target"] = self.target_temp
         return status
-    cmd_SET_TEMPERATURE_FAN_TARGET_help = \
+    cmd_SET_TEMPERATURE_FAN_TARGET_help = (
         "Sets a temperature fan target and fan speed limits"
+    )
     def cmd_SET_TEMPERATURE_FAN_TARGET(self, gcmd):
         temp = gcmd.get_float('TARGET', self.target_temp_conf)
         self.set_temp(temp)
@@ -182,7 +183,7 @@ class ControlBangBang:
               and temp <= target_temp-self.max_delta):
             self.heating = True
         tempspeed = 0. if self.heating else self.temperature_fan.get_max_speed()
-        finalspeed = speed if speed > tempspeed else tempspeed
+        finalspeed = max(speed, tempspeed)
         self.temperature_fan.set_speed(read_time, finalspeed)
 
 ######################################################################
@@ -225,7 +226,7 @@ class ControlPID:
         bounded_co = max(0., min(self.temperature_fan.get_max_speed(), co))
         tempspeed = max(self.temperature_fan.get_min_speed(),
                         self.temperature_fan.get_max_speed() - bounded_co)
-        finalspeed = speed if speed > tempspeed else tempspeed
+        finalspeed = max(speed, tempspeed)
         self.temperature_fan.set_speed(read_time, finalspeed)
         # Store state for next measurement
         self.prev_temp = temp
