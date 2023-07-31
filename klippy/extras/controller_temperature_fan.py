@@ -24,7 +24,7 @@ class ControllerTemperatureFan:
         self.sensor.setup_callback(self.temperature_callback)
         pheaters.register_sensor(config, self)
         self.heaters = []
-        self.heater_names = config.getlist("heater", ("extruder",))
+        self.heater_names = config.getlist("heater", None)
         self.stepper_names = config.getlist("stepper", None)
         self.stepper_enable = self.printer.load_object(config, 'stepper_enable')
         self.speed_delay = self.sensor.get_report_time_delta()
@@ -67,7 +67,11 @@ class ControllerTemperatureFan:
     def handle_connect(self):
         # Heater lookup
         pheaters = self.printer.lookup_object('heaters')
-        self.heaters = [pheaters.lookup_heater(n) for n in self.heater_names]
+        if self.heater_names is None:
+            self.heaters = [pheaters.lookup_heater(n) for n in
+                            pheaters.available_heaters]
+        else:
+            self.heaters = [pheaters.lookup_heater(n) for n in self.heater_names]
         # Stepper lookup
         all_steppers = self.stepper_enable.get_steppers()
         if self.stepper_names is None:
