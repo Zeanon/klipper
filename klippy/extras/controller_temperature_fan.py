@@ -52,6 +52,7 @@ class ControllerTemperatureFan:
         self.control = algo(self, config)
         self.next_speed_time = 0.
         self.last_speed_value = 0.
+        self.last_on = self.idle_timeout
 
         self.controller_speed = 0.
         gcode = self.printer.lookup_object('gcode')
