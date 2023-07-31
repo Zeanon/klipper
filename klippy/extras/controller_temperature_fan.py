@@ -71,7 +71,8 @@ class ControllerTemperatureFan:
             self.heaters = [pheaters.lookup_heater(n) for n in
                             pheaters.available_heaters]
         else:
-            self.heaters = [pheaters.lookup_heater(n) for n in self.heater_names]
+            self.heaters = [pheaters.lookup_heater(n) for n in
+                            self.heater_names]
         # Stepper lookup
         all_steppers = self.stepper_enable.get_steppers()
         if self.stepper_names is None:
