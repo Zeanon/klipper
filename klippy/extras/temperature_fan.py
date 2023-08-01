@@ -197,19 +197,45 @@ class ControlCurve:
     def __init__(self, temperature_fan, config):
         self.temperature_fan = temperature_fan
         self.points = []
-        n = 1
-        current_point = config.getfloatlist('point_%d' % n, None)
-        while current_point is not None:
+        for i in range(99):
+            current_point = config.getfloatlist('point_%d' % i, None)
+            if current_point is None:
+                break
+            if len(current_point) != 2:
+                raise temperature_fan.printer.config_error(
+                    "Point needs to have exactly one temperature and one speed "
+                    "value."
+                )
+            if current_point[0] > temperature_fan.target_temp:
+                raise temperature_fan.printer.config_error(
+                    "Temperature in point can not exceed target temperature."
+                )
+            if current_point[0] < temperature_fan.min_temp:
+                raise temperature_fan.printer.config_error(
+                    "Temperature in point can not fall below min_temp."
+                )
+            if current_point[1] > temperature_fan.get_max_speed:
+                raise temperature_fan.printer.config_error(
+                    "Speed in point can not exceed max_speed."
+                )
+            if current_point[1] < temperature_fan.get_min_speed:
+                raise temperature_fan.printer.config_error(
+                    "Speed in point can not fall below min_speed."
+                )
             self.points.append(current_point)
-            n += 1
-            current_point = config.getfloatlist('point_%d' % n, None)
+        self.points.append([temperature_fan.target_temp,
+                            temperature_fan.get_max_speed()])
         if len(self.points) < 2:
             raise temperature_fan.printer.config_error(
-                "At least two temperatures need to be defined for curve in "
+                "At least two points need to be defined for curve in "
                 "temperature_fan."
             )
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
+        if temp > target_temp:
+            self.temperature_fan.set_speed(read_time,
+                                           self.temperature_fan.get_max_speed())
+            return
         below = [self.temperature_fan.min_temp,
                  self.temperature_fan.get_min_speed()]
         above = [self.temperature_fan.max_temp,
@@ -217,12 +243,12 @@ class ControlCurve:
         for config_temp in self.points:
             if config_temp[0] < temp:
                 below = config_temp
-            if config_temp[0] > temp:
+            else:
                 above = config_temp
                 break
-        speed = self.interpolate(below, above, current_temp)
-        self.temperature_fan.set_speed(read_time, speed)
-
+        self.temperature_fan.set_speed(read_time, self.interpolate(below,
+                                                                   above,
+                                                                   temp))
     def interpolate(self,
                     below,
                     above,
