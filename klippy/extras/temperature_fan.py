@@ -197,7 +197,7 @@ class ControlCurve:
     def __init__(self, temperature_fan, config):
         self.temperature_fan = temperature_fan
         self.points = []
-        for i in range(99):
+        for i in range(1, 99):
             current_point = config.getfloatlist('point_%d' % i, None)
             if current_point is None:
                 break
