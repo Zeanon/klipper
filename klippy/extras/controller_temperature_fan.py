@@ -94,8 +94,6 @@ class ControllerTemperatureFan:
     def _enable_kickstart(self, print_time):
         self.kickstart_enabled = True
     def set_speed(self, read_time, value):
-        gcode = self.printer.lookup_object('gcode')
-        gcode.respond_info("%f" % value)
         if value <= 0.:
             value = 0.
         elif value < self.min_speed:
@@ -131,9 +129,11 @@ class ControllerTemperatureFan:
             self.controller_speed = speed
         return eventtime + 1.
     def temperature_callback(self, read_time, temp):
+
         self.last_temp = temp
         self.control.temperature_callback(read_time,
                                           temp,
+                                          self.printer.lookup_object('gcode'),
                                           self.controller_speed)
     def get_temp(self, eventtime):
         return self.last_temp, self.target_temp
@@ -227,7 +227,7 @@ class ControlPID:
         self.prev_temp_time = 0.
         self.prev_temp_deriv = 0.
         self.prev_temp_integ = 0.
-    def temperature_callback(self, read_time, temp, speed=0.):
+    def temperature_callback(self, read_time, temp, gcode, speed=0.):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         time_diff = read_time - self.prev_temp_time
         # Calculate change of temperature, flip sign if set to reverse
@@ -247,6 +247,7 @@ class ControlPID:
         # Calculate output
         co = self.Kp*temp_err + self.Ki*temp_integ - self.Kd*temp_deriv
         bounded_co = max(0., min(self.temperature_fan.get_max_speed(), co))
+        gcode.respond_info("%f" % speed)
         tempspeed = max(self.temperature_fan.get_min_speed(),
                         self.temperature_fan.get_max_speed() - bounded_co)
         finalspeed = max(speed, tempspeed)
