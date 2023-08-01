@@ -89,6 +89,10 @@ class ControllerTemperatureFan:
     def handle_ready(self):
         reactor = self.printer.get_reactor()
         reactor.register_timer(self.callback, reactor.monotonic()+PIN_MIN_TIME)
+        reactor.register_callback(self._set_control, 5)
+    def _set_control(self, print_time):
+        if self.control != self.algo:
+            self.control = self.algo
     def set_speed(self, read_time, value):
         if value <= 0.:
             value = 0.
