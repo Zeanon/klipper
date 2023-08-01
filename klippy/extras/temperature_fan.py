@@ -47,10 +47,6 @@ class TemperatureFan:
             "SET_TEMPERATURE_FAN_TARGET", "TEMPERATURE_FAN", self.name,
             self.cmd_SET_TEMPERATURE_FAN_TARGET,
             desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
-        gcode.register_mux_command(
-            "SET_TEMPERATURE_FAN_TARGET", "FAN", self.name,
-            self.cmd_SET_TEMPERATURE_FAN_TARGET,
-            desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
 
     def set_speed(self, read_time, value):
         if value <= 0.:

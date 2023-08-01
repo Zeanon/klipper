@@ -65,10 +65,6 @@ class ControllerTemperatureFan:
             "SET_TEMPERATURE_FAN_TARGET", "TEMPERATURE_FAN", self.name,
             self.cmd_SET_TEMPERATURE_FAN_TARGET,
             desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
-        gcode.register_mux_command(
-            "SET_TEMPERATURE_FAN_TARGET", "FAN", self.name,
-            self.cmd_SET_TEMPERATURE_FAN_TARGET,
-            desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
 
     def handle_connect(self):
         # Heater lookup
