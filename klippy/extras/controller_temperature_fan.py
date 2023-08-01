@@ -247,9 +247,9 @@ class ControlPID:
         # Calculate output
         co = self.Kp*temp_err + self.Ki*temp_integ - self.Kd*temp_deriv
         bounded_co = max(0., min(self.temperature_fan.get_max_speed(), co))
-        gcode.respond_info("%f" % speed)
         tempspeed = max(self.temperature_fan.get_min_speed(),
                         self.temperature_fan.get_max_speed() - bounded_co)
+        gcode.respond_info("%f" % tempspeed)
         finalspeed = max(speed, tempspeed)
         self.temperature_fan.set_speed(read_time, finalspeed)
         # Store state for next measurement
