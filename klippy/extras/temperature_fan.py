@@ -202,7 +202,7 @@ class ControlCurve:
         while current_point is not None:
             self.points.append(current_point)
             n += 1
-            current_point = config.getfloatlist('temperature_%d' % n, None)
+            current_point = config.getfloatlist('point_%d' % n, None)
         if len(self.points) < 2:
             raise temperature_fan.printer.config_error(
                 "At least two temperatures need to be defined for curve in "
