@@ -107,7 +107,7 @@ class ControllerTemperatureFan:
         speed_time = read_time + self.speed_delay
         self.next_speed_time = speed_time + 0.75 * MAX_FAN_TIME
         self.last_speed_value = value
-        self.fan.set_speed(speed_time, value, self.kickstart_enabled)
+        self.fan.set_speed(speed_time, value, False)
     def callback(self, eventtime):
         speed = self.idle_speed
         active = False
