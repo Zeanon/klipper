@@ -49,14 +49,13 @@ class ControllerTemperatureFan:
             minval=self.min_temp, maxval=self.max_temp)
         self.target_temp = self.target_temp_conf
         algos = {'watermark': ControlBangBang, 'pid': ControlPID}
-        algo = config.getchoice('control', algos)
-        self.control = algo(self, config)
+        self.algo = config.getchoice('control', algos)
+        self.control = ControlBangBang
         self.next_speed_time = 0.
         self.last_speed_value = 0.
         self.last_on = self.idle_timeout
 
         self.controller_speed = 0.
-        self.kickstart_enabled = False
         gcode = self.printer.lookup_object('gcode')
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
         self.printer.register_event_handler("klippy:connect",
@@ -88,11 +87,11 @@ class ControllerTemperatureFan:
     def handle_ready(self):
         reactor = self.printer.get_reactor()
         reactor.register_timer(self.callback, reactor.monotonic()+PIN_MIN_TIME)
-        # reactor.register_callback(self._enable_kickstart,
-        #                           self.fan.kick_start_time
-        #                           + PIN_MIN_TIME)
-    def _enable_kickstart(self, print_time):
-        self.kickstart_enabled = True
+        reactor.register_callback(self._set_algo(),
+                                  1 + PIN_MIN_TIME)
+    def _set_algo(self):
+        if self.control != self.algo:
+            self.control = self.algo
     def set_speed(self, read_time, value):
         if value <= 0.:
             value = 0.
@@ -107,7 +106,7 @@ class ControllerTemperatureFan:
         speed_time = read_time + self.speed_delay
         self.next_speed_time = speed_time + 0.75 * MAX_FAN_TIME
         self.last_speed_value = value
-        self.fan.set_speed(speed_time, value, False)
+        self.fan.set_speed(speed_time, value)
     def callback(self, eventtime):
         speed = self.idle_speed
         active = False
@@ -129,7 +128,6 @@ class ControllerTemperatureFan:
             self.controller_speed = speed
         return eventtime + 1.
     def temperature_callback(self, read_time, temp):
-
         self.last_temp = temp
         self.control.temperature_callback(read_time,
                                           temp,

@@ -45,7 +45,7 @@ class Fan:
 
     def get_mcu(self):
         return self.mcu_fan.get_mcu()
-    def set_speed(self, print_time, value, kickstart_enabled=True):
+    def set_speed(self, print_time, value):
         if value < self.off_below:
             value = 0.
         value = max(0., min(self.max_power, value * self.max_power))
@@ -58,7 +58,6 @@ class Fan:
             elif value == 0 and self.last_fan_value > 0:
                 self.enable_pin.set_digital(print_time, 0)
         if (value and value < self.max_power and self.kick_start_time
-                and kickstart_enabled
                 and (not self.last_fan_value or value - self.last_fan_value > .5)):
             # Run fan at full speed for specified kick_start_time
             self.mcu_fan.set_pwm(print_time, self.max_power)
