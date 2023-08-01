@@ -50,8 +50,9 @@ class ControllerTemperatureFan:
             minval=self.min_temp, maxval=self.max_temp)
         self.target_temp = self.target_temp_conf
         algos = {'watermark': ControlBangBang, 'pid': ControlPID}
-        self.algo = config.getchoice('control', algos)
-        self.control = self.algo(self, config)
+        algo = config.getchoice('control', algos)
+        self.config_control = algo(self, config)
+        self.control = algo(self, config)
         self.next_speed_time = 0.
         self.last_speed_value = 0.
         self.last_on = self.idle_timeout
@@ -91,8 +92,8 @@ class ControllerTemperatureFan:
         reactor.register_timer(self.callback, reactor.monotonic()+PIN_MIN_TIME)
         reactor.register_callback(self._set_control, 5)
     def _set_control(self, print_time):
-        if self.control != self.algo:
-            self.control = self.algo
+        if self.control != self.config_control:
+            self.control = self.config_control
     def set_speed(self, read_time, value):
         if value <= 0.:
             value = 0.
