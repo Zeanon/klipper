@@ -94,6 +94,8 @@ class ControllerTemperatureFan:
     def _enable_kickstart(self, print_time):
         self.kickstart_enabled = True
     def set_speed(self, read_time, value):
+        gcode = self.printer.lookup_object('gcode')
+        gcode.respond_info("%f" % value)
         if value <= 0.:
             value = 0.
         elif value < self.min_speed:
@@ -107,8 +109,6 @@ class ControllerTemperatureFan:
         speed_time = read_time + self.speed_delay
         self.next_speed_time = speed_time + 0.75 * MAX_FAN_TIME
         self.last_speed_value = value
-        gcode = self.printer.lookup_object('gcode')
-        gcode.respond_info("%f" % value)
         self.fan.set_speed(speed_time, value, False)
     def callback(self, eventtime):
         speed = self.idle_speed
