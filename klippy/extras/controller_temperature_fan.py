@@ -50,7 +50,7 @@ class ControllerTemperatureFan:
         self.target_temp = self.target_temp_conf
         algos = {'watermark': ControlBangBang, 'pid': ControlPID}
         algo = config.getchoice('control', algos)
-        self.control = ControlPID
+        self.control = algo(self, config)
         self.next_speed_time = 0.
         self.last_speed_value = 0.
         self.last_on = self.idle_timeout
@@ -87,8 +87,6 @@ class ControllerTemperatureFan:
     def handle_ready(self):
         reactor = self.printer.get_reactor()
         reactor.register_timer(self.callback, reactor.monotonic()+PIN_MIN_TIME)
-        # reactor.register_callback(self._set_algo(),
-        #                           1 + PIN_MIN_TIME)
     def set_speed(self, read_time, value):
         if value <= 0.:
             value = 0.
@@ -128,7 +126,6 @@ class ControllerTemperatureFan:
         self.last_temp = temp
         self.control.temperature_callback(read_time,
                                           temp,
-                                          self.printer.lookup_object('gcode'),
                                           self.controller_speed)
     def get_temp(self, eventtime):
         return self.last_temp, self.target_temp
@@ -188,14 +185,11 @@ class ControlBangBang:
         self.heating = False
     def temperature_callback(self, read_time, temp, speed=0.):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
-        temp_diff = target_temp - temp
-        if self.temperature_fan.reverse:
-            temp_diff = -temp_diff
         if (self.heating
-                and temp_diff >= self.max_delta):
+            and temp >= target_temp+self.max_delta):
             self.heating = False
         elif (not self.heating
-              and temp_diff <= -self.max_delta):
+              and temp <= target_temp-self.max_delta):
             self.heating = True
         tempspeed = 0. if self.heating else self.temperature_fan.get_max_speed()
         finalspeed = max(speed, tempspeed)
@@ -222,14 +216,11 @@ class ControlPID:
         self.prev_temp_time = 0.
         self.prev_temp_deriv = 0.
         self.prev_temp_integ = 0.
-    def temperature_callback(self, read_time, temp, gcode, speed=0.):
+    def temperature_callback(self, read_time, temp, speed=0.):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         time_diff = read_time - self.prev_temp_time
-        # Calculate change of temperature, flip sign if set to reverse
-        if self.temperature_fan.reverse:
-            temp_diff = target_temp - temp
-        else:
-            temp_diff = temp - target_temp
+        # Calculate change of temperature
+        temp_diff = temp - self.prev_temp
         if time_diff >= self.min_deriv_time:
             temp_deriv = temp_diff / time_diff
         else:
