@@ -9,6 +9,10 @@ from . import bus, tmc, tmc2130
 
 TMC_FREQUENCY=12500000.
 
+COMMUNICATION_INTERFACE = {
+    'spi': 'spi', 'uart': 'uart'
+}
+
 Registers = {
     "GCONF":            0x00,
     "GSTAT":            0x01,
@@ -343,8 +347,17 @@ class TMC2240:
     def __init__(self, config):
         # Setup mcu communication
         self.fields = tmc.FieldHelper(Fields, SignedFields, FieldFormatters)
-        self.mcu_tmc = tmc2130.MCU_TMC_SPI(config, Registers, self.fields,
-                                           TMC_FREQUENCY)
+        interface = config.getchoice('interface',
+                                     COMMUNICATION_INTERFACE,
+                                     'spi')
+        if interface == 'spi':
+            # Use SPI bus for communication
+            self.mcu_tmc = tmc2130.MCU_TMC_SPI(config, Registers, self.fields,
+                                               TMC_FREQUENCY)
+        elif interface == 'uart':
+            # use UART for communication
+            self.mcu_tmc = tmc_uart.MCU_TMC_uart(config, Registers, self.fields,
+                                                 3, TMC_FREQUENCY)
         # Allow virtual pins to be created
         tmc.TMCVirtualPinHelper(config, self.mcu_tmc)
         # Register commands

@@ -15,6 +15,10 @@ for details on how to update the configuration.  With this deprecation
 the `RELATIVE_REFERENCE_INDEX` is no longer available as a parameter
 for the `BED_MESH_CALIBRATE` gcode command.
 
+20230611: The `stepper` parameter in command SET_STEPPER_ENABLE has
+been renamed to `steppers`. Now it accepts multiple steppers.
+The `stepper` parameter is deprecated and will be removed in the near future.
+
 20230530: The default canbus frequency in "make menuconfig" is
 now 1000000. If using canbus and using canbus with some other
 frequency is required, then be sure to select "Enable extra low-level

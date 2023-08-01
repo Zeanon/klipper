@@ -18,6 +18,7 @@ class ControllerTemperatureFan:
         self.fan = fan.Fan(config, default_shutdown_speed=1.)
         self.min_temp = config.getfloat('min_temp', minval=KELVIN_TO_CELSIUS)
         self.max_temp = config.getfloat('max_temp', above=self.min_temp)
+        self.reverse = config.getboolean('reverse', False)
         pheaters = self.printer.load_object(config, 'heaters')
         self.sensor = pheaters.setup_sensor(config)
         self.sensor.setup_minmax(self.min_temp, self.max_temp)
@@ -33,7 +34,7 @@ class ControllerTemperatureFan:
                                          minval=0., maxval=1.)
         self.idle_speed = config.getfloat('idle_speed', default=self.fan_speed,
                                           minval=0., maxval=1.)
-        self.idle_timeout = config.getint("idle_timeout", default=30, minval=0)
+        self.idle_timeout = config.getint("idle_timeout", default=30, minval=-1)
 
         self.max_speed_conf = config.getfloat(
             'max_speed', 1., above=0., maxval=1.)
@@ -102,7 +103,7 @@ class ControllerTemperatureFan:
         self.last_speed_value = value
         self.fan.set_speed(speed_time, value)
     def callback(self, eventtime):
-        speed = 0.
+        speed = self.idle_speed
         active = False
         for name in self.stepper_names:
             active |= self.stepper_enable.lookup_enable(name).is_motor_enabled()
@@ -113,9 +114,11 @@ class ControllerTemperatureFan:
         if active:
             self.last_on = 0
             speed = self.fan_speed
-        elif self.last_on < self.idle_timeout:
-            speed = self.idle_speed
-            self.last_on += 1
+        elif self.idle_timeout != -1:
+            if self.last_on >= self.idle_timeout:
+                speed = 0.
+            else:
+                self.last_on += 1
         if speed != self.controller_speed:
             self.controller_speed = speed
         return eventtime + 1.
@@ -182,11 +185,14 @@ class ControlBangBang:
         self.heating = False
     def temperature_callback(self, read_time, temp, speed=0.):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
+        temp_diff = target_temp - temp
+        if self.temperature_fan.reverse:
+            temp_diff = -temp_diff
         if (self.heating
-            and temp >= target_temp+self.max_delta):
+                and temp_diff >= self.max_delta):
             self.heating = False
         elif (not self.heating
-              and temp <= target_temp-self.max_delta):
+              and temp_diff <= -self.max_delta):
             self.heating = True
         tempspeed = 0. if self.heating else self.temperature_fan.get_max_speed()
         finalspeed = max(speed, tempspeed)
@@ -216,8 +222,11 @@ class ControlPID:
     def temperature_callback(self, read_time, temp, speed=0.):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         time_diff = read_time - self.prev_temp_time
-        # Calculate change of temperature
-        temp_diff = temp - self.prev_temp
+        # Calculate change of temperature, flip sign if set to reverse
+        if self.temperature_fan.reverse:
+            temp_diff = target_temp - temp
+        else:
+            temp_diff = temp - target_temp
         if time_diff >= self.min_deriv_time:
             temp_deriv = temp_diff / time_diff
         else:

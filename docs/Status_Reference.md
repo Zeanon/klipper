@@ -255,9 +255,11 @@ is always available):
 - `state`: The current state of the printer as tracked by the
   idle_timeout module. It is one of the following strings: "Idle",
   "Printing", "Ready".
-- `printing_time`: The amount of time (in seconds) the printer has
-  been in the "Printing" state (as tracked by the idle_timeout
-  module).
+- `mcu_startup_unixtime`: The amount of time (in seconds) since the unix epoch
+  at mcu startup.
+- `mcu_uptime`: The amount of time (in seconds) since mcu startup.
+- `last_print_start_time`: Timestamp (relative to mcu startup) of when the last
+  print started.
 
 ## led
 
@@ -406,6 +408,23 @@ The following information is available in
 - `printer["servo <config_name>"].value`: The last setting of the PWM
   pin (a value between 0.0 and 1.0) associated with the servo.
 
+## stepper_*
+
+The following information is available in the `stepper_*`, and
+`manual_stepper some_name`:
+- `mcu_position`: The total number of steps the micro-controller has issued
+  in a positive direction minus the number of steps issued in a negative
+  direction since the micro-controller was last reset. This is the "mcu"
+  position reported by `GET_POSITION`. See the developer documentation of
+  [GET_POSITION output](Code_Overview.md#coordinate-systems) for more
+  information.
+
+If the robot is in motion when the query is issued then the reported value
+includes moves buffered on the micro-controller, but does not include moves
+on the look-ahead queue. One may execute `M400` before evaluating a macro
+that reads `mcu_position` to fully flush the look-ahead and step generation
+code.
+
 ## stepper_enable
 
 The following information is available in the `stepper_enable` object (this
@@ -426,8 +445,9 @@ The following information is available in
 [bme280 config_section_name](Config_Reference.md#bmp280bme280bme680-temperature-sensor),
 [htu21d config_section_name](Config_Reference.md#htu21d-sensor),
 [lm75 config_section_name](Config_Reference.md#lm75-temperature-sensor),
-and
 [temperature_host config_section_name](Config_Reference.md#host-temperature-sensor)
+and
+[temperature_combined config_section_name](Config_Reference.md#combined-temperature-sensor)
 objects:
 - `temperature`: The last read temperature from the sensor.
 - `humidity`, `pressure`, `gas`: The last read values from the sensor
