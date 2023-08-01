@@ -31,7 +31,6 @@ class PrinterHeaterFan:
         speed = 0.
         for heater in self.heaters:
             current_temp, target_temp = heater.get_temp(eventtime)
-            self.printer.lookup_object('gcode').respond_info("%f" % current_temp)
             if ((target_temp or current_temp > self.heater_temp)
                     or (self.last_speed > 0
                         and (target_temp or
