@@ -56,7 +56,7 @@ class ControllerTemperatureFan:
         self.last_on = self.idle_timeout
 
         self.controller_speed = 0.
-        self.first_update = True
+        self.kickstart_enabled = False
         gcode = self.printer.lookup_object('gcode')
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
         self.printer.register_event_handler("klippy:connect",
@@ -88,6 +88,12 @@ class ControllerTemperatureFan:
     def handle_ready(self):
         reactor = self.printer.get_reactor()
         reactor.register_timer(self.callback, reactor.monotonic()+PIN_MIN_TIME)
+        reactor.register_callback(self._enabled_kickstart,
+                                  reactor.monotonic
+                                  + self.fan.kick_start_time
+                                  + PIN_MIN_TIME)
+    def _enabled_kickstart(self):
+        self.kickstart_enabled = True
     def set_speed(self, read_time, value):
         if value <= 0.:
             value = 0.
@@ -102,7 +108,7 @@ class ControllerTemperatureFan:
         speed_time = read_time + self.speed_delay
         self.next_speed_time = speed_time + 0.75 * MAX_FAN_TIME
         self.last_speed_value = value
-        self.fan.set_speed(speed_time, value)
+        self.fan.set_speed(speed_time, value, self.kickstart_enabled)
     def callback(self, eventtime):
         speed = self.idle_speed
         active = False
@@ -124,13 +130,10 @@ class ControllerTemperatureFan:
             self.controller_speed = speed
         return eventtime + 1.
     def temperature_callback(self, read_time, temp):
-        if self.first_update:
-            self.first_update = False
-        else:
-            self.last_temp = temp
-            self.control.temperature_callback(read_time,
-                                              temp,
-                                              self.controller_speed)
+        self.last_temp = temp
+        self.control.temperature_callback(read_time,
+                                          temp,
+                                          self.controller_speed)
     def get_temp(self, eventtime):
         return self.last_temp, self.target_temp
     def get_min_speed(self):
