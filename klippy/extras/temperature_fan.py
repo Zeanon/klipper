@@ -78,7 +78,7 @@ class TemperatureFan:
     def get_max_speed(self):
         return self.max_speed
     def get_status(self, eventtime):
-        status = self.fan.get_status(eventtime)
+        status = {}
         status["temperature"] = round(self.last_temp, 2)
         status["target"] = self.target_temp
         return status
