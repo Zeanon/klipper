@@ -17,7 +17,9 @@ class ControllerTemperatureFan:
         self.name = config.get_name().split()[1]
         self.printer = config.get_printer()
         self.fan = fan.Fan(config, default_shutdown_speed=1.)
-        self.temperature_fan = temperature_fan.TemperatureFan(config, self.fan)
+        self.temperature_fan = temperature_fan.TemperatureFan(config,
+                                                              self.fan,
+                                                              self)
         self.controller_fan = controller_fan.ControllerFan(config, self.fan)
     def set_speed(self, read_time, value):
         value = max(value, self.controller_fan.get_speed(read_time))
