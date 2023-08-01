@@ -215,9 +215,9 @@ class ControlCurve:
         above = [self.temperature_fan.max_temp,
                  self.temperature_fan.get_max_speed()]
         for config_temp in self.points:
-            if config_temp < temp:
+            if config_temp[0] < temp:
                 below = config_temp
-            if config_temp > temp:
+            if config_temp[0] > temp:
                 above = config_temp
                 break
         speed = self.interpolate(below, above, current_temp)
