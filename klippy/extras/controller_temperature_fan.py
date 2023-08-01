@@ -13,6 +13,7 @@ PIN_MIN_TIME = 0.100
 
 class ControllerTemperatureFan:
     def __init__(self, config):
+        self.config = config
         self.name = config.get_name().split()[1]
         self.printer = config.get_printer()
         self.fan = fan.Fan(config, default_shutdown_speed=1.)
@@ -66,7 +67,7 @@ class ControllerTemperatureFan:
             desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
 
     def handle_connect(self):
-        self.control = ControlBangBang
+        self.control = ControlBangBang(self, self.config)
         # Heater lookup
         pheaters = self.printer.lookup_object('heaters')
         if self.heater_names is None:
