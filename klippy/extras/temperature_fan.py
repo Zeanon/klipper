@@ -50,7 +50,7 @@ class TemperatureFan:
             self.cmd_SET_TEMPERATURE_FAN_TARGET,
             desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
 
-    def get_speed_time(self, read_time, value):
+    def set_speed(self, read_time, value):
         if value <= 0.:
             value = 0.
         elif value < self.min_speed:
@@ -64,9 +64,6 @@ class TemperatureFan:
         speed_time = read_time + self.speed_delay
         self.next_speed_time = speed_time + 0.75 * MAX_FAN_TIME
         self.last_speed_value = value
-        return speed_time
-    def set_speed(self, read_time, value):
-        speed_time = self.get_speed_time(read_time, value)
         self.fan.set_speed(speed_time, value)
     def temperature_callback(self, read_time, temp):
         self.last_temp = temp
