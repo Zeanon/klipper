@@ -88,10 +88,10 @@ class ControllerTemperatureFan:
     def handle_ready(self):
         reactor = self.printer.get_reactor()
         reactor.register_timer(self.callback, reactor.monotonic()+PIN_MIN_TIME)
-        reactor.register_callback(self._enabled_kickstart,
+        reactor.register_callback(self._enable_kickstart,
                                   self.fan.kick_start_time
                                   + PIN_MIN_TIME)
-    def _enabled_kickstart(self):
+    def _enable_kickstart(self, print_time):
         self.kickstart_enabled = True
     def set_speed(self, read_time, value):
         if value <= 0.:
