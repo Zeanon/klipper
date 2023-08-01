@@ -51,7 +51,6 @@ class ControllerTemperatureFan:
         algos = {'watermark': ControlBangBang, 'pid': ControlPID}
         self.algo = config.getchoice('control', algos)
         self.control = self.algo
-        self.control = ControlBangBang
         self.next_speed_time = 0.
         self.last_speed_value = 0.
         self.last_on = self.idle_timeout
@@ -67,6 +66,7 @@ class ControllerTemperatureFan:
             desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
 
     def handle_connect(self):
+        self.control = ControlBangBang
         # Heater lookup
         pheaters = self.printer.lookup_object('heaters')
         if self.heater_names is None:
