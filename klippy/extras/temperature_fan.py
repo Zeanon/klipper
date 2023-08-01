@@ -39,7 +39,9 @@ class TemperatureFan:
             'target_temp', 40. if self.max_temp > 40. else self.max_temp,
             minval=self.min_temp, maxval=self.max_temp)
         self.target_temp = self.target_temp_conf
-        algos = {'watermark': ControlBangBang, 'pid': ControlPID}
+        algos = {'watermark': ControlBangBang,
+                 'pid': ControlPID,
+                 'curve': ControlCurve}
         algo = config.getchoice('control', algos)
         self.control = algo(self, config)
         self.next_speed_time = 0.
@@ -190,6 +192,45 @@ class ControlPID:
         self.prev_temp_deriv = temp_deriv
         if co == bounded_co:
             self.prev_temp_integ = temp_integ
+
+class ControlCurve:
+    def __init__(self, temperature_fan, config):
+        self.temperature_fan = temperature_fan
+        self.temps = []
+        n = 1
+        current_temp = config.getfloatlist('temperature_%d' % n, None)
+        while current_temp is not None:
+            self.temps.append(current_temp)
+            n += 1
+            current_temp = config.getfloatlist('temperature_%d' % n, None)
+        if len(self.temps) < 2:
+            raise temperature_fan.printer.config_error(
+                "At least two temperatures need to be defined for curve in "
+                "temperature_fan."
+            )
+    def temperature_callback(self, read_time, temp):
+        current_temp, target_temp = self.temperature_fan.get_temp(read_time)
+        below = [self.temperature_fan.min_temp,
+                 self.temperature_fan.get_min_speed()]
+        above = [self.temperature_fan.max_temp,
+                 self.temperature_fan.get_max_speed()]
+        for config_temp in self.temps:
+            if config_temp < temp:
+                below = config_temp
+            if config_temp > temp:
+                above = config_temp
+                break
+        speed = self.interpolate(below, above, current_temp)
+        self.temperature_fan.set_speed(read_time, speed)
+
+    def interpolate(self,
+                    below,
+                    above,
+                    temp):
+        return (((below[1] * (above[0] - temp))
+                 + (above[1] * (temp - below[0])))
+                / (above[0] - below[0]))
+
 
 def load_config_prefix(config):
     return TemperatureFan(config)
