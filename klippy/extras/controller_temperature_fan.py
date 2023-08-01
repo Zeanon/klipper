@@ -108,7 +108,7 @@ class ControllerTemperatureFan:
         self.next_speed_time = speed_time + 0.75 * MAX_FAN_TIME
         self.last_speed_value = value
         gcode = self.printer.lookup_object('gcode')
-        gcode.repond_info("%f" % value)
+        gcode.respond_info("%f" % value)
         self.fan.set_speed(speed_time, value, False)
     def callback(self, eventtime):
         speed = self.idle_speed
