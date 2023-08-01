@@ -43,7 +43,9 @@ class TemperatureFan:
                  'pid': ControlPID,
                  'curve': ControlCurve}
         algo = config.getchoice('control', algos)
-        self.control = algo(self if super is None else super, config)
+        self.control = algo(self,
+                            config,
+                            self if super is None else super)
         self.next_speed_time = 0.
         self.last_speed_value = 0.
         gcode = self.printer.lookup_object('gcode')
@@ -121,8 +123,9 @@ class TemperatureFan:
 ######################################################################
 
 class ControlBangBang:
-    def __init__(self, temperature_fan, config):
+    def __init__(self, temperature_fan, config, controlled_fan):
         self.temperature_fan = temperature_fan
+        self.controlled_fan = controlled_fan
         self.max_delta = config.getfloat('max_delta', 2.0, above=0.)
         self.heating = False
     def temperature_callback(self, read_time, temp):
@@ -137,9 +140,9 @@ class ControlBangBang:
               and temp_diff <= -self.max_delta):
             self.heating = True
         if self.heating:
-            self.temperature_fan.set_speed(read_time, 0.)
+            self.controlled_fan.set_speed(read_time, 0.)
         else:
-            self.temperature_fan.set_speed(read_time,
+            self.controlled_fan.set_speed(read_time,
                                            self.temperature_fan.get_max_speed())
 
 ######################################################################
@@ -150,8 +153,9 @@ PID_SETTLE_DELTA = 1.
 PID_SETTLE_SLOPE = .1
 
 class ControlPID:
-    def __init__(self, temperature_fan, config):
+    def __init__(self, temperature_fan, config, controlled_fan):
         self.temperature_fan = temperature_fan
+        self.controlled_fan = controlled_fan
         self.Kp = config.getfloat('pid_Kp') / PID_PARAM_BASE
         self.Ki = config.getfloat('pid_Ki') / PID_PARAM_BASE
         self.Kd = config.getfloat('pid_Kd') / PID_PARAM_BASE
@@ -183,7 +187,7 @@ class ControlPID:
         # Calculate output
         co = self.Kp*temp_err + self.Ki*temp_integ - self.Kd*temp_deriv
         bounded_co = max(0., min(self.temperature_fan.get_max_speed(), co))
-        self.temperature_fan.set_speed(
+        self.controlled_fan.set_speed(
             read_time, max(self.temperature_fan.get_min_speed(),
                            self.temperature_fan.get_max_speed() - bounded_co))
         # Store state for next measurement
@@ -193,9 +197,11 @@ class ControlPID:
         if co == bounded_co:
             self.prev_temp_integ = temp_integ
 
+
 class ControlCurve:
-    def __init__(self, temperature_fan, config):
+    def __init__(self, temperature_fan, config, controlled_fan):
         self.temperature_fan = temperature_fan
+        self.controlled_fan = controlled_fan
         self.points = []
         for i in range(1, 99):
             current_point = config.getfloatlist('point_%d' % i, None)
@@ -246,7 +252,7 @@ class ControlCurve:
             else:
                 above = config_temp
                 break
-        self.temperature_fan.set_speed(read_time, self.interpolate(below,
+        self.controlled_fan.set_speed(read_time, self.interpolate(below,
                                                                    above,
                                                                    temp))
     def interpolate(self,
