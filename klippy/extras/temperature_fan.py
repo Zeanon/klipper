@@ -11,10 +11,13 @@ AMBIENT_TEMP = 25.
 PID_PARAM_BASE = 255.
 
 class TemperatureFan:
-    def __init__(self, config):
+    def __init__(self, config, defined_fan=None):
         self.name = config.get_name().split()[1]
         self.printer = config.get_printer()
-        self.fan = fan.Fan(config, default_shutdown_speed=1.)
+        if defined_fan is None:
+            self.fan = fan.Fan(config, default_shutdown_speed=1.)
+        else:
+            self.fan = defined_fan
         self.min_temp = config.getfloat('min_temp', minval=KELVIN_TO_CELSIUS)
         self.max_temp = config.getfloat('max_temp', above=self.min_temp)
         self.reverse = config.getboolean('reverse', False)
