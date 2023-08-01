@@ -11,7 +11,7 @@ AMBIENT_TEMP = 25.
 PID_PARAM_BASE = 255.
 
 class TemperatureFan:
-    def __init__(self, config, defined_fan=None):
+    def __init__(self, config, defined_fan=None, super=None):
         self.name = config.get_name().split()[1]
         self.printer = config.get_printer()
         if defined_fan is None:
@@ -43,7 +43,7 @@ class TemperatureFan:
                  'pid': ControlPID,
                  'curve': ControlCurve}
         algo = config.getchoice('control', algos)
-        self.control = algo(self, config)
+        self.control = algo(self if super is None else super, config)
         self.next_speed_time = 0.
         self.last_speed_value = 0.
         gcode = self.printer.lookup_object('gcode')
