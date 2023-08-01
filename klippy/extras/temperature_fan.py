@@ -196,14 +196,14 @@ class ControlPID:
 class ControlCurve:
     def __init__(self, temperature_fan, config):
         self.temperature_fan = temperature_fan
-        self.temps = []
+        self.points = []
         n = 1
-        current_temp = config.getfloatlist('temperature_%d' % n, None)
-        while current_temp is not None:
-            self.temps.append(current_temp)
+        current_point = config.getfloatlist('point_%d' % n, None)
+        while current_point is not None:
+            self.points.append(current_point)
             n += 1
-            current_temp = config.getfloatlist('temperature_%d' % n, None)
-        if len(self.temps) < 2:
+            current_point = config.getfloatlist('temperature_%d' % n, None)
+        if len(self.points) < 2:
             raise temperature_fan.printer.config_error(
                 "At least two temperatures need to be defined for curve in "
                 "temperature_fan."
@@ -214,7 +214,7 @@ class ControlCurve:
                  self.temperature_fan.get_min_speed()]
         above = [self.temperature_fan.max_temp,
                  self.temperature_fan.get_max_speed()]
-        for config_temp in self.temps:
+        for config_temp in self.points:
             if config_temp < temp:
                 below = config_temp
             if config_temp > temp:
