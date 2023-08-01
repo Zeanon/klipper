@@ -66,7 +66,6 @@ class ControllerTemperatureFan:
             desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
 
     def handle_connect(self):
-        self.control = ControlBangBang
         # Heater lookup
         pheaters = self.printer.lookup_object('heaters')
         if self.heater_names is None:
