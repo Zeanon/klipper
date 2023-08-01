@@ -89,8 +89,7 @@ class ControllerTemperatureFan:
         reactor = self.printer.get_reactor()
         reactor.register_timer(self.callback, reactor.monotonic()+PIN_MIN_TIME)
         reactor.register_callback(self._enabled_kickstart,
-                                  reactor.monotonic
-                                  + self.fan.kick_start_time
+                                  self.fan.kick_start_time
                                   + PIN_MIN_TIME)
     def _enabled_kickstart(self):
         self.kickstart_enabled = True
