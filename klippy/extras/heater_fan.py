@@ -37,6 +37,8 @@ class PrinterHeaterFan:
                              current_temp > self.heater_temp
                              - self.heater_temp_off_offset))):
                 speed = self.fan_speed
+                self.printer.lookup_object('gcode').respond_info("%f" % speed)
+
         if speed != self.last_speed:
             self.last_speed = speed
             curtime = self.printer.get_reactor().monotonic()
