@@ -214,11 +214,11 @@ class ControlCurve:
                 raise temperature_fan.printer.config_error(
                     "Temperature in point can not fall below min_temp."
                 )
-            if current_point[1] > temperature_fan.get_max_speed:
+            if current_point[1] > temperature_fan.get_max_speed():
                 raise temperature_fan.printer.config_error(
                     "Speed in point can not exceed max_speed."
                 )
-            if current_point[1] < temperature_fan.get_min_speed:
+            if current_point[1] < temperature_fan.get_min_speed():
                 raise temperature_fan.printer.config_error(
                     "Speed in point can not fall below min_speed."
                 )
