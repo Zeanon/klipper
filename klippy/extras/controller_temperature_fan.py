@@ -247,7 +247,6 @@ class ControlPID:
         bounded_co = max(0., min(self.temperature_fan.get_max_speed(), co))
         tempspeed = max(self.temperature_fan.get_min_speed(),
                         self.temperature_fan.get_max_speed() - bounded_co)
-        gcode.respond_info("%f" % tempspeed)
         finalspeed = max(speed, tempspeed)
         self.temperature_fan.set_speed(read_time, finalspeed)
         # Store state for next measurement
