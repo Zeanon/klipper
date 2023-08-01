@@ -8,11 +8,13 @@ from . import fan
 PIN_MIN_TIME = 0.100
 
 class ControllerFan:
-    def __init__(self, config):
+    def __init__(self, config, standalone=True):
         self.printer = config.get_printer()
-        self.printer.register_event_handler("klippy:ready", self.handle_ready)
         self.printer.register_event_handler("klippy:connect",
                                             self.handle_connect)
+        if standalone:
+            self.printer.register_event_handler("klippy:ready",
+                                                self.handle_ready)
         self.stepper_names = config.getlist("stepper", None)
         self.stepper_enable = self.printer.load_object(config, 'stepper_enable')
         self.printer.load_object(config, 'heaters')
@@ -23,13 +25,18 @@ class ControllerFan:
         self.idle_speed = config.getfloat(
             'idle_speed', default=self.fan_speed, minval=0., maxval=1.)
         self.idle_timeout = config.getint("idle_timeout", default=30, minval=-1)
-        self.heater_names = config.getlist("heater", ("extruder",))
+        self.heater_names = config.getlist("heater", None)
         self.last_on = self.idle_timeout
         self.last_speed = 0.
     def handle_connect(self):
         # Heater lookup
         pheaters = self.printer.lookup_object('heaters')
-        self.heaters = [pheaters.lookup_heater(n) for n in self.heater_names]
+        if self.heater_names is None:
+            self.heaters = [pheaters.lookup_heater(n) for n in
+                            pheaters.available_heaters]
+        else:
+            self.heaters = [pheaters.lookup_heater(n) for n in
+                            self.heater_names]
         # Stepper lookup
         all_steppers = self.stepper_enable.get_steppers()
         if self.stepper_names is None:
@@ -45,7 +52,7 @@ class ControllerFan:
         reactor.register_timer(self.callback, reactor.monotonic()+PIN_MIN_TIME)
     def get_status(self, eventtime):
         return self.fan.get_status(eventtime)
-    def callback(self, eventtime):
+    def get_speed(self, eventtime):
         speed = self.idle_speed
         active = False
         for name in self.stepper_names:
@@ -62,6 +69,9 @@ class ControllerFan:
                 speed = 0.
             else:
                 self.last_on += 1
+        return speed
+    def callback(self, eventtime):
+        speed = self.get_speed(eventtime)
         if speed != self.last_speed:
             self.last_speed = speed
             curtime = self.printer.get_reactor().monotonic()
