@@ -242,6 +242,15 @@ class ControlCurve:
                 "At least two points need to be defined for curve in "
                 "temperature_fan."
             )
+        self.points.sort(key=lambda p: p[0])
+        last_point = [temperature_fan.min_temp, temperature_fan.get_min_speed()]
+        for point in self.points:
+            if point[1] < last_point[1]:
+                raise temperature_fan.printer.config_error(
+                    "Points with higher temperatures have to have higher or "
+                    "equal speed than points with lower temperatures."
+                )
+            last_point = point
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         if temp > target_temp:
