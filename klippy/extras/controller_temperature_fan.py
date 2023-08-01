@@ -50,7 +50,7 @@ class ControllerTemperatureFan:
         self.target_temp = self.target_temp_conf
         algos = {'watermark': ControlBangBang, 'pid': ControlPID}
         algo = config.getchoice('control', algos)
-        self.control = algo
+        self.control = ControlPID
         self.next_speed_time = 0.
         self.last_speed_value = 0.
         self.last_on = self.idle_timeout
