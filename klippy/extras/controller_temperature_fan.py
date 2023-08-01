@@ -56,12 +56,17 @@ class ControllerTemperatureFan:
         self.last_on = self.idle_timeout
 
         self.controller_speed = 0.
+        self.first_update = True
         gcode = self.printer.lookup_object('gcode')
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
         self.printer.register_event_handler("klippy:connect",
                                             self.handle_connect)
         gcode.register_mux_command(
             "SET_TEMPERATURE_FAN_TARGET", "TEMPERATURE_FAN", self.name,
+            self.cmd_SET_TEMPERATURE_FAN_TARGET,
+            desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
+        gcode.register_mux_command(
+            "SET_TEMPERATURE_FAN_TARGET", "FAN", self.name,
             self.cmd_SET_TEMPERATURE_FAN_TARGET,
             desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
 
@@ -123,10 +128,13 @@ class ControllerTemperatureFan:
             self.controller_speed = speed
         return eventtime + 1.
     def temperature_callback(self, read_time, temp):
-        self.last_temp = temp
-        self.control.temperature_callback(read_time,
-                                          temp,
-                                          self.controller_speed)
+        if self.first_update:
+            self.first_update = False
+        else:
+            self.last_temp = temp
+            self.control.temperature_callback(read_time,
+                                              temp,
+                                              self.controller_speed)
     def get_temp(self, eventtime):
         return self.last_temp, self.target_temp
     def get_min_speed(self):

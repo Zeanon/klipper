@@ -41,9 +41,14 @@ class TemperatureFan:
         self.control = algo(self, config)
         self.next_speed_time = 0.
         self.last_speed_value = 0.
+        self.first_update = True
         gcode = self.printer.lookup_object('gcode')
         gcode.register_mux_command(
             "SET_TEMPERATURE_FAN_TARGET", "TEMPERATURE_FAN", self.name,
+            self.cmd_SET_TEMPERATURE_FAN_TARGET,
+            desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
+        gcode.register_mux_command(
+            "SET_TEMPERATURE_FAN_TARGET", "FAN", self.name,
             self.cmd_SET_TEMPERATURE_FAN_TARGET,
             desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
 
@@ -63,8 +68,11 @@ class TemperatureFan:
         self.last_speed_value = value
         self.fan.set_speed(speed_time, value)
     def temperature_callback(self, read_time, temp):
-        self.last_temp = temp
-        self.control.temperature_callback(read_time, temp)
+        if self.first_update:
+            self.first_update = False
+        else:
+            self.last_temp = temp
+            self.control.temperature_callback(read_time, temp)
     def get_temp(self, eventtime):
         return self.last_temp, self.target_temp
     def get_min_speed(self):
