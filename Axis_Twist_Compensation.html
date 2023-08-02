@@ -1391,8 +1391,8 @@
 
 <h1 id="axis-twist-compensation">Axis Twist Compensation<a class="headerlink" href="#axis-twist-compensation" title="Permanent link">&para;</a></h1>
 <p>This document describes the [axis_twist_compensation] module.</p>
-<p>Some printers exhibit different Z offsets depending on the X position of the
-probed point, and this is independent of the bed being not flat or not trammed.
+<p>Some printers may have a small twist in their X rail which can skew the results
+of a probe attached to the X carriage.
 This is common in printers with designs like the Prusa MK3, Sovol SV06 etc and is
 further described under <a href="Probe_Calibrate.html#location-bias-check">probe location
 bias</a>. It may result in
@@ -1407,16 +1407,14 @@ first use mechanical means to fix it prior to applying software corrections.</p>
 <blockquote>
 <p><strong>Tip:</strong> Make sure the <a href="Config_Reference.html#probe">probe X and Y offsets</a> are
 correctly set as they greatly influence calibration.</p>
-<p><strong>Tip:</strong> A feeler gauge is recommended in place of paper for more accurate
-measurements</p>
 </blockquote>
 <ol>
 <li>After setting up the [axis_twist_compensation] module,
 perform <code>AXIS_TWIST_COMPENSATION_CALIBRATE</code>
 * The calibration wizard will prompt you to measure the probe Z offset at a few
 points along the bed
-* The calibration defaults to 3 points but you can use the option <code>N_POINTS=</code> to
-use a different number.</li>
+* The calibration defaults to 3 points but you can use the option
+<code>SAMPLE_COUNT=</code> to use a different number.</li>
 <li><a href="Probe_Calibrate.html#calibrating-probe-z-offset">Adjust your Z offset</a></li>
 <li>Perform automatic/probe-based bed tramming operations, such as
 <a href="G-Codes.html#screws_tilt_adjust">Screws Tilt Adjust</a>,
@@ -1428,9 +1426,6 @@ use a different number.</li>
 <blockquote>
 <p><strong>Tip:</strong> Bed temperature and nozzle temperature and size do not seem to have
 an influence to the calibration process.</p>
-<p><strong>Tip:</strong> Disable the Axis twist compensation using <code>AXIS_TWIST_PROFILE_CLEAR</code>
-and perform Screws Tilt Adjust/Z Tilt Adjust/Bed Mesh to compare the
-difference</p>
 </blockquote>
 <h2 id="axis_twist_compensation-setup-and-commands">[axis_twist_compensation] setup and commands<a class="headerlink" href="#axis_twist_compensation-setup-and-commands" title="Permanent link">&para;</a></h2>
 <p>Configuration options for [axis_twist_compensation] can be found in the
