@@ -257,7 +257,7 @@ class ControlCurve:
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         if temp < self.last_temp:
             temp = temp + self.hysteresis
-        self.last_temp = current_temp
+        self.last_temp = temp
         if temp > target_temp:
             self.temperature_fan.set_speed(read_time,
                                            self.temperature_fan.get_max_speed())
