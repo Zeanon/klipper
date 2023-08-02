@@ -3,6 +3,8 @@
 # Copyright (C) 2016-2020  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
+import statistics
+
 from . import fan
 
 KELVIN_TO_CELSIUS = -273.15
@@ -262,7 +264,7 @@ class ControlCurve:
         for i in range(1, len(self.stored_temps)):
             self.stored_temps[i] = self.stored_temps[i-1]
         self.stored_temps[0] = temp
-        temp = sum(self.stored_temps) / len(self.stored_temps)
+        temp = statistics.median(self.stored_temps)
         if temp < self.last_temp:
             temp = temp + self.hysteresis
         self.last_temp = current_temp
