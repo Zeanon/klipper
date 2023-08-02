@@ -246,6 +246,11 @@ object is available if any heater is defined):
   temperature sensors by their full config section names,
   e.g. `["extruder", "heater_bed", "heater_generic my_custom_heater",
   "temperature_sensor electronics_temp"]`.
+- `available_monitors`: Returns a list of all currently available
+  temperature monitors by their full config section names,
+  e.g. `["tmc2240 stepper_x"]`.  While a temperature sensor is always
+  available to read, a temperature monitor may not be available and
+  will return null in such case.
 
 ## idle_timeout
 
@@ -389,6 +394,8 @@ object:
 - `error`: Returns True if the most recent `SCREWS_TILT_CALCULATE`
   command included the `MAX_DEVIATION` parameter and any of the probed
   screw points exceeded the specified `MAX_DEVIATION`.
+- `max_deviation`: Return the last `MAX_DEVIATION` value of the most
+  recent `SCREWS_TILT_CALCULATE` command.
 - `results["<screw>"]`: A dictionary containing the following keys:
   - `z`: The measured Z height of the screw location.
   - `sign`: A string specifying the direction to turn to screw for the
@@ -522,10 +529,11 @@ The following information is available in the `toolhead` object
 
 The following information is available in
 [dual_carriage](Config_Reference.md#dual_carriage)
-on a hybrid_corexy or hybrid_corexz robot
-- `mode`: The current mode. Possible values are: "FULL_CONTROL"
-- `active_carriage`: The current active carriage.
-Possible values are: "CARRIAGE_0", "CARRIAGE_1"
+on a cartesian, hybrid_corexy or hybrid_corexz robot
+- `carriage_0`: The mode of the carriage 0. Possible values are:
+  "INACTIVE" and "PRIMARY".
+- `carriage_1`: The mode of the carriage 1. Possible values are:
+  "INACTIVE", "PRIMARY", "COPY", and "MIRROR".
 
 ## virtual_sdcard
 
