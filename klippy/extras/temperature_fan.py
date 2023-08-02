@@ -254,7 +254,7 @@ class ControlCurve:
                 )
             last_point = point
         self.hysteresis = config.getfloat('hysteresis', 0.0)
-        self.smooth_readings = config.getint('smooth_readings', 100, minval=1)
+        self.smooth_readings = config.getint('smooth_readings', 10, minval=1)
         self.stored_temps = []
         for i in range(self.smooth_readings):
             self.stored_temps.append(0.)
