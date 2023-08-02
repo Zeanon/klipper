@@ -252,17 +252,17 @@ class ControlCurve:
                 )
             last_point = point
         self.hysteresis = config.getfloat('hyteresis', 0.0)
-        self.smooth = config.getint('smooth_readings', 3, minval=1)
-        self.smoothed_readings = []
-        for i in range(self.smooth):
-            self.smoothed_readings.append(0.)
+        self.smooth_readings = config.getint('smooth_readings', 3, minval=1)
+        self.stored_temps = []
+        for i in range(self.smooth_readings):
+            self.stored_temps.append(0.)
         self.last_temp = 0.
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
-        for i in range(1, len(self.smooth)):
-            self.smooth[i] = self.smooth[i-1]
-        self.smooth[0] = temp
-        temp = sum(self.smooth) / len(self.smooth)
+        for i in range(1, len(self.stored_temps)):
+            self.stored_temps[i] = self.stored_temps[i-1]
+        self.stored_temps[0] = temp
+        temp = sum(self.stored_temps) / len(self.stored_temps)
         if temp < self.last_temp:
             temp = temp + self.hysteresis
         self.last_temp = current_temp
