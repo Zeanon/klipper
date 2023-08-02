@@ -259,7 +259,6 @@ class ControlCurve:
         for i in range(self.smooth_readings):
             self.stored_temps.append(0.)
         self.last_temp = 0.
-        self.n = 0
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         temp = self.smooth_temps(temp)
@@ -277,8 +276,6 @@ class ControlCurve:
             else:
                 above = config_temp
                 break
-        # self.controlled_fan.printer.lookup_object('gcode').respond_info("%d" % self.n)
-        self.n += 1
         self.controlled_fan.set_speed(read_time, self.interpolate(below,
                                                                   above,
                                                                   temp))
