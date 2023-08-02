@@ -145,7 +145,7 @@ class ControlBangBang:
             self.controlled_fan.set_speed(read_time, 0.)
         else:
             self.controlled_fan.set_speed(read_time,
-                                           self.temperature_fan.get_max_speed())
+                                          self.temperature_fan.get_max_speed())
 
 ######################################################################
 # Proportional Integral Derivative (PID) control algo
@@ -251,8 +251,13 @@ class ControlCurve:
                     "equal speed than points with lower temperatures."
                 )
             last_point = point
+        self.hysteresis = config.getfloat('hyteresis', 5.0)
+        self.last_temp = 0.
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
+        if temp < self.last_temp:
+            temp = temp + self.hysteresis
+        self.last_temp = current_temp
         if temp > target_temp:
             self.temperature_fan.set_speed(read_time,
                                            self.temperature_fan.get_max_speed())
