@@ -254,20 +254,15 @@ class ControlCurve:
                 )
             last_point = point
         self.hysteresis = config.getfloat('hysteresis', 0.0)
-        self.smooth_readings = config.getint('smooth_readings', 30, minval=1)
+        self.smooth_readings = config.getint('smooth_readings', 100, minval=1)
         self.stored_temps = []
         for i in range(self.smooth_readings):
             self.stored_temps.append(0.)
         self.last_temp = 0.
+        self.n = 0
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
-        for i in range(1, len(self.stored_temps)):
-            self.stored_temps[i] = self.stored_temps[i-1]
-        self.stored_temps[0] = temp
-        temp = statistics.median(self.stored_temps)
-        if self.last_temp - self.hysteresis < temp < self.last_temp:
-            temp = self.last_temp
-        self.last_temp = current_temp
+        temp = self.smooth_temps(temp)
         if temp > target_temp:
             self.temperature_fan.set_speed(read_time,
                                            self.temperature_fan.get_max_speed())
@@ -282,6 +277,8 @@ class ControlCurve:
             else:
                 above = config_temp
                 break
+        self.controlled_fan.printer.load_object('gcode').respond_info("%d" % self.n)
+        self.n += 1
         self.controlled_fan.set_speed(read_time, self.interpolate(below,
                                                                   above,
                                                                   temp))
@@ -289,6 +286,16 @@ class ControlCurve:
         return (((below[1] * (above[0] - temp))
                  + (above[1] * (temp - below[0])))
                 / (above[0] - below[0]))
+    def smooth_temps(self, current_temp):
+        if self.last_temp - self.hysteresis < current_temp < self.last_temp:
+            temp = self.last_temp
+        else:
+            temp = current_temp
+        self.last_temp = current_temp
+        for i in range(1, len(self.stored_temps)):
+            self.stored_temps[i] = self.stored_temps[i-1]
+        self.stored_temps[0] = temp
+        return statistics.median(self.stored_temps)
 
 
 def load_config_prefix(config):
