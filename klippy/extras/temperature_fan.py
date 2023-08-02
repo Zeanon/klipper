@@ -251,13 +251,21 @@ class ControlCurve:
                     "equal speed than points with lower temperatures."
                 )
             last_point = point
-        self.hysteresis = config.getfloat('hyteresis', 5.0)
+        self.hysteresis = config.getfloat('hyteresis', 0.0)
+        self.smooth = config.getint('smooth_readings', 3, minval=1)
+        self.smoothed_readings = []
+        for i in range(self.smooth):
+            self.smoothed_readings.append(0.)
         self.last_temp = 0.
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
+        for i in range(1, len(self.smooth)):
+            self.smooth[i] = self.smooth[i-1]
+        self.smooth[0] = temp
+        temp = sum(self.smooth) / len(self.smooth)
         if temp < self.last_temp:
             temp = temp + self.hysteresis
-        self.last_temp = temp
+        self.last_temp = current_temp
         if temp > target_temp:
             self.temperature_fan.set_speed(read_time,
                                            self.temperature_fan.get_max_speed())
