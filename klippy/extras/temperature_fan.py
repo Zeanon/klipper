@@ -254,7 +254,7 @@ class ControlCurve:
                 )
             last_point = point
         self.hysteresis = config.getfloat('hyteresis', 0.0)
-        self.smooth_readings = config.getint('smooth_readings', 3, minval=1)
+        self.smooth_readings = config.getint('smooth_readings', 30, minval=1)
         self.stored_temps = []
         for i in range(self.smooth_readings):
             self.stored_temps.append(0.)
@@ -265,8 +265,8 @@ class ControlCurve:
             self.stored_temps[i] = self.stored_temps[i-1]
         self.stored_temps[0] = temp
         temp = statistics.median(self.stored_temps)
-        if temp < self.last_temp:
-            temp = temp + self.hysteresis
+        if self.last_temp - self.hysteresis < temp < self.last_temp:
+            temp = self.last_temp
         self.last_temp = current_temp
         if temp > target_temp:
             self.temperature_fan.set_speed(read_time,
