@@ -2,8 +2,8 @@
 
 This document describes the [axis_twist_compensation] module.
 
-Some printers exhibit different Z offsets depending on the X position of the
-probed point, and this is independent of the bed being not flat or not trammed.
+Some printers may have a small twist in their X rail which can skew the results
+of a probe attached to the X carriage.
 This is common in printers with designs like the Prusa MK3, Sovol SV06 etc and is
 further described under [probe location
 bias](Probe_Calibrate.md#location-bias-check). It may result in
@@ -21,15 +21,12 @@ first use mechanical means to fix it prior to applying software corrections.
 > **Tip:** Make sure the [probe X and Y offsets](Config_Reference.md#probe) are
 > correctly set as they greatly influence calibration.
 
-> **Tip:** A feeler gauge is recommended in place of paper for more accurate
-> measurements
-
 1. After setting up the [axis_twist_compensation] module,
 perform `AXIS_TWIST_COMPENSATION_CALIBRATE`
 * The calibration wizard will prompt you to measure the probe Z offset at a few
 points along the bed
-* The calibration defaults to 3 points but you can use the option `N_POINTS=` to
-use a different number.
+* The calibration defaults to 3 points but you can use the option
+`SAMPLE_COUNT=` to use a different number.
 2. [Adjust your Z offset](Probe_Calibrate.md#calibrating-probe-z-offset)
 3. Perform automatic/probe-based bed tramming operations, such as
 [Screws Tilt Adjust](G-Codes.md#screws_tilt_adjust),
@@ -40,10 +37,6 @@ use a different number.
 
 > **Tip:** Bed temperature and nozzle temperature and size do not seem to have
 > an influence to the calibration process.
-
-> **Tip:** Disable the Axis twist compensation using `AXIS_TWIST_PROFILE_CLEAR`
-> and perform Screws Tilt Adjust/Z Tilt Adjust/Bed Mesh to compare the
-> difference
 
 ## [axis_twist_compensation] setup and commands
 
