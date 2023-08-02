@@ -253,7 +253,7 @@ class ControlCurve:
                     "equal speed than points with lower temperatures."
                 )
             last_point = point
-        self.hysteresis = config.getfloat('hyteresis', 0.0)
+        self.hysteresis = config.getfloat('hysteresis', 0.0)
         self.smooth_readings = config.getint('smooth_readings', 30, minval=1)
         self.stored_temps = []
         for i in range(self.smooth_readings):
