@@ -277,7 +277,7 @@ class ControlCurve:
             else:
                 above = config_temp
                 break
-        self.controlled_fan.printer.load_object('gcode').respond_info("%d" % self.n)
+        self.controlled_fan.printer.lookup_object('gcode').respond_info("%d" % self.n)
         self.n += 1
         self.controlled_fan.set_speed(read_time, self.interpolate(below,
                                                                   above,
