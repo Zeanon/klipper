@@ -212,7 +212,7 @@ class ControlCurve:
                                else controlled_fan)
         self.points = []
         for i in range(1, 99):
-            current_point = config.getfloatlist('point_%d' % i, None)
+            current_point = config.getfloatlist('point%d' % i, None)
             if current_point is None:
                 break
             if len(current_point) != 2:
