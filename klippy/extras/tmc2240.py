@@ -5,13 +5,9 @@
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import math, logging
-from . import bus, tmc, tmc2130, tmc_uart
+from . import bus, tmc, tmc2130
 
 TMC_FREQUENCY=12500000.
-
-COMMUNICATION_INTERFACE = {
-    'spi': 'spi', 'uart': 'uart'
-}
 
 Registers = {
     "GCONF":            0x00,
@@ -347,17 +343,8 @@ class TMC2240:
     def __init__(self, config):
         # Setup mcu communication
         self.fields = tmc.FieldHelper(Fields, SignedFields, FieldFormatters)
-        interface = config.getchoice('interface',
-                                     COMMUNICATION_INTERFACE,
-                                     'spi')
-        if interface == 'spi':
-            # Use SPI bus for communication
-            self.mcu_tmc = tmc2130.MCU_TMC_SPI(config, Registers, self.fields,
-                                               TMC_FREQUENCY)
-        elif interface == 'uart':
-            # use UART for communication
-            self.mcu_tmc = tmc_uart.MCU_TMC_uart(config, Registers, self.fields,
-                                                 3, TMC_FREQUENCY)
+        self.mcu_tmc = tmc2130.MCU_TMC_SPI(config, Registers, self.fields,
+                                           TMC_FREQUENCY)
         # Allow virtual pins to be created
         tmc.TMCVirtualPinHelper(config, self.mcu_tmc)
         # Register commands
@@ -368,17 +355,13 @@ class TMC2240:
         self.get_temperature = cmdhelper.get_temperature
         self.get_mcu = cmdhelper.get_mcu
         self.get_status = cmdhelper.get_status
-        self.printer = config.get_printer()
-        self.config = config
         # Setup basic register values
-        self.fields.set_field("multistep_filt", True)
         tmc.TMCWaveTableHelper(config, self.mcu_tmc)
         self.fields.set_config_field(config, "offset_sin90", 0)
-        tmc.TMCStealthchopHelper(config, self.mcu_tmc)
-        tmc.TMCVcoolthrsHelper(config, self.mcu_tmc)
-        tmc.TMCVhighHelper(config, self.mcu_tmc)
-        # Allow other registers to be set from the config
+        tmc.TMCStealthchopHelper(config, self.mcu_tmc, TMC_FREQUENCY)
         set_config_field = self.fields.set_config_field
+        #   GCONF
+        set_config_field(config, "multistep_filt", True)
         #   CHOPCONF
         set_config_field(config, "toff", 3)
         set_config_field(config, "hstrt", 5)
@@ -416,10 +399,6 @@ class TMC2240:
         set_config_field(config, "tpowerdown", 10)
         #   SG4_THRS
         set_config_field(config, "sg4_angle_offset", 1)
-        self.printer.register_event_handler("klippy:ready",
-                                            self._handle_ready())
-    def _handle_ready(self):
-        logging.info(self.config.get_name())
 
 def load_config_prefix(config):
     return TMC2240(config)
