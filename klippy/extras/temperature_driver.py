@@ -18,7 +18,7 @@ class PrinterTemperatureDriver:
         self.sample_timer = self.reactor.register_timer(
             self._sample_driver_temperature)
 
-        self.printer.register_event_handler("klippy:ready",
+        self.printer.register_event_handler("klippy:connect",
                                             self.handle_connect)
 
     def handle_connect(self):
