@@ -368,7 +368,8 @@ class TMC2240:
         self.get_temperature = cmdhelper.get_temperature
         self.get_mcu = cmdhelper.get_mcu
         self.get_status = cmdhelper.get_status
-        config.get_printer().lookup_object('gcode').respond_info(config.get_name())
+        self.printer = config.get_printer()
+        self.config = config
         # Setup basic register values
         self.fields.set_field("multistep_filt", True)
         tmc.TMCWaveTableHelper(config, self.mcu_tmc)
@@ -415,6 +416,12 @@ class TMC2240:
         set_config_field(config, "tpowerdown", 10)
         #   SG4_THRS
         set_config_field(config, "sg4_angle_offset", 1)
+        self.printer.register_event_handler("klippy:ready",
+                                            self._handle_ready())
 
+    def _handle_ready(self):
+        self.printer.lookup_object('gcode').respond_info(self.config.get_name())
+
+        
 def load_config_prefix(config):
     return TMC2240(config)
