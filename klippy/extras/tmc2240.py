@@ -287,6 +287,7 @@ class TMC2240CurrentHelper:
         self.fields.set_field("current_range", current_range)
         gscaler, irun, ihold = self._calc_current(run_current, hold_current)
         self.printer.add_object(config.get_name, self)
+        self.printer.lookup_object('gcode').respond_info(config.get_name)
         self.fields.set_field("globalscaler", gscaler)
         self.fields.set_field("ihold", ihold)
         self.fields.set_field("irun", irun)
