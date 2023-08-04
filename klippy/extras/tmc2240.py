@@ -286,8 +286,6 @@ class TMC2240CurrentHelper:
         current_range = self._calc_current_range(run_current)
         self.fields.set_field("current_range", current_range)
         gscaler, irun, ihold = self._calc_current(run_current, hold_current)
-        self.printer.add_object(config.get_name, self)
-        self.printer.lookup_object('gcode').respond_info(config.get_name)
         self.fields.set_field("globalscaler", gscaler)
         self.fields.set_field("ihold", ihold)
         self.fields.set_field("irun", irun)
@@ -370,6 +368,7 @@ class TMC2240:
         self.get_temperature = cmdhelper.get_temperature
         self.get_mcu = cmdhelper.get_mcu
         self.get_status = cmdhelper.get_status
+        config.get_printer().lookup_object('gcode').respond_info(config.get_name())
         # Setup basic register values
         self.fields.set_field("multistep_filt", True)
         tmc.TMCWaveTableHelper(config, self.mcu_tmc)
