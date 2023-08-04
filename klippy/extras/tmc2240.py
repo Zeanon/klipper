@@ -418,10 +418,8 @@ class TMC2240:
         set_config_field(config, "sg4_angle_offset", 1)
         self.printer.register_event_handler("klippy:ready",
                                             self._handle_ready())
-
     def _handle_ready(self):
-        self.printer.lookup_object('gcode').respond_info(self.config.get_name())
+        logging.info(self.config.get_name())
 
-        
 def load_config_prefix(config):
     return TMC2240(config)
