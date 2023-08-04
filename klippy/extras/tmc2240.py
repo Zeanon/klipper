@@ -286,6 +286,7 @@ class TMC2240CurrentHelper:
         current_range = self._calc_current_range(run_current)
         self.fields.set_field("current_range", current_range)
         gscaler, irun, ihold = self._calc_current(run_current, hold_current)
+        self.printer.add_object(self.name, self)
         self.fields.set_field("globalscaler", gscaler)
         self.fields.set_field("ihold", ihold)
         self.fields.set_field("irun", irun)
