@@ -8,9 +8,9 @@ DRIVER_REPORT_TIME = 1.0
 class PrinterTemperatureDriver:
     def __init__(self, config):
         self.printer = config.get_printer()
+        self.name = config.get('sensor_driver')
 
-        driver_name = config.get('sensor_driver')
-        self.driver = self.printer.lookup_object(driver_name)
+        self.driver = None
 
         self.temp = self.min_temp = self.max_temp = 0.0
 
@@ -18,10 +18,11 @@ class PrinterTemperatureDriver:
         self.sample_timer = self.reactor.register_timer(
             self._sample_driver_temperature)
 
-        self.printer.register_event_handler("klippy:connect",
+        self.printer.register_event_handler("klippy:ready",
                                             self.handle_connect)
 
     def handle_connect(self):
+        self.driver = self.printer.lookup_object(self.name)
         self.reactor.update_timer(self.sample_timer, self.reactor.NOW)
 
     def setup_callback(self, temperature_callback):
