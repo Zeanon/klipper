@@ -1372,7 +1372,7 @@ class MCUConnection:
         sd_sha = hashlib.sha1()
         klipper_bin_path = self.board_config['klipper_bin_path']
         output("Removing old firmware file...")
-        old_fw_path = self.board_config.get('current_firmware_path', "firmware.bin")
+        old_fw_path = self.board_config.get('current_firmware_path', "firmware.cur")
         try:
             with open(old_fw_path, 'rb') as local_f:
                 with self.fatfs.open_file(old_fw_path, "wb") as sd_f:
