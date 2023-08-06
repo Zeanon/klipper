@@ -465,11 +465,6 @@ class SDCardFile:
             raise OSError("flash_sdcard: Error writing file '%s'" % (self.path))
         return bytes_written
 
-    def remove(self):
-        if self.fhdl is None:
-            raise OSError("flash_sdcard: File '%s' not open" % (self.path))
-        self.ffi_lib.fatfs_remove(self.path)
-
     def close(self):
         if self.fhdl is not None:
             ret = self.ffi_lib.fatfs_close(self.fhdl)
@@ -1368,24 +1363,10 @@ class MCUConnection:
             raise SPIFlashError("Unknown bus defined in board_defs.py.")
 
     def sdcard_upload(self):
+        output("Uploading Klipper Firmware to SD Card...")
         input_sha = hashlib.sha1()
         sd_sha = hashlib.sha1()
         klipper_bin_path = self.board_config['klipper_bin_path']
-        output("Removing old firmware file...")
-        old_fw_path = self.board_config.get('current_firmware_path', "firmware.bin")
-        try:
-            with open(klipper_bin_path, 'rb') as local_f:
-                with self.fatfs.open_file(old_fw_path, "wb") as sd_f:
-                    while True:
-                        buf = local_f.read(4096)
-                        if not buf:
-                            break
-                        input_sha.update(buf)
-                        sd_f.write(buf)
-        except Exception:
-            logging.exception("SD Card Upload Error")
-            raise SPIFlashError("Error Uploading Firmware")
-        output("Uploading Klipper Firmware to SD Card...")
         fw_path = self.board_config.get('firmware_path', "firmware.bin")
         try:
             with open(klipper_bin_path, 'rb') as local_f:
