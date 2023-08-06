@@ -1374,14 +1374,9 @@ class MCUConnection:
         output("Removing old firmware file...")
         old_fw_path = self.board_config.get('current_firmware_path', "firmware.bin")
         try:
-            with open(klipper_bin_path, 'rb') as local_f:
+            with open(old_fw_path, 'rb') as local_f:
                 with self.fatfs.open_file(old_fw_path, "wb") as sd_f:
-                    while True:
-                        buf = local_f.read(4096)
-                        if not buf:
-                            break
-                        input_sha.update(buf)
-                        sd_f.write(buf)
+                    sd_f.remove()
         except Exception:
             logging.exception("SD Card Upload Error")
             raise SPIFlashError("Error Uploading Firmware")
