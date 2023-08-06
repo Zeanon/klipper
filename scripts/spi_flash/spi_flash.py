@@ -468,7 +468,7 @@ class SDCardFile:
     def remove(self):
         if self.fhdl is None:
             raise OSError("flash_sdcard: File '%s' not open" % (self.path))
-        self.ffi_lib.fatfs_remove(self.path)
+        self.ffi_lib.fatfs_remove(self.fhdl)
 
     def close(self):
         if self.fhdl is not None:
