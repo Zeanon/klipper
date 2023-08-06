@@ -1377,9 +1377,9 @@ class MCUConnection:
                             break
                         input_sha.update(buf)
                         sd_f.write(buf)
-        except Exception as err:
+        except Exception:
             logging.exception("SD Card Upload Error")
-            raise SPIFlashError("Error Uploading Firmware", err)
+            raise SPIFlashError("Error Uploading Firmware")
         output_line("Done")
         output("Validating Upload...")
         try:
