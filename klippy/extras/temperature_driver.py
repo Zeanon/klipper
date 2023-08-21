@@ -46,11 +46,14 @@ class PrinterTemperatureDriver:
 
         measured_time = self.reactor.monotonic()
 
-        if self.temp is not None:
-            mcu = self.driver.get_mcu()
-            self.temperature_callback(
-                mcu.estimated_print_time(measured_time),
-                self.temp)
+        if self.temp is None:
+            self.temp = 0.0
+
+        mcu = self.driver.get_mcu()
+        self.temperature_callback(
+            mcu.estimated_print_time(measured_time),
+            self.temp)
+
 
         return measured_time + DRIVER_REPORT_TIME
 
