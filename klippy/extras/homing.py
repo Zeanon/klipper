@@ -68,6 +68,7 @@ class HomingMove:
     def homing_move(self, movepos, speed, probe_pos=False,
                     triggered=True, check_triggered=True):
         # Notify start of homing/probing move
+        logging.info("1")
         self.printer.send_event("homing:homing_move_begin", self)
         logging.info("1")
         # Note start location
@@ -75,7 +76,6 @@ class HomingMove:
         kin = self.toolhead.get_kinematics()
         kin_spos = {s.get_name(): s.get_commanded_position()
                     for s in kin.get_steppers()}
-        logging.info("1")
         self.stepper_positions = [ StepperPosition(s, name)
                                    for es, name in self.endstops
                                    for s in es.get_steppers() ]
