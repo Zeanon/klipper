@@ -185,6 +185,7 @@ class Homing:
         hmove.homing_move(homepos, hi.speed)
         # Perform second home
         if hi.retract_dist:
+            logging.info("1")
             # Retract
             startpos = self._fill_coord(forcepos)
             homepos = self._fill_coord(movepos)
