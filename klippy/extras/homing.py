@@ -69,7 +69,7 @@ class HomingMove:
                     triggered=True, check_triggered=True):
         # Notify start of homing/probing move
         logging.info("1")
-        self.printer.send_event("homing:homing_move_begin2", self)
+        self.printer.send_event("homing:homing_move_begin", self)
         logging.info("1")
         # Note start location
         self.toolhead.flush_step_generation()

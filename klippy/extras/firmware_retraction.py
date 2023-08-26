@@ -372,7 +372,7 @@ class FirmwareRetraction:
         # disabled on host and firmware restart, thus triggering clear
         # retraction as well. Shutdown requires host and/or firmware restart,
         # thus also triggerung clear retraction.
-        self.printer.register_event_handler("homing:homing_move_begin2",
+        self.printer.register_event_handler("homing:homing_move_begin",
                                             self._evaluate_retraction)
         self.printer.register_event_handler("homing:home",
                                             self._evaluate_retraction)

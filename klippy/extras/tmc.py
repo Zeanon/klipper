@@ -501,7 +501,7 @@ class TMCVirtualPinHelper:
         if self.diag_pin is None:
             raise ppins.error("tmc virtual endstop requires diag pin config")
         # Setup for sensorless homing
-        self.printer.register_event_handler("homing:homing_move_begin2",
+        self.printer.register_event_handler("homing:homing_move_begin",
                                             self.handle_homing_move_begin)
         self.printer.register_event_handler("homing:homing_move_end",
                                             self.handle_homing_move_end)
