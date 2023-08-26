@@ -6,7 +6,7 @@
 import logging
 
 PIN_MIN_TIME = 0.100
-RESEND_HOST_TIME = 0.600 + PIN_MIN_TIME
+RESEND_HOST_TIME = 0.300 + PIN_MIN_TIME
 MAX_ENABLE_TIME = 5.0
 DISABLE_STALL_TIME = 0.100
 
@@ -37,16 +37,16 @@ class StepperEnablePin:
             if not self.enable_count:
                 toolhead = self.printer.lookup_object('toolhead')
                 toolhead.wait_moves()
-                toolhead.dwell(RESEND_HOST_TIME)
                 toolhead.register_lookahead_callback(
                     lambda print_time: self._set_pin(print_time, 0))
     def _set_pin(self, print_time, value, is_resend=False):
         if value == self.last_value and not is_resend:
             return
-        print_time = max(print_time, self.last_print_time + PIN_MIN_TIME)
-        self.mcu_enable.set_digital(print_time, value)
         self.last_value = value
+        
+        print_time = max(print_time, self.last_print_time + PIN_MIN_TIME)
         self.last_print_time = print_time
+        self.mcu_enable.set_digital(print_time, value)
         if self.resend_interval and self.resend_timer is None:
             self.resend_timer = self.reactor.register_timer(
                 self._resend_current_val, self.reactor.NOW)
