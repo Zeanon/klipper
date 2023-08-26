@@ -80,6 +80,7 @@ class HomingMove:
         # Start endstop checking
         print_time = self.toolhead.get_last_move_time()
         endstop_triggers = []
+        logging.info("1")
         for mcu_endstop, name in self.endstops:
             rest_time = self._calc_endstop_rate(mcu_endstop, movepos, speed)
             wait = mcu_endstop.home_start(print_time, ENDSTOP_SAMPLE_TIME,
@@ -137,7 +138,6 @@ class HomingMove:
                 error = str(e)
         if error is not None:
             raise self.printer.command_error(error)
-        logging.info("1")
         return trigpos
     def check_no_movement(self):
         if self.printer.get_start_args().get('debuginput') is not None:
