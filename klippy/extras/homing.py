@@ -199,6 +199,7 @@ class Homing:
             startpos = [rp - ad * retract_r
                         for rp, ad in zip(retractpos, axes_d)]
             self.toolhead.set_position(startpos)
+            logging.info("1")
             hmove = HomingMove(self.printer, endstops)
             hmove.homing_move(homepos, hi.second_homing_speed)
             if hmove.check_no_movement() is not None:
@@ -206,7 +207,6 @@ class Homing:
                     "Endstop %s still triggered after retract"
                     % (hmove.check_no_movement(),))
         if hi.resting_retract_dist:
-            logging.info("1")
             startpos = self._fill_coord(forcepos)
             homepos = self._fill_coord(movepos)
             axes_d = [hp - sp for hp, sp in zip(homepos, startpos)]
