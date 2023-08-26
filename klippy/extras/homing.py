@@ -74,6 +74,7 @@ class HomingMove:
         kin = self.toolhead.get_kinematics()
         kin_spos = {s.get_name(): s.get_commanded_position()
                     for s in kin.get_steppers()}
+        logging.info("1")
         self.stepper_positions = [ StepperPosition(s, name)
                                    for es, name in self.endstops
                                    for s in es.get_steppers() ]
@@ -98,7 +99,6 @@ class HomingMove:
         # Wait for endstops to trigger
         trigger_times = {}
         move_end_print_time = self.toolhead.get_last_move_time()
-        logging.info("1")
         for mcu_endstop, name in self.endstops:
             trigger_time = mcu_endstop.home_wait(move_end_print_time)
             if trigger_time > 0.:
