@@ -67,6 +67,7 @@ class HomingMove:
         return list(kin.calc_position(kin_spos))[:3] + thpos[3:]
     def homing_move(self, movepos, speed, probe_pos=False,
                     triggered=True, check_triggered=True):
+        logging.info("1")
         # Notify start of homing/probing move
         self.printer.send_event("homing:homing_move_begin", self)
         # Note start location
@@ -136,6 +137,7 @@ class HomingMove:
                 error = str(e)
         if error is not None:
             raise self.printer.command_error(error)
+        logging.info("1")
         return trigpos
     def check_no_movement(self):
         if self.printer.get_start_args().get('debuginput') is not None:
@@ -185,7 +187,6 @@ class Homing:
         hmove.homing_move(homepos, hi.speed)
         # Perform second home
         if hi.retract_dist:
-            logging.info("1")
             # Retract
             startpos = self._fill_coord(forcepos)
             homepos = self._fill_coord(movepos)
@@ -201,7 +202,6 @@ class Homing:
             self.toolhead.set_position(startpos)
             hmove = HomingMove(self.printer, endstops)
             hmove.homing_move(homepos, hi.second_homing_speed)
-            logging.info("1")
             if hmove.check_no_movement() is not None:
                 raise self.printer.command_error(
                     "Endstop %s still triggered after retract"
