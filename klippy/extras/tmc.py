@@ -508,6 +508,7 @@ class TMCVirtualPinHelper:
         self.mcu_endstop = ppins.setup_pin('endstop', self.diag_pin)
         return self.mcu_endstop
     def handle_homing_move_begin(self, hmove):
+        logging.info("4")
         if self.mcu_endstop not in hmove.get_mcu_endstops():
             return
         self.pwmthrs = self.fields.get_field("tpwmthrs")
@@ -528,6 +529,7 @@ class TMCVirtualPinHelper:
         if self.coolthrs == 0:
             tc_val = self.fields.set_field("tcoolthrs", 0xfffff)
             self.mcu_tmc.set_register("TCOOLTHRS", tc_val)
+        logging.info("4")
     def handle_homing_move_end(self, hmove):
         if self.mcu_endstop not in hmove.get_mcu_endstops():
             return

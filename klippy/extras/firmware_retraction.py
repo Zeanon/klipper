@@ -431,6 +431,7 @@ class FirmwareRetraction:
     ###### Helper method to evaluate to clear retraction if certain events occur
     # (must accept all arguments passed from event handlers)
     def _evaluate_retraction(self, *args):
+        logging.info("2")
         if self.is_retracted:                               # Check if retracted
                 if self.vsdcard_paused:          # Check if VSDCard print paused
                     # Reset paused flag and hence do not clear retraction on
@@ -439,6 +440,7 @@ class FirmwareRetraction:
                 else:
                     # If cancel command triggered pause event, clear retraction.
                     self._execute_clear_retraction()
+        logging.info("2")
 
     ########### Helper method to reset pause flags and force evaluate retraction
     def _reset_pause_flag(self, *args):
