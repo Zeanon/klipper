@@ -54,7 +54,7 @@ class PrinterProbe:
         # Register z_virtual_endstop pin
         self.printer.lookup_object('pins').register_chip('probe', self)
         # Register homing event handlers
-        self.printer.register_event_handler("homing:homing_move_begin",
+        self.printer.register_event_handler("homing:homing_move_begin2",
                                             self._handle_homing_move_begin)
         self.printer.register_event_handler("homing:homing_move_end",
                                             self._handle_homing_move_end)
