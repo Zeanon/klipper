@@ -43,7 +43,7 @@ class StepperEnablePin:
         if value == self.last_value and not is_resend:
             return
         self.last_value = value
-        
+
         print_time = max(print_time, self.last_print_time + PIN_MIN_TIME)
         self.last_print_time = print_time
         self.mcu_enable.set_digital(print_time, value)
