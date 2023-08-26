@@ -260,6 +260,7 @@ class Printer:
     def register_event_handler(self, event, callback):
         self.event_handlers.setdefault(event, []).append(callback)
     def send_event(self, event, *params):
+        logging.info("6")
         return [cb(*params) for cb in self.event_handlers.get(event, [])]
     def request_exit(self, result):
         if self.run_result is None:
