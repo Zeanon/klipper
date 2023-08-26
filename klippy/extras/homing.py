@@ -206,6 +206,7 @@ class Homing:
                     "Endstop %s still triggered after retract"
                     % (hmove.check_no_movement(),))
         if hi.resting_retract_dist:
+            logging.info("1")
             startpos = self._fill_coord(forcepos)
             homepos = self._fill_coord(movepos)
             axes_d = [hp - sp for hp, sp in zip(homepos, startpos)]
