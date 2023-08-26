@@ -67,7 +67,6 @@ class HomingMove:
         return list(kin.calc_position(kin_spos))[:3] + thpos[3:]
     def homing_move(self, movepos, speed, probe_pos=False,
                     triggered=True, check_triggered=True):
-        logging.info("1")
         # Notify start of homing/probing move
         self.printer.send_event("homing:homing_move_begin", self)
         # Note start location
@@ -98,6 +97,7 @@ class HomingMove:
         # Wait for endstops to trigger
         trigger_times = {}
         move_end_print_time = self.toolhead.get_last_move_time()
+        logging.info("1")
         for mcu_endstop, name in self.endstops:
             trigger_time = mcu_endstop.home_wait(move_end_print_time)
             if trigger_time > 0.:
