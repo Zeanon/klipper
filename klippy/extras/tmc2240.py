@@ -9,6 +9,10 @@ from . import bus, tmc, tmc2130, tmc_uart
 
 TMC_FREQUENCY=12500000.
 
+COMMUNICATION_INTERFACE = {
+    'spi': 'spi', 'uart': 'uart'
+}
+
 Registers = {
     "GCONF":            0x00,
     "GSTAT":            0x01,
@@ -358,11 +362,15 @@ class TMC2240:
         cmdhelper = tmc.TMCCommandHelper(config, self.mcu_tmc, current_helper)
         cmdhelper.setup_register_dump(ReadRegisters)
         self.get_phase_offset = cmdhelper.get_phase_offset
+        self.get_temperature = cmdhelper.get_temperature
+        self.get_mcu = cmdhelper.get_mcu
         self.get_status = cmdhelper.get_status
         # Setup basic register values
         tmc.TMCWaveTableHelper(config, self.mcu_tmc)
         self.fields.set_config_field(config, "offset_sin90", 0)
-        tmc.TMCStealthchopHelper(config, self.mcu_tmc, TMC_FREQUENCY)
+        tmc.TMCStealthchopHelper(config, self.mcu_tmc)
+        tmc.TMCVcoolthrsHelper(config, self.mcu_tmc)
+        tmc.TMCVhighHelper(config, self.mcu_tmc)
         set_config_field = self.fields.set_config_field
         #   GCONF
         set_config_field(config, "multistep_filt", True)

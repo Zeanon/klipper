@@ -201,7 +201,7 @@ class ControlAutoTune:
     def converged(self):
         tolerance = self.get_sample_tolerance()
         if tolerance is False:
-           return False
+            return False
         if tolerance <= self.tolerance:
             return True
         return False

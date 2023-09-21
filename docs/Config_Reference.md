@@ -904,10 +904,10 @@ sensor_pin:
 #   The resistance (in ohms) of the pullup attached to the thermistor.
 #   This parameter is only valid when the sensor is a thermistor. The
 #   default is 4700 ohms.
-#smooth_time: 1.0
+#smooth_time:
 #   A time value (in seconds) over which temperature measurements will
 #   be smoothed to reduce the impact of measurement noise. The default
-#   is 1 seconds.
+#   is to not perform any additional temperature smoothing.
 control:
 #   Control algorithm (either pid, pid_v or watermark). This parameter must
 #   be provided. pid_v should only be used on well calibrated heaters with
@@ -2116,12 +2116,15 @@ calibrate_y: 112.5
 #   This should be the Y coordinate that positions the nozzle during the
 #   calibration process. This parameter must be provided and is recommended to
 #   be near the center of the bed
-#type: multilinear
-#   Defines the type of correction to apply. The choices are 'linear' or
-#   'multilinear'. 'linear' uses a linear regression to fit a line with the
-#   calibration points. 'multilinear' will interpolate linearly between each
-#   pair of points. It is not necessary to redo a calibration after changing
-#   this setting.
+#wait_for_continue: true
+#   Defines whether the calibration will wait until CONTINUE is called in the
+#   console between each probing sequence, the default is true
+#start_gcode:
+#   GCode to be run before the calibration starts
+#abort_gcode:
+#   GCode to be run when the calibration gets aborted
+#end_gcode:
+#   GCode to be run when the calibration succeeds
 ```
 
 ## Additional stepper motors and extruders
@@ -2690,6 +2693,17 @@ sensor_type: temperature_mcu
 #   micro-controller specification.
 ```
 
+### Builtin stepper driver temperature sensor
+
+The TMC2240 stepper driver contain an internal temperature sensor. One can
+use the "temperature_driver" sensor to monitor this temperatures.
+
+```
+sensor_type: temperature_driver
+sensor_driver:
+#   The stepper driver to read from.
+```
+
 ### Host temperature sensor
 
 Temperature from the machine (eg Raspberry Pi) running the host software.
@@ -2748,15 +2762,14 @@ Print cooling fan.
 pin:
 #   Output pin controlling the fan. This parameter must be provided.
 #max_power: 1.0
-#   The maximum power (expressed as a value from 0.0 to 1.0) that the
-#   pin may be set to. The value 1.0 allows the pin to be set fully
-#   enabled for extended periods, while a value of 0.5 would allow the
-#   pin to be enabled for no more than half the time. This setting may
-#   be used to limit the total power output (over extended periods) to
-#   the fan. If this value is less than 1.0 then fan speed requests
-#   will be scaled between zero and max_power (for example, if
-#   max_power is .9 and a fan speed of 80% is requested then the fan
-#   power will be set to 72%). The default is 1.0.
+#   The maximum power (0.0 to 1.0) that the pin may be set to. A value
+#   of 1.0 enables the pin fully for extended periods, while 0.5 allows
+#   it for no more than half the time. Use it to limit total power output
+#   (over extended periods) to the fan. This value is combined with
+#   min_power to scale fan speed. With `min_power` at 0.3 and
+#   `max_power` at 1.0, fan speed request scales between 0.3 (min_power)
+#   and 1.0 (max_power). Requesting 10% fan speed results in a value of
+#   0.37. Default is 1.0.
 #shutdown_speed: 0
 #   The desired fan speed (expressed as a value from 0.0 to 1.0) if
 #   the micro-controller software enters an error state. The default
@@ -2776,18 +2789,14 @@ pin:
 #   Time (in seconds) to run the fan at full speed when either first
 #   enabling or increasing it by more than 50% (helps get the fan
 #   spinning). The default is 0.100 seconds.
-#off_below: 0.0
-#   The minimum input speed which will power the fan (expressed as a
-#   value from 0.0 to 1.0). When a speed lower than off_below is
-#   requested the fan will instead be turned off. This setting may be
-#   used to prevent fan stalls and to ensure kick starts are
-#   effective. The default is 0.0.
+#min_power: 0.0
+#   The minimum input power which will power the fan (expressed as a
+#   value from 0.0 to 1.0). The default is 0.0.
 #
-#   This setting should be recalibrated whenever max_power is adjusted.
-#   To calibrate this setting, start with off_below set to 0.0 and the
-#   fan spinning. Gradually lower the fan speed to determine the lowest
+#   To calibrate this setting, start with min_power=0 and max_power=1
+#   Gradually lower the fan speed to determine the lowest
 #   input speed which reliably drives the fan without stalls. Set
-#   off_below to the duty cycle corresponding to this value (for
+#   min_power to the duty cycle corresponding to this value (for
 #   example, 12% -> 0.12) or slightly higher.
 #tachometer_pin:
 #   Tachometer input pin for monitoring fan speed. A pullup is generally
@@ -2832,7 +2841,7 @@ a shutdown_speed equal to max_power.
 #cycle_time:
 #hardware_pwm:
 #kick_start_time:
-#off_below:
+#min_power:
 #tachometer_pin:
 #tachometer_ppr:
 #tachometer_poll_interval:
@@ -2846,6 +2855,10 @@ a shutdown_speed equal to max_power.
 #heater_temp: 50.0
 #   A temperature (in Celsius) that the heater must drop below before
 #   the fan is disabled. The default is 50 Celsius.
+#heater_temp_off_offset: 0
+#   How many degrees (Celsius/Kelvin) the heater temperature has to
+#   drop below "heater_temp" before the fan turns off
+#   (to prevent a fan oscilating on and off). The default is 0K.
 #fan_speed: 1.0
 #   The fan speed (expressed as a value from 0.0 to 1.0) that the fan
 #   will be set to when its associated heater is enabled. The default
@@ -2869,7 +2882,7 @@ watched component.
 #cycle_time:
 #hardware_pwm:
 #kick_start_time:
-#off_below:
+#min_power:
 #tachometer_pin:
 #tachometer_ppr:
 #tachometer_poll_interval:
@@ -2881,8 +2894,9 @@ watched component.
 #   The default is 1.0
 #idle_timeout:
 #   The amount of time (in seconds) after a stepper driver or heater
-#   was active and the fan should be kept running. The default
-#   is 30 seconds.
+#   was active and the fan should be kept running. If the value is
+#   set to -1, the fan will keep from shutting off while idle. The
+#   default is 30 seconds.
 #idle_speed:
 #   The fan speed (expressed as a value from 0.0 to 1.0) that the fan
 #   will be set to when a heater or stepper driver was active and
@@ -2915,7 +2929,7 @@ information.
 #cycle_time:
 #hardware_pwm:
 #kick_start_time:
-#off_below:
+#min_power:
 #tachometer_pin:
 #tachometer_ppr:
 #tachometer_poll_interval:
@@ -2957,7 +2971,14 @@ information.
 #gcode_id:
 #   If set, the temperature will be reported in M105 queries using the
 #   given id. The default is to not report the temperature via M105.
+reverse: False
+#   If True, the working mode of the fan is reversed. If the temperature
+#   is lower than the target temperature, the fan speed increases;
+#   otherwise, the fan speed decreases.
+#   The default is False
 ```
+
+### [controller_temperature_fan]
 
 ### [fan_generic]
 
@@ -2973,7 +2994,7 @@ with the SET_FAN_SPEED [gcode command](G-Codes.md#fan_generic).
 #cycle_time:
 #hardware_pwm:
 #kick_start_time:
-#off_below:
+#min_power:
 #tachometer_pin:
 #tachometer_ppr:
 #tachometer_poll_interval:
@@ -3326,6 +3347,27 @@ run_current:
 #   set, "stealthChop" mode will be enabled if the stepper motor
 #   velocity is below this value. The default is 0, which disables
 #   "stealthChop" mode.
+#vcoolthrs: 0
+#   The velocity (in mm/s) to set the "CoolStep" threshold to. When set,
+#   the CoolStep feature will be disabled if the stepper motor velocity
+#   is below this value. Besides CoolStep, this also sets the velocity
+#   below which the Stall output of the driver gets disabled, so it will
+#   influence the homing. If it is not specified, it defaults to 0mm/s during
+#   homing, but CoolStep is also disabled at all other times. Configure this
+#   setting in order to enable the CoolStep feature and to improve the
+#   sensorless homing reliability.
+#vhigh: 0
+#   The velocity (in mm/s) to set the "High velocity" threshold to. When set,
+#   the CoolStep feature will be disabled if the stepper motor velocity
+#   is approximately above this value. Besides CoolStep, this also sets the
+#   velocity above which the Stall output of the driver gets disabled, so it
+#   might influence the homing if it is set too low.
+#   In combination with `vhighchm` or `vhighfs`, the velocity threshold above
+#   which the driver switches to "Constant off time with slow decay" mode and
+#   FullStepping can be configured, which could help maintain motor torque when
+#   the back EMF of the motor approaches the stepper supply voltage.
+#   If it is not specified, it defaults to the maximum possible velocity,
+#   effectively disabling the "High velocity" mode.
 #driver_MSLUT0: 2863314260
 #driver_MSLUT1: 1251300522
 #driver_MSLUT2: 608774441
@@ -3356,11 +3398,19 @@ run_current:
 #driver_TOFF: 4
 #driver_HEND: 7
 #driver_HSTRT: 0
+#driver_VHIGHFS: 0
+#driver_VHIGHCHM: 0
 #driver_PWM_AUTOSCALE: True
 #driver_PWM_FREQ: 1
 #driver_PWM_GRAD: 4
 #driver_PWM_AMPL: 128
 #driver_SGT: 0
+#driver_SEMIN: 0
+#driver_SEUP: 0
+#driver_SEMAX: 0
+#driver_SEDN: 0
+#driver_SEIMIN: 0
+#driver_SFILT: 0
 #   Set the given register during the configuration of the TMC2130
 #   chip. This may be used to set custom motor parameters. The
 #   defaults for each parameter are next to the parameter name in the
@@ -3457,6 +3507,15 @@ run_current:
 #sense_resistor: 0.110
 #stealthchop_threshold: 0
 #   See the "tmc2208" section for the definition of these parameters.
+#vcoolthrs: 0
+#   The velocity (in mm/s) to set the "CoolStep" threshold to. When set,
+#   the CoolStep feature will be disabled if the stepper motor velocity
+#   is below this value. Besides CoolStep, this also sets the velocity
+#   below which the Stall output of the driver gets disabled, so it will
+#   influence the homing. If it is not specified, it defaults to 0mm/s during
+#   homing, but CoolStep is also disabled at all other times. Configure this
+#   setting in order to enable the CoolStep feature and to improve the
+#   sensorless homing reliability.
 #uart_address:
 #   The address of the TMC2209 chip for UART messages (an integer
 #   between 0 and 3). This is typically used when multiple TMC2209
@@ -3476,6 +3535,11 @@ run_current:
 #driver_PWM_GRAD: 14
 #driver_PWM_OFS: 36
 #driver_SGTHRS: 0
+#driver_SEMIN: 0
+#driver_SEUP: 0
+#driver_SEMAX: 0
+#driver_SEDN: 0
+#driver_SEIMIN: 0
 #   Set the given register during the configuration of the TMC2209
 #   chip. This may be used to set custom motor parameters. The
 #   defaults for each parameter are next to the parameter name in the
@@ -3571,6 +3635,7 @@ the name of the corresponding stepper config section (for example,
 
 ```
 [tmc2240 stepper_x]
+interface: spi
 cs_pin:
 #   The pin corresponding to the TMC2240 chip select line. This pin
 #   will be set to low at the start of SPI messages and raised to high
@@ -3610,6 +3675,27 @@ run_current:
 #   set, "stealthChop" mode will be enabled if the stepper motor
 #   velocity is below this value. The default is 0, which disables
 #   "stealthChop" mode.
+#vcoolthrs: 0
+#   The velocity (in mm/s) to set the "CoolStep" threshold to. When set,
+#   the CoolStep feature will be disabled if the stepper motor velocity
+#   is below this value. Besides CoolStep, this also sets the velocity
+#   below which the Stall output of the driver gets disabled, so it will
+#   influence the homing. If it is not specified, it defaults to 0mm/s during
+#   homing, but CoolStep is also disabled at all other times. Configure this
+#   setting in order to enable the CoolStep feature and to improve the
+#   sensorless homing reliability.
+#vhigh: 0
+#   The velocity (in mm/s) to set the "High velocity" threshold to. When set,
+#   the CoolStep feature will be disabled if the stepper motor velocity
+#   is approximately above this value. Besides CoolStep, this also sets the
+#   velocity above which the Stall output of the driver gets disabled, so it
+#   might influence the homing if it is set too low.
+#   In combination with `vhighchm` or `vhighfs`, the velocity threshold above
+#   which the driver switches to "Constant off time with slow decay" mode and
+#   FullStepping can be configured, which could help maintain motor torque when
+#   the back EMF of the motor approaches the stepper supply voltage.
+#   If it is not specified, it defaults to the maximum possible velocity,
+#   effectively disabling the "High velocity" mode.
 #driver_MSLUT0: 2863314260
 #driver_MSLUT1: 1251300522
 #driver_MSLUT2: 608774441
@@ -3686,6 +3772,23 @@ run_current:
 #   sensorless homing.
 ```
 
+### [tmc2240] UART
+
+Configure a TMC2240 stepper motor driver via UART. To use this
+feature, define a config section with a "tmc2240" prefix followed by
+the name of the corresponding stepper config section (for example,
+"[tmc2240 stepper_x]").
+
+See the [TMC2240 config reference](Config_Reference.html#tmc2240) for additional
+configuration fields.
+
+```
+[tmc2240 stepper_x]
+interface: uart
+uart_pin:
+#diag_pin:
+```
+
 ### [tmc5160]
 
 Configure a TMC5160 stepper motor driver via SPI bus. To use this
@@ -3731,6 +3834,27 @@ run_current:
 #   set, "stealthChop" mode will be enabled if the stepper motor
 #   velocity is below this value. The default is 0, which disables
 #   "stealthChop" mode.
+#vcoolthrs: 0
+#   The velocity (in mm/s) to set the "CoolStep" threshold to. When set,
+#   the CoolStep feature will be disabled if the stepper motor velocity
+#   is below this value. Besides CoolStep, this also sets the velocity
+#   below which the Stall output of the driver gets disabled, so it will
+#   influence the homing. If it is not specified, it defaults to 0mm/s during
+#   homing, but CoolStep is also disabled at all other times. Configure this
+#   setting in order to enable the CoolStep feature and to improve the
+#   sensorless homing reliability.
+#vhigh: 0
+#   The velocity (in mm/s) to set the "High velocity" threshold to. When set,
+#   the CoolStep feature will be disabled if the stepper motor velocity
+#   is approximately above this value. Besides CoolStep, this also sets the
+#   velocity above which the Stall output of the driver gets disabled, so it
+#   might influence the homing if it is set too low.
+#   In combination with `vhighchm` or `vhighfs`, the velocity threshold above
+#   which the driver switches to "Constant off time with slow decay" mode and
+#   FullStepping can be configured, which could help maintain motor torque when
+#   the back EMF of the motor approaches the stepper supply voltage.
+#   If it is not specified, it defaults to the maximum possible velocity,
+#   effectively disabling the "High velocity" mode.
 #driver_MSLUT0: 2863314260
 #driver_MSLUT1: 1251300522
 #driver_MSLUT2: 608774441

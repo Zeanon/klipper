@@ -3,6 +3,8 @@
 # Copyright (C) 2016-2020  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
+import statistics
+
 from . import fan
 
 KELVIN_TO_CELSIUS = -273.15
@@ -11,12 +13,16 @@ AMBIENT_TEMP = 25.
 PID_PARAM_BASE = 255.
 
 class TemperatureFan:
-    def __init__(self, config):
+    def __init__(self, config, defined_fan=None, super_fan=None):
         self.name = config.get_name().split()[1]
         self.printer = config.get_printer()
-        self.fan = fan.Fan(config, default_shutdown_speed=1.)
+        if defined_fan is None:
+            self.fan = fan.Fan(config, default_shutdown_speed=1.)
+        else:
+            self.fan = defined_fan
         self.min_temp = config.getfloat('min_temp', minval=KELVIN_TO_CELSIUS)
         self.max_temp = config.getfloat('max_temp', above=self.min_temp)
+        self.reverse = config.getboolean('reverse', False)
         pheaters = self.printer.load_object(config, 'heaters')
         self.sensor = pheaters.setup_sensor(config)
         self.sensor.setup_minmax(self.min_temp, self.max_temp)
@@ -35,9 +41,13 @@ class TemperatureFan:
             'target_temp', 40. if self.max_temp > 40. else self.max_temp,
             minval=self.min_temp, maxval=self.max_temp)
         self.target_temp = self.target_temp_conf
-        algos = {'watermark': ControlBangBang, 'pid': ControlPID}
+        algos = {'watermark': ControlBangBang,
+                 'pid': ControlPID,
+                 'curve': ControlCurve}
         algo = config.getchoice('control', algos)
-        self.control = algo(self, config)
+        self.control = algo(self,
+                            config,
+                            super_fan)
         self.next_speed_time = 0.
         self.last_speed_value = 0.
         gcode = self.printer.lookup_object('gcode')
@@ -115,23 +125,29 @@ class TemperatureFan:
 ######################################################################
 
 class ControlBangBang:
-    def __init__(self, temperature_fan, config):
+    def __init__(self, temperature_fan, config, controlled_fan=None):
         self.temperature_fan = temperature_fan
+        self.controlled_fan = (temperature_fan
+                               if controlled_fan is None
+                               else controlled_fan)
         self.max_delta = config.getfloat('max_delta', 2.0, above=0.)
         self.heating = False
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
+        temp_diff = target_temp - temp
+        if self.temperature_fan.reverse:
+            temp_diff = -temp_diff
         if (self.heating
-            and temp >= target_temp+self.max_delta):
+                and temp_diff >= self.max_delta):
             self.heating = False
         elif (not self.heating
-              and temp <= target_temp-self.max_delta):
+              and temp_diff <= -self.max_delta):
             self.heating = True
         if self.heating:
-            self.temperature_fan.set_speed(read_time, 0.)
+            self.controlled_fan.set_speed(read_time, 0.)
         else:
-            self.temperature_fan.set_speed(read_time,
-                                           self.temperature_fan.get_max_speed())
+            self.controlled_fan.set_speed(read_time,
+                                          self.temperature_fan.get_max_speed())
 
 ######################################################################
 # Proportional Integral Derivative (PID) control algo
@@ -141,8 +157,11 @@ PID_SETTLE_DELTA = 1.
 PID_SETTLE_SLOPE = .1
 
 class ControlPID:
-    def __init__(self, temperature_fan, config):
+    def __init__(self, temperature_fan, config, controlled_fan=None):
         self.temperature_fan = temperature_fan
+        self.controlled_fan = (temperature_fan
+                               if controlled_fan is None
+                               else controlled_fan)
         self.Kp = config.getfloat('pid_Kp') / PID_PARAM_BASE
         self.Ki = config.getfloat('pid_Ki') / PID_PARAM_BASE
         self.Kd = config.getfloat('pid_Kd') / PID_PARAM_BASE
@@ -157,8 +176,11 @@ class ControlPID:
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         time_diff = read_time - self.prev_temp_time
-        # Calculate change of temperature
-        temp_diff = temp - self.prev_temp
+        # Calculate change of temperature, flip sign if set to reverse
+        if self.temperature_fan.reverse:
+            temp_diff = target_temp - temp
+        else:
+            temp_diff = temp - target_temp
         if time_diff >= self.min_deriv_time:
             temp_deriv = temp_diff / time_diff
         else:
@@ -171,7 +193,7 @@ class ControlPID:
         # Calculate output
         co = self.Kp*temp_err + self.Ki*temp_integ - self.Kd*temp_deriv
         bounded_co = max(0., min(self.temperature_fan.get_max_speed(), co))
-        self.temperature_fan.set_speed(
+        self.controlled_fan.set_speed(
             read_time, max(self.temperature_fan.get_min_speed(),
                            self.temperature_fan.get_max_speed() - bounded_co))
         # Store state for next measurement
@@ -180,6 +202,98 @@ class ControlPID:
         self.prev_temp_deriv = temp_deriv
         if co == bounded_co:
             self.prev_temp_integ = temp_integ
+
+
+class ControlCurve:
+    def __init__(self, temperature_fan, config, controlled_fan=None):
+        self.temperature_fan = temperature_fan
+        self.controlled_fan = (temperature_fan
+                               if controlled_fan is None
+                               else controlled_fan)
+        self.points = []
+        for i in range(1, 99):
+            current_point = config.getfloatlist('point%d' % i, None)
+            if current_point is None:
+                break
+            if len(current_point) != 2:
+                raise temperature_fan.printer.config_error(
+                    "Point needs to have exactly one temperature and one speed "
+                    "value."
+                )
+            if current_point[0] > temperature_fan.target_temp:
+                raise temperature_fan.printer.config_error(
+                    "Temperature in point can not exceed target temperature."
+                )
+            if current_point[0] < temperature_fan.min_temp:
+                raise temperature_fan.printer.config_error(
+                    "Temperature in point can not fall below min_temp."
+                )
+            if current_point[1] > temperature_fan.get_max_speed():
+                raise temperature_fan.printer.config_error(
+                    "Speed in point can not exceed max_speed."
+                )
+            if current_point[1] < temperature_fan.get_min_speed():
+                raise temperature_fan.printer.config_error(
+                    "Speed in point can not fall below min_speed."
+                )
+            self.points.append(current_point)
+        self.points.append([temperature_fan.target_temp,
+                            temperature_fan.get_max_speed()])
+        if len(self.points) < 2:
+            raise temperature_fan.printer.config_error(
+                "At least two points need to be defined for curve in "
+                "temperature_fan."
+            )
+        self.points.sort(key=lambda p: p[0])
+        last_point = [temperature_fan.min_temp, temperature_fan.get_min_speed()]
+        for point in self.points:
+            if point[1] < last_point[1]:
+                raise temperature_fan.printer.config_error(
+                    "Points with higher temperatures have to have higher or "
+                    "equal speed than points with lower temperatures."
+                )
+            last_point = point
+        self.hysteresis = config.getfloat('hysteresis', 0.0)
+        self.smooth_readings = config.getint('smooth_readings', 10, minval=1)
+        self.stored_temps = []
+        for i in range(self.smooth_readings):
+            self.stored_temps.append(0.)
+        self.last_temp = 0.
+    def temperature_callback(self, read_time, temp):
+        current_temp, target_temp = self.temperature_fan.get_temp(read_time)
+        temp = self.smooth_temps(temp)
+        if temp > target_temp:
+            self.temperature_fan.set_speed(read_time,
+                                           self.temperature_fan.get_max_speed())
+            return
+        below = [self.temperature_fan.min_temp,
+                 self.temperature_fan.get_min_speed()]
+        above = [self.temperature_fan.max_temp,
+                 self.temperature_fan.get_max_speed()]
+        for config_temp in self.points:
+            if config_temp[0] < temp:
+                below = config_temp
+            else:
+                above = config_temp
+                break
+        self.controlled_fan.set_speed(read_time, self.interpolate(below,
+                                                                  above,
+                                                                  temp))
+    def interpolate(self, below, above, temp):
+        return (((below[1] * (above[0] - temp))
+                 + (above[1] * (temp - below[0])))
+                / (above[0] - below[0]))
+    def smooth_temps(self, current_temp):
+        if self.last_temp - self.hysteresis < current_temp < self.last_temp:
+            temp = self.last_temp
+        else:
+            temp = current_temp
+        self.last_temp = current_temp
+        for i in range(1, len(self.stored_temps)):
+            self.stored_temps[i] = self.stored_temps[i-1]
+        self.stored_temps[0] = temp
+        return statistics.median(self.stored_temps)
+
 
 def load_config_prefix(config):
     return TemperatureFan(config)

@@ -242,6 +242,9 @@ Fields["TCOOLTHRS"] = {
 Fields["TSTEP"] = {
     "tstep":                    0xfffff << 0
 }
+Fields["THIGH"] = {
+    "thigh":                    0xfffff << 0
+}
 
 SignedFields = ["cur_a", "cur_b", "sgt", "xactual", "vactual", "pwm_scale_auto"]
 
@@ -332,10 +335,15 @@ class TMC5160:
         cmdhelper = tmc.TMCCommandHelper(config, self.mcu_tmc, current_helper)
         cmdhelper.setup_register_dump(ReadRegisters)
         self.get_phase_offset = cmdhelper.get_phase_offset
+        self.get_temperature = cmdhelper.get_temperature
+        self.get_mcu = cmdhelper.get_mcu
         self.get_status = cmdhelper.get_status
         # Setup basic register values
         tmc.TMCWaveTableHelper(config, self.mcu_tmc)
-        tmc.TMCStealthchopHelper(config, self.mcu_tmc, TMC_FREQUENCY)
+        tmc.TMCStealthchopHelper(config, self.mcu_tmc)
+        tmc.TMCVcoolthrsHelper(config, self.mcu_tmc)
+        tmc.TMCVhighHelper(config, self.mcu_tmc)
+        # Allow other registers to be set from the config
         set_config_field = self.fields.set_config_field
         #   GCONF
         set_config_field(config, "multistep_filt", True)

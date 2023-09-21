@@ -223,6 +223,8 @@ class MCU_TMC_SPI_chain:
         pr = pr[(self.chain_len - chain_pos) * 5 :
                 (self.chain_len - chain_pos + 1) * 5]
         return (pr[1] << 24) | (pr[2] << 16) | (pr[3] << 8) | pr[4]
+    def get_mcu(self):
+        return self.spi.get_mcu()
 
 # Helper to setup an spi daisy chain bus from settings in a config section
 def lookup_tmc_spi_chain(config):
@@ -274,6 +276,8 @@ class MCU_TMC_SPI:
             "Unable to write tmc spi '%s' register %s" % (self.name, reg_name))
     def get_tmc_frequency(self):
         return self.tmc_frequency
+    def get_mcu(self):
+        return self.tmc_spi.get_mcu()
 
 
 ######################################################################
@@ -293,10 +297,14 @@ class TMC2130:
         cmdhelper = tmc.TMCCommandHelper(config, self.mcu_tmc, current_helper)
         cmdhelper.setup_register_dump(ReadRegisters)
         self.get_phase_offset = cmdhelper.get_phase_offset
+        self.get_temperature = cmdhelper.get_temperature
+        self.get_mcu = cmdhelper.get_mcu
         self.get_status = cmdhelper.get_status
         # Setup basic register values
         tmc.TMCWaveTableHelper(config, self.mcu_tmc)
-        tmc.TMCStealthchopHelper(config, self.mcu_tmc, TMC_FREQUENCY)
+        tmc.TMCStealthchopHelper(config, self.mcu_tmc)
+        tmc.TMCVcoolthrsHelper(config, self.mcu_tmc)
+        tmc.TMCVhighHelper(config, self.mcu_tmc)
         # Allow other registers to be set from the config
         set_config_field = self.fields.set_config_field
         # CHOPCONF
@@ -304,8 +312,16 @@ class TMC2130:
         set_config_field(config, "hstrt", 0)
         set_config_field(config, "hend", 7)
         set_config_field(config, "tbl", 1)
+        set_config_field(config, "vhighfs", 0)
+        set_config_field(config, "vhighchm", 0)
         # COOLCONF
+        set_config_field(config, "semin", 0)
+        set_config_field(config, "seup", 0)
+        set_config_field(config, "semax", 0)
+        set_config_field(config, "sedn", 0)
+        set_config_field(config, "seimin", 0)
         set_config_field(config, "sgt", 0)
+        set_config_field(config, "sfilt", 0)
         # IHOLDIRUN
         set_config_field(config, "iholddelay", 8)
         # PWMCONF

@@ -194,10 +194,12 @@ class TMC2208:
         cmdhelper = tmc.TMCCommandHelper(config, self.mcu_tmc, current_helper)
         cmdhelper.setup_register_dump(ReadRegisters, self.read_translate)
         self.get_phase_offset = cmdhelper.get_phase_offset
+        self.get_temperature = cmdhelper.get_temperature
+        self.get_mcu = cmdhelper.get_mcu
         self.get_status = cmdhelper.get_status
         # Setup basic register values
         self.fields.set_field("mstep_reg_select", True)
-        tmc.TMCStealthchopHelper(config, self.mcu_tmc, TMC_FREQUENCY)
+        tmc.TMCStealthchopHelper(config, self.mcu_tmc)
         # Allow other registers to be set from the config
         set_config_field = self.fields.set_config_field
         # GCONF

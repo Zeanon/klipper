@@ -8,6 +8,11 @@ All dates in this document are approximate.
 
 ## Changes
 
+20230820: The heater `smooth_time` now defaults to not perform any
+additional temperature smoothing. To return to the previous behavior
+of one second smoothing, set `smooth_time: 1.0` in the heater config
+section.
+
 20230810: The flash-sdcard.sh script now supports both variants of the
 Bigtreetech SKR-3, STM32H743 and STM32H723. For this, the original tag
 of btt-skr-3 now has changed to be either btt-skr-3-h743 or btt-skr-3-h723.
@@ -23,6 +28,10 @@ and superceded by the `zero_reference_position` option.  Refer to the
 for details on how to update the configuration.  With this deprecation
 the `RELATIVE_REFERENCE_INDEX` is no longer available as a parameter
 for the `BED_MESH_CALIBRATE` gcode command.
+
+20230611: The `stepper` parameter in command SET_STEPPER_ENABLE has
+been renamed to `steppers`. Now it accepts multiple steppers.
+The `stepper` parameter is deprecated and will be removed in the near future.
 
 20230530: The default canbus frequency in "make menuconfig" is
 now 1000000. If using canbus and using canbus with some other
