@@ -464,6 +464,17 @@ enabled.
 `SET_FAN_SPEED FAN=config_name SPEED=<speed>` This command sets the
 speed of a fan. "speed" must be between 0.0 and 1.0.
 
+### [multi_fan]
+
+The following command is available when a
+[multi_fan config section](Config_Reference.md#multi_fan is
+enabled.
+
+#### ACTIVATE_FAN
+
+`ACTIVATE_FAN FAN=fan_name` Selects the active printer fan that reacts to
+M106/M107 gcodes. Current fan speed is transferred over to the new fan.
+
 ### [filament_switch_sensor]
 
 The following command is available when a

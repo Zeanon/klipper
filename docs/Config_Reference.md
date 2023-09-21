@@ -1564,6 +1564,8 @@ path:
 #   be provided.
 #on_error_gcode:
 #   A list of G-Code commands to execute when an error is reported.
+#with_subdirs: False
+#   Enable subdirs into menu and M20, M23 commands. The default is False.
 
 ```
 
@@ -2807,6 +2809,13 @@ pin:
 #   ground-switched FET(standard fan pin) can be used to control power to
 #   the fan.
 ```
+
+### [multi_fan first_fan]
+
+Multiple print cooling fans, replaces [fan] entry and handles M106/M107 gcodes.
+One may define any number of sections with a "multi_fan" prefix.
+ACTIVATE_FAN [gcode command](G-Codes.md#fan) selects which fan is used for
+cooling.
 
 ### [heater_fan]
 

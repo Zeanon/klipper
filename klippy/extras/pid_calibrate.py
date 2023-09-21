@@ -16,6 +16,7 @@ class PIDCalibrate:
     def cmd_PID_CALIBRATE(self, gcmd):
         heater_name = gcmd.get('HEATER')
         target = gcmd.get_float('TARGET')
+        tune_pid_delta = gcmd.get_float('TUNE_PID_DELTA', 5.0)
         write_file = gcmd.get_int('WRITE_FILE', 0)
         tolerance = gcmd.get_float('TOLERANCE', TUNE_PID_TOL, above=0.)
         profile_name = gcmd.get('PROFILE', 'default')
@@ -25,7 +26,7 @@ class PIDCalibrate:
         except self.printer.config_error as e:
             raise gcmd.error(str(e))
         self.printer.lookup_object('toolhead').get_last_move_time()
-        calibrate = ControlAutoTune(heater, target, tolerance)
+        calibrate = ControlAutoTune(heater, target, tolerance, tune_pid_delta)
         old_control = heater.set_control(calibrate)
         try:
             pheaters.set_temperature(heater, target, True)
@@ -59,13 +60,12 @@ class PIDCalibrate:
         heater.set_control(heater.lookup_control(profile))
         heater.pmgr.save_profile(profile_name, None, False)
 
-TUNE_PID_DELTA = 5.0
 TUNE_PID_TOL = 0.02
 TUNE_PID_SAMPLES = 3
 TUNE_PID_MAX_PEAKS = 60
 
 class ControlAutoTune:
-    def __init__(self, heater, target, tolerance):
+    def __init__(self, heater, target, tolerance, tune_pid_delta):
         self.heater = heater
         self.heater_max_power = heater.get_max_power()
         # store the reference so we can push messages if needed
@@ -80,9 +80,9 @@ class ControlAutoTune:
         # acceptable level
         self.tolerance = tolerance
         # the the temp that determines when to turn the heater off
-        self.temp_high = target + TUNE_PID_DELTA/2.
+        self.temp_high = target + tune_pid_delta/2.
         # the the temp that determines when to turn the heater on
-        self.temp_low = target - TUNE_PID_DELTA/2.
+        self.temp_low = target - tune_pid_delta/2.
         # is the heater on
         self.heating = False
         # the current potential peak value
