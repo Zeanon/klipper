@@ -1217,6 +1217,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#multi_fan-first_fan" class="md-nav__link">
+    [multi_fan first_fan]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#heater_fan" class="md-nav__link">
     [heater_fan]
   </a>
@@ -3222,6 +3229,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#multi_fan-first_fan" class="md-nav__link">
+    [multi_fan first_fan]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#heater_fan" class="md-nav__link">
     [heater_fan]
   </a>
@@ -5128,6 +5142,8 @@ path:
 #   be provided.
 #on_error_gcode:
 #   A list of G-Code commands to execute when an error is reported.
+#with_subdirs: False
+#   Enable subdirs into menu and M20, M23 commands. The default is False.
 </code></pre></div>
 
 <h3 id="sdcard_loop">[sdcard_loop]<a class="headerlink" href="#sdcard_loop" title="Permanent link">&para;</a></h3>
@@ -6230,6 +6246,11 @@ pin:
 #   the fan.
 </code></pre></div>
 
+<h3 id="multi_fan-first_fan">[multi_fan first_fan]<a class="headerlink" href="#multi_fan-first_fan" title="Permanent link">&para;</a></h3>
+<p>Multiple print cooling fans, replaces [fan] entry and handles M106/M107 gcodes.
+One may define any number of sections with a "multi_fan" prefix.
+ACTIVATE_FAN <a href="G-Codes.html#fan">gcode command</a> selects which fan is used for
+cooling.</p>
 <h3 id="heater_fan">[heater_fan]<a class="headerlink" href="#heater_fan" title="Permanent link">&para;</a></h3>
 <p>Heater cooling fans (one may define any number of sections with a
 "heater_fan" prefix). A "heater fan" is a fan that will be enabled
