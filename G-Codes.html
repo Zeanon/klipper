@@ -2340,6 +2340,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#axis_twist_compensation_load" class="md-nav__link">
+    AXIS_TWIST_COMPENSATION_LOAD
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4512,6 +4519,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#axis_twist_compensation_load" class="md-nav__link">
+    AXIS_TWIST_COMPENSATION_LOAD
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4933,12 +4947,14 @@ changes the active hotend.</p>
 <h4 id="set_pressure_advance">SET_PRESSURE_ADVANCE<a class="headerlink" href="#set_pressure_advance" title="Permanent link">&para;</a></h4>
 <p><code>SET_PRESSURE_ADVANCE [EXTRUDER=&lt;config_name&gt;]
 [ADVANCE=&lt;pressure_advance&gt;]
-[SMOOTH_TIME=&lt;pressure_advance_smooth_time&gt;]</code>: Set pressure advance
+[SMOOTH_TIME=&lt;pressure_advance_smooth_time&gt;]
+[ENABLE=1/0]</code>: Set pressure advance
 parameters of an extruder stepper (as defined in an
 <a href="Config_Reference.html#extruder">extruder</a> or
 <a href="Config_Reference.html#extruder_stepper">extruder_stepper</a> config section).
 If EXTRUDER is not specified, it defaults to the stepper defined in
-the active hotend.</p>
+the active hotend. Enable allows to temporarily disable the pressure advance
+without changing the configuration, IE for MMU material unload.</p>
 <h4 id="set_extruder_rotation_distance">SET_EXTRUDER_ROTATION_DISTANCE<a class="headerlink" href="#set_extruder_rotation_distance" title="Permanent link">&para;</a></h4>
 <p><code>SET_EXTRUDER_ROTATION_DISTANCE EXTRUDER=&lt;config_name&gt;
 [DISTANCE=&lt;distance&gt;]</code>: Set a new value for the provided extruder
@@ -5643,8 +5659,13 @@ settings. Requires <code>control_pin</code> to be provided in the config section
 <h3 id="stepper_enable">[stepper_enable]<a class="headerlink" href="#stepper_enable" title="Permanent link">&para;</a></h3>
 <p>The stepper_enable module is automatically loaded.</p>
 <h4 id="set_stepper_enable">SET_STEPPER_ENABLE<a class="headerlink" href="#set_stepper_enable" title="Permanent link">&para;</a></h4>
-<p><code>SET_STEPPER_ENABLE STEPPER=&lt;config_name&gt; ENABLE=[0|1]</code>: Enable or
-disable only the given stepper. This is a diagnostic and debugging
+<p><code>SET_STEPPER_ENABLE STEPPERS=&lt;config_name&gt; [ENABLE=[0|1]]</code>: Enable or
+disable only the given steppers. <code>&lt;config_name&gt;</code> can be one or
+more configured steppers, delimited with comma, for example
+<code>STEPPERS=stepper_x,stepper_y</code>. This is a diagnostic and debugging<code>SET_STEPPER_ENABLE STEPPERS=&lt;config_name&gt; [ENABLE=[0|1]]</code>: Enable or
+disable only the given steppers. <code>&lt;config_name&gt;</code> can be one or
+more configured steppers, delimited with comma, for example
+<code>STEPPERS=stepper_x,stepper_y</code>. This is a diagnostic and debugging
 tool and must be used with care. Disabling an axis motor does not
 reset the homing information. Manually moving a disabled stepper may
 cause the machine to operate the motor outside of safe limits. This
@@ -5753,11 +5774,14 @@ print.</p>
 <a href="Config_Reference.html#axis_twist_compensation">axis_twist_compensation config
 section</a> is enabled.</p>
 <h4 id="axis_twist_compensation_calibrate">AXIS_TWIST_COMPENSATION_CALIBRATE<a class="headerlink" href="#axis_twist_compensation_calibrate" title="Permanent link">&para;</a></h4>
-<p><code>AXIS_TWIST_COMPENSATION_CALIBRATE [N_POINTS=&lt;value&gt;]</code>: Initiates the X twist calibration
-wizard. <code>N_POINTS</code> specifies the number of points along the X axis to calibrate
-at and defaults to 3.</p>
+<p><code>AXIS_TWIST_COMPENSATION_CALIBRATE [SAMPLE_COUNT=&lt;value&gt;]</code>: Initiates the X
+twist calibration wizard. <code>SAMPLE_COUNT</code> specifies the number of points along
+the X axis to calibrate at and defaults to 3.</p>
 <h4 id="axis_twist_compensation_clear">AXIS_TWIST_COMPENSATION_CLEAR<a class="headerlink" href="#axis_twist_compensation_clear" title="Permanent link">&para;</a></h4>
 <p><code>AXIS_TWIST_COMPENSATION_CLEAR</code>: Clears the current compensation values.</p>
+<h4 id="axis_twist_compensation_load">AXIS_TWIST_COMPENSATION_LOAD<a class="headerlink" href="#axis_twist_compensation_load" title="Permanent link">&para;</a></h4>
+<p><code>AXIS_TWIST_COMPENSATION_LOAD</code>: Loads the twist compensation values from the
+config.</p>
 <h3 id="z_thermal_adjust">[z_thermal_adjust]<a class="headerlink" href="#z_thermal_adjust" title="Permanent link">&para;</a></h3>
 <p>The following commands are available when the
 <a href="Config_Reference.html#z_thermal_adjust">z_thermal_adjust config section</a>

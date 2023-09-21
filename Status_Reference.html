@@ -1034,6 +1034,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#stepper_" class="md-nav__link">
+    stepper_*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#stepper_enable" class="md-nav__link">
     stepper_enable
   </a>
@@ -1823,6 +1830,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#stepper_" class="md-nav__link">
+    stepper_*
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#stepper_enable" class="md-nav__link">
     stepper_enable
   </a>
@@ -2049,6 +2063,7 @@ the following strings: "adjust", "fine".</li>
 <a href="Config_Reference.html#extruder">extruder</a> objects):</p>
 <ul>
 <li><code>pressure_advance</code>: The current <a href="Pressure_Advance.html">pressure advance</a> value.</li>
+<li><code>pressure_advance_enabled</code>: If pressure advance is currently enabled.</li>
 <li><code>smooth_time</code>: The current pressure advance smooth time.</li>
 <li><code>motion_queue</code>: The name of the extruder that this extruder stepper is
   currently synchronized to.  This is reported as <code>None</code> if the extruder stepper
@@ -2183,9 +2198,11 @@ is always available):</p>
 <li><code>state</code>: The current state of the printer as tracked by the
   idle_timeout module. It is one of the following strings: "Idle",
   "Printing", "Ready".</li>
-<li><code>printing_time</code>: The amount of time (in seconds) the printer has
-  been in the "Printing" state (as tracked by the idle_timeout
-  module).</li>
+<li><code>mcu_startup_unixtime</code>: The amount of time (in seconds) since the unix epoch
+  at mcu startup.</li>
+<li><code>mcu_uptime</code>: The amount of time (in seconds) since mcu startup.</li>
+<li><code>last_print_start_time</code>: Timestamp (relative to mcu startup) of when the last
+  print started.</li>
 </ul>
 <h2 id="led">led<a class="headerlink" href="#led" title="Permanent link">&para;</a></h2>
 <p>The following information is available for each <code>[led led_name]</code>,
@@ -2338,6 +2355,22 @@ object:</p>
 <li><code>printer["servo &lt;config_name&gt;"].value</code>: The last setting of the PWM
   pin (a value between 0.0 and 1.0) associated with the servo.</li>
 </ul>
+<h2 id="stepper_">stepper_*<a class="headerlink" href="#stepper_" title="Permanent link">&para;</a></h2>
+<p>The following information is available in the <code>stepper_*</code>, and
+<code>manual_stepper some_name</code>:</p>
+<ul>
+<li><code>mcu_position</code>: The total number of steps the micro-controller has issued
+  in a positive direction minus the number of steps issued in a negative
+  direction since the micro-controller was last reset. This is the "mcu"
+  position reported by <code>GET_POSITION</code>. See the developer documentation of
+  <a href="Code_Overview.html#coordinate-systems">GET_POSITION output</a> for more
+  information.</li>
+</ul>
+<p>If the robot is in motion when the query is issued then the reported value
+includes moves buffered on the micro-controller, but does not include moves
+on the look-ahead queue. One may execute <code>M400</code> before evaluating a macro
+that reads <code>mcu_position</code> to fully flush the look-ahead and step generation
+code.</p>
 <h2 id="stepper_enable">stepper_enable<a class="headerlink" href="#stepper_enable" title="Permanent link">&para;</a></h2>
 <p>The following information is available in the <code>stepper_enable</code> object (this
 object is available if any stepper is defined):</p>

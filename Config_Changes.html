@@ -1323,6 +1323,10 @@ are not backwards compatible. It is a good idea to review this
 document when upgrading the Klipper software.</p>
 <p>All dates in this document are approximate.</p>
 <h2 id="changes">Changes<a class="headerlink" href="#changes" title="Permanent link">&para;</a></h2>
+<p>20230820: The heater <code>smooth_time</code> now defaults to not perform any
+additional temperature smoothing. To return to the previous behavior
+of one second smoothing, set <code>smooth_time: 1.0</code> in the heater config
+section.</p>
 <p>20230810: The flash-sdcard.sh script now supports both variants of the
 Bigtreetech SKR-3, STM32H743 and STM32H723. For this, the original tag
 of btt-skr-3 now has changed to be either btt-skr-3-h743 or btt-skr-3-h723.</p>
@@ -1336,6 +1340,9 @@ and superceded by the <code>zero_reference_position</code> option.  Refer to the
 for details on how to update the configuration.  With this deprecation
 the <code>RELATIVE_REFERENCE_INDEX</code> is no longer available as a parameter
 for the <code>BED_MESH_CALIBRATE</code> gcode command.</p>
+<p>20230611: The <code>stepper</code> parameter in command SET_STEPPER_ENABLE has
+been renamed to <code>steppers</code>. Now it accepts multiple steppers.
+The <code>stepper</code> parameter is deprecated and will be removed in the near future.</p>
 <p>20230530: The default canbus frequency in "make menuconfig" is
 now 1000000. If using canbus and using canbus with some other
 frequency is required, then be sure to select "Enable extra low-level
