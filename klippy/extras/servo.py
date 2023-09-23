@@ -6,7 +6,7 @@
 import ast
 import logging
 
-from klippy.extras.display import display
+from .display import display
 
 SERVO_SIGNAL_PERIOD = 0.020
 PIN_MIN_TIME = 0.100
