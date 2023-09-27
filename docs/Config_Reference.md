@@ -2917,6 +2917,8 @@ sections with a "temperature_fan" prefix). A "temperature fan" is a
 fan that will be enabled whenever its associated sensor is above a set
 temperature. By default, a temperature_fan has a shutdown_speed equal
 to max_power.
+While not being able to use "pid_v" as a control, a temperature_fan can use "curve"
+for control.
 
 See the [command reference](G-Codes.md#temperature_fan) for additional
 information.
@@ -2976,6 +2978,29 @@ reverse: False
 #   is lower than the target temperature, the fan speed increases;
 #   otherwise, the fan speed decreases.
 #   The default is False
+```
+
+```
+control: curve
+#point1: 50.0, 0.0
+#point2: 55.0, 0.5
+#   A user might defne up to 99 points which consist of a temperature with
+#   it's associated fan speed (temp, fan_speed).
+#   The target_temp value defines the temperature at which the fan will run
+#   at full speed.
+#   The algorithm will use linear interpolation to get the fan speeds
+#   between two points (if one has defined 0.0 for 50° and 1.0 for 60° the
+#   fan would run with 0.5 at 55°)
+#cooling_hysteresis: 0.0
+#   define the temperature hysteresis for lowering the fan speed
+#   (temperature differences to the last measured value that are lower than
+#   the hysteresis will not cause lowering of the fan speed)
+#heating_hysteresis: 0.0
+#   same as cooling_hysteresis but for increasing the fan speed, it is
+#   recommended to be left at 0 for safety reasons
+#smooth_readings: 10
+#   the amount of readings a median should be taken of to determine the fan
+#   speed at each update interval, the default is 10
 ```
 
 ### [controller_temperature_fan]

@@ -22,7 +22,6 @@ class ControllerTemperatureFan:
                                                               self)
         self.controller_fan = controller_fan.ControllerFan(config, self.fan)
     def set_speed(self, read_time, value):
-        value = max(value, self.controller_fan.get_speed(read_time))
         self.temperature_fan.set_speed(read_time,
                                        max(value,
                                            self
