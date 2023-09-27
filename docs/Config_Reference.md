@@ -3004,6 +3004,10 @@ control: curve
 ```
 
 ### [controller_temperature_fan]
+A combination of a controller and a temperature_fan, takes values of both and
+applies the higher speed of both implementations at any given time.
+Most useful for electronics bays to control the fans via controllers and mcu
+temperature.
 
 ### [fan_generic]
 
