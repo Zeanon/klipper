@@ -214,7 +214,7 @@ class ControlCurve:
         for i in range(1, 99):
             current_point = config.getfloatlist('point%d' % i, None)
             if current_point is None:
-                break
+                continue
             if len(current_point) != 2:
                 raise temperature_fan.printer.config_error(
                     "Point needs to have exactly one temperature and one speed "
@@ -253,7 +253,8 @@ class ControlCurve:
                     "equal speed than points with lower temperatures."
                 )
             last_point = point
-        self.hysteresis = config.getfloat('hysteresis', 0.0)
+        self.cooling_hysteresis = config.getfloat('cooling_hysteresis', 0.0)
+        self.heating_hysteresis = config.getfloat('heating_hysteresis', 0.0)
         self.smooth_readings = config.getint('smooth_readings', 10, minval=1)
         self.stored_temps = []
         for i in range(self.smooth_readings):
@@ -262,7 +263,7 @@ class ControlCurve:
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         temp = self.smooth_temps(temp)
-        if temp > target_temp:
+        if temp >= target_temp:
             self.temperature_fan.set_speed(read_time,
                                            self.temperature_fan.get_max_speed())
             return
@@ -284,11 +285,15 @@ class ControlCurve:
                  + (above[1] * (temp - below[0])))
                 / (above[0] - below[0]))
     def smooth_temps(self, current_temp):
-        if self.last_temp - self.hysteresis < current_temp < self.last_temp:
-            temp = self.last_temp
+        if (self.last_temp - self.cooling_hysteresis
+                <=
+                current_temp
+                <=
+                self.last_temp + self.heating_hysteresis):
+                temp = self.last_temp
         else:
             temp = current_temp
-        self.last_temp = current_temp
+        self.last_temp = temp
         for i in range(1, len(self.stored_temps)):
             self.stored_temps[i] = self.stored_temps[i-1]
         self.stored_temps[0] = temp
