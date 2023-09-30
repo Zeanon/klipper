@@ -8,6 +8,15 @@ All dates in this document are approximate.
 
 ## Changes
 
+20230826: If `safe_distance` is set or calculated to be 0 in `[dual_carriage]`,
+the carriages proximity checks will be disabled as per documentation. A user
+may wish to configure `safe_distance` explicitly to prevent accidental crashes
+of the carriages with each other. Additionally, the homing order of the primary
+and the dual carriage is changed in some configurations (certain configurations
+when both carriages home in the same direction, see
+[[dual_carriage] configuration reference](./Config_Reference.md#dual_carriage)
+for more details).
+
 20230820: The heater `smooth_time` now defaults to not perform any
 additional temperature smoothing. To return to the previous behavior
 of one second smoothing, set `smooth_time: 1.0` in the heater config
