@@ -94,6 +94,7 @@ class ExtruderStepper:
             raise gcmd.error("Unable to infer active extruder stepper")
         extruder.extruder_stepper.cmd_SET_PRESSURE_ADVANCE(gcmd)
     def cmd_SET_PRESSURE_ADVANCE(self, gcmd):
+        verbose = gcmd.get('VERBOSE', 'high')
         self.pressure_advance = gcmd.get_float(
             'ADVANCE', self.pressure_advance, minval=0.)
         self.pa_smooth_time = gcmd.get_float(
@@ -106,6 +107,8 @@ class ExtruderStepper:
                "pressure_advance_enabled: %d\n"
                % (self.pressure_advance, self.pa_smooth_time, self.pa_enabled))
         self.printer.set_rollover_info(self.name, "%s: %s" % (self.name, msg))
+        if verbose.lower() != 'high':
+            return
         gcmd.respond_info(msg, log=False)
     cmd_SET_E_ROTATION_DISTANCE_help = "Set extruder rotation distance"
     def cmd_SET_E_ROTATION_DISTANCE(self, gcmd):
