@@ -85,10 +85,10 @@ class EncoderSensor:
     cmd_SET_DETECTION_LENGTH_help = ("Set the detection length of the filament "
                                      "motion sensor")
     def cmd_SET_DETECTION_LENGTH(self, gcmd):
-        verbose = gcmd.get('VERBOSE', 'high')
+        verbose = gcmd.get('VERBOSE', 'high').lower()
         self.detection_length = gcmd.get_float('LENGTH', minval=0.)
         self._update_filament_runout_pos()
-        if verbose.lower() != 'high':
+        if verbose != 'high' and verbose != 'low':
             return
         gcmd.respond_info("Detection Length for Sensor %s set to: %f"
                           % (self.name, self.detection_length))
