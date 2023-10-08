@@ -97,7 +97,7 @@ class EncoderSensor:
                           % (self.name, self.detection_length))
     cmd_GET_DETECTION_LENGTH_help = "Query the status of the Filament Sensor"
     def cmd_GET_DETECTION_LENGTH(self, gcmd):
-        gcmd.respond_info("Detection Length for Sensor %s set to: %f"
+        gcmd.respond_info("Detection Length for Sensor %s set to: %.2f"
                           % (self.name, self.detection_length))
 
 def load_config_prefix(config):
