@@ -42,6 +42,10 @@ class EncoderSensor:
             "SET_DETECTION_LENGTH", "SENSOR", self.name,
             self.cmd_SET_DETECTION_LENGTH,
             desc=self.cmd_SET_DETECTION_LENGTH_help)
+        self.gcode.register_mux_command(
+            "GET_DETECTION_LENGTH", "SENSOR", self.name,
+            self.cmd_GET_DETECTION_LENGTH,
+            desc=self.cmd_GET_DETECTION_LENGTH_help)
     def _update_filament_runout_pos(self, eventtime=None):
         if eventtime is None:
             eventtime = self.reactor.monotonic()
@@ -78,10 +82,15 @@ class EncoderSensor:
             # Check for filament insertion
             # Filament is always assumed to be present on an encoder event
             self.runout_helper.note_filament_present(True)
-    cmd_SET_DETECTION_LENGTH_help = "Query the status of the Filament Sensor"
+    cmd_SET_DETECTION_LENGTH_help = ("Set the detection length of the filament "
+                                     "motion sensor")
     def cmd_SET_DETECTION_LENGTH(self, gcmd):
         self.detection_length = gcmd.get_float('LENGTH', minval=0.)
         self._update_filament_runout_pos()
+        gcmd.respond_info("Detection Length for Sensor %s set to: %f"
+                          % (self.name, self.detection_length))
+    cmd_GET_DETECTION_LENGTH_help = "Query the status of the Filament Sensor"
+    def cmd_GET_DETECTION_LENGTH(self, gcmd):
         gcmd.respond_info("Detection Length for Sensor %s set to: %f"
                           % (self.name, self.detection_length))
 
