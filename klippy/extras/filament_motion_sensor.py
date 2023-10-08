@@ -11,7 +11,9 @@ CHECK_RUNOUT_TIMEOUT = .250
 class EncoderSensor:
     def __init__(self, config):
         # Read config
+        self.name = config.get_name().split()[-1]
         self.printer = config.get_printer()
+        self.gcode = self.printer.lookup_object('gcode')
         switch_pin = config.get('switch_pin')
         self.extruder_name = config.get('extruder')
         self.detection_length = config.getfloat(
@@ -36,6 +38,10 @@ class EncoderSensor:
                 self._handle_not_printing)
         self.printer.register_event_handler('idle_timeout:idle',
                 self._handle_not_printing)
+        self.gcode.register_mux_command(
+            "SET_DETECTION_LENGTH", "SENSOR", self.name,
+            self.cmd_SET_DETECTION_LENGTH,
+            desc=self.cmd_SET_DETECTION_LENGTH_help)
     def _update_filament_runout_pos(self, eventtime=None):
         if eventtime is None:
             eventtime = self.reactor.monotonic()
@@ -72,6 +78,12 @@ class EncoderSensor:
             # Check for filament insertion
             # Filament is always assumed to be present on an encoder event
             self.runout_helper.note_filament_present(True)
+    cmd_SET_DETECTION_LENGTH_help = "Query the status of the Filament Sensor"
+    def cmd_SET_DETECTION_LENGTH(self, gcmd):
+        self.detection_length = gcmd.get_float('LENGTH', minval=0.)
+        self._update_filament_runout_pos()
+        gcmd.respond_info("Detection Length for Sensor %s set to: %f"
+                          % (self.name, self.detection_length))
 
 def load_config_prefix(config):
     return EncoderSensor(config)
