@@ -85,9 +85,12 @@ class EncoderSensor:
     cmd_SET_DETECTION_LENGTH_help = ("Set the detection length of the filament "
                                      "motion sensor")
     def cmd_SET_DETECTION_LENGTH(self, gcmd):
+        if self.extruder is None:
+            gcmd.error("Extruder not configured")
         verbose = gcmd.get('VERBOSE', 'high').lower()
         self.detection_length = gcmd.get_float('LENGTH', minval=0.)
         self._update_filament_runout_pos()
+        self.runout_helper.note_filament_present(True)
         if verbose != 'high':
             return
         gcmd.respond_info("Detection Length for Sensor %s set to: %f"
