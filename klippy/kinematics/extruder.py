@@ -107,7 +107,7 @@ class ExtruderStepper:
                "pressure_advance_enabled: %d\n"
                % (self.pressure_advance, self.pa_smooth_time, self.pa_enabled))
         self.printer.set_rollover_info(self.name, "%s: %s" % (self.name, msg))
-        if verbose != 'high' and verbose != 'low':
+        if verbose != 'high':
             return
         gcmd.respond_info(msg, log=False)
     cmd_SET_E_ROTATION_DISTANCE_help = "Set extruder rotation distance"

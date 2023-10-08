@@ -88,7 +88,7 @@ class EncoderSensor:
         verbose = gcmd.get('VERBOSE', 'high').lower()
         self.detection_length = gcmd.get_float('LENGTH', minval=0.)
         self._update_filament_runout_pos()
-        if verbose != 'high' and verbose != 'low':
+        if verbose != 'high':
             return
         gcmd.respond_info("Detection Length for Sensor %s set to: %f"
                           % (self.name, self.detection_length))
