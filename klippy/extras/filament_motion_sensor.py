@@ -93,7 +93,7 @@ class EncoderSensor:
         self.runout_helper.note_filament_present(True)
         if verbose != 'high':
             return
-        gcmd.respond_info("Detection Length for Sensor %s set to: %f"
+        gcmd.respond_info("Detection Length for Sensor %s set to: %.2f"
                           % (self.name, self.detection_length))
     cmd_GET_DETECTION_LENGTH_help = "Query the status of the Filament Sensor"
     def cmd_GET_DETECTION_LENGTH(self, gcmd):
