@@ -157,10 +157,11 @@ class SwitchSensor:
         extruder = self.printer.lookup_object('toolhead').get_extruder()
         return extruder.find_past_position(print_time)
     def get_sensor_status(self):
-        return ("Filament Sensor %s: %s"
+        return ("Filament Sensor %s: %s\n"
+                "Runout Distance: %.2f"
                 % (self.runout_helper.name,
                    'enabled' if self.runout_helper.sensor_enabled
-                   else 'disabled'))
+                   else 'disabled', self.runout_helper.runout_distance))
     def set_filament_sensor(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
         reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
