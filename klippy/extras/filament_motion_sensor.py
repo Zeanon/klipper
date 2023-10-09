@@ -3,7 +3,6 @@
 # Copyright (C) 2021 Joshua Wherrett <thejoshw.code@gmail.com>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import logging
 from . import filament_switch_sensor
 
 CHECK_RUNOUT_TIMEOUT = .250
@@ -37,15 +36,11 @@ class EncoderSensor:
                                             self._handle_not_printing)
         self.printer.register_event_handler('idle_timeout:idle',
                                             self._handle_not_printing)
-        self.gcode.register_mux_command(
-            "GET_DETECTION_LENGTH", "SENSOR", self.runout_helper.name,
-            self.cmd_GET_DETECTION_LENGTH,
-            desc=self.cmd_GET_DETECTION_LENGTH_help)
     def _update_filament_runout_pos(self, eventtime=None):
         if eventtime is None:
             eventtime = self.reactor.monotonic()
         self.filament_runout_pos = (
-                self._get_extruder_pos(eventtime) +
+                self.get_extruder_pos(eventtime) +
                 self.detection_length)
     def _handle_ready(self):
         self.extruder = self.printer.lookup_object(self.extruder_name)
@@ -60,13 +55,13 @@ class EncoderSensor:
     def _handle_not_printing(self, print_time):
         self.reactor.update_timer(self._extruder_pos_update_timer,
                 self.reactor.NEVER)
-    def _get_extruder_pos(self, eventtime=None):
+    def get_extruder_pos(self, eventtime=None):
         if eventtime is None:
             eventtime = self.reactor.monotonic()
         print_time = self.estimated_print_time(eventtime)
         return self.extruder.find_past_position(print_time)
     def _extruder_pos_update_event(self, eventtime):
-        extruder_pos = self._get_extruder_pos(eventtime)
+        extruder_pos = self.get_extruder_pos(eventtime)
         # Check for filament runout
         self.runout_helper.note_filament_present(
                 extruder_pos < self.filament_runout_pos)
@@ -83,26 +78,24 @@ class EncoderSensor:
                 % (self.runout_helper.name,
                    'enabled' if self.runout_helper.sensor_enabled > 0
                    else 'disabled', self.detection_length))
-    def enable_sensor(self, gcmd, enable):
-        if self.extruder is None:
-            gcmd.error("Extruder not configured")
-        self.runout_helper.sensor_enabled = enable
-        self.reset_sensor(gcmd)
-    def reset_sensor(self, gcmd, reset=1):
-        if self.extruder is None:
-            gcmd.error("Extruder not configured")
-        if reset > 0:
+    def set_filament_sensor(self, gcmd):
+        enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
+        reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
+        detection_length = gcmd.get_float('DETECTION_LENGTH', None, minval=0.)
+        if enable is None and reset is None and detection_length is None:
+            gcmd.respond_info(self.get_sensor_status())
+            return
+        if enable is not None:
+            if enable and not self.runout_helper.sensor_enabled:
+                reset = 1
+            self.runout_helper.sensor_enabled = enable
+        if detection_length is not None:
+            if detection_length != self.detection_length:
+                reset = 1
+            self.detection_length = detection_length
+        if reset is not None and reset > 0:
             self._update_filament_runout_pos()
             self.runout_helper.note_filament_present(True)
-    def set_detection_length(self, gcmd, detection_length):
-        if self.extruder is None:
-            gcmd.error("Extruder not configured")
-        self.detection_length = detection_length
-        self.reset_sensor(gcmd)
-    cmd_GET_DETECTION_LENGTH_help = "Query the status of the Filament Sensor"
-    def cmd_GET_DETECTION_LENGTH(self, gcmd):
-        gcmd.respond_info("Detection Length for Sensor %s set to: %.2f"
-                          % (self.runout_helper.name, self.detection_length))
 
 def load_config_prefix(config):
     return EncoderSensor(config)

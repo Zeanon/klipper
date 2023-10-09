@@ -4,9 +4,12 @@
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import logging
+from . import filament_motion_sensor
+
+CHECK_RUNOUT_TIMEOUT = .250
 
 class RunoutHelper:
-    def __init__(self, config, defined_sensor):
+    def __init__(self, config, defined_sensor, runout_distance=0):
         self.name = config.get_name().split()[-1]
         self.defined_sensor = defined_sensor
         self.printer = config.get_printer()
@@ -24,12 +27,15 @@ class RunoutHelper:
         if config.get('insert_gcode', None) is not None:
             self.insert_gcode = gcode_macro.load_template(
                 config, 'insert_gcode')
-        self.pause_delay = config.getfloat('pause_delay', .5, above=.0)
+        self.pause_delay = config.getfloat('pause_delay', .5, above=0.)
         self.event_delay = config.getfloat('event_delay', 3., above=0.)
+        self.runout_distance = runout_distance
         # Internal state
         self.min_event_systime = self.reactor.NEVER
         self.filament_present = False
         self.sensor_enabled = True
+        self.runout_position = 0.
+        self.runout_distance_timer = None
         # Register commands and event handlers
         self.printer.register_event_handler("klippy:ready", self._handle_ready)
         self.gcode.register_mux_command(
@@ -45,6 +51,14 @@ class RunoutHelper:
     def _runout_event_handler(self, eventtime):
         # Pausing from inside an event requires that the pause portion
         # of pause_resume execute immediately.
+        if self.runout_distance > 0:
+            if self.runout_distance_timer is None:
+                self.runout_position = self.defined_sensor.get_extruder_pos(eventtime)
+                self.runout_distance_timer = self.reactor.register_timer(
+                    self._pause_after_distance, self.reactor.NOW)
+        else:
+            self._execute_runout(eventtime)
+    def _execute_runout(self, eventtime):
         pause_prefix = ""
         if self.runout_pause:
             pause_resume = self.printer.lookup_object('pause_resume')
@@ -52,6 +66,15 @@ class RunoutHelper:
             pause_prefix = "PAUSE\n"
             self.printer.get_reactor().pause(eventtime + self.pause_delay)
         self._exec_gcode(pause_prefix, self.runout_gcode)
+    def _pause_after_distance(self, eventtime):
+        if (self.defined_sensor.get_extruder_pos(eventtime)
+                < self.runout_position + self.runout_distance):
+            return eventtime + CHECK_RUNOUT_TIMEOUT
+        else:
+            self._execute_runout(eventtime)
+            self.reactor.unregister_timer(self.runout_distance_timer)
+            self.runout_distance_timer = None
+            return self.reactor.NEVER
     def _insert_event_handler(self, eventtime):
         self._exec_gcode("", self.insert_gcode)
     def _exec_gcode(self, prefix, template):
@@ -95,48 +118,50 @@ class RunoutHelper:
             "enabled": bool(self.sensor_enabled)}
     cmd_QUERY_FILAMENT_SENSOR_help = "Query the status of the Filament Sensor"
     def cmd_QUERY_FILAMENT_SENSOR(self, gcmd):
-        if self.filament_present:
-            msg = "Filament Sensor %s: filament detected" % self.name
-        else:
-            msg = "Filament Sensor %s: filament not detected" % self.name
+        msg = "Filament Sensor %s: filament %s" %\
+              (self.name, "detected" if self.filament_present else "not detected")
         gcmd.respond_info(msg)
     cmd_SET_FILAMENT_SENSOR_help = "Sets the filament sensor on/off"
     def cmd_SET_FILAMENT_SENSOR(self, gcmd):
-        enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
-        reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
-        detection_length = gcmd.get_float('DETECTION_LENGTH', None, minval=0.)
-        if enable is None and reset is None and detection_length is None:
-            gcmd.respond_info(self.defined_sensor.get_sensor_status())
-            return
-        if enable is not None:
-            self.defined_sensor.enable_sensor(gcmd, enable)
-        if reset is not None:
-            self.defined_sensor.reset_sensor(gcmd, reset)
-        if detection_length is not None:
-            self.defined_sensor.set_detection_length(gcmd, detection_length)
+        self.defined_sensor.set_filament_sensor(gcmd)
 
 
 class SwitchSensor:
     def __init__(self, config):
-        printer = config.get_printer()
-        buttons = printer.load_object(config, 'buttons')
+        self.printer = config.get_printer()
+        buttons = self.printer.load_object(config, 'buttons')
         switch_pin = config.get('switch_pin')
+        runout_distance = config.getfloat('runout_distance', 0., minval=0.)
         buttons.register_buttons([switch_pin], self._button_handler)
-        self.runout_helper = RunoutHelper(config, self)
+        self.reactor = self.printer.get_reactor()
+        self.estimated_print_time = None
+        self.runout_helper = RunoutHelper(config, self, runout_distance)
         self.get_status = self.runout_helper.get_status
+        self.printer.register_event_handler('klippy:ready',
+                                            self._handle_ready)
+    def _handle_ready(self):
+        self.estimated_print_time = (
+                self.printer.lookup_object('mcu').estimated_print_time)
     def _button_handler(self, eventtime, state):
         self.runout_helper.note_filament_present(state)
+    def get_extruder_pos(self, eventtime=None):
+        if eventtime is None:
+            eventtime = self.reactor.monotonic()
+        print_time = self.estimated_print_time(eventtime)
+        extruder = self.printer.lookup_object('toolhead').get_extruder()
+        return extruder.find_past_position(print_time)
     def get_sensor_status(self):
         return ("Filament Sensor %s: %s"
                 % (self.runout_helper.name,
                    'enabled' if self.runout_helper.sensor_enabled > 0
                    else 'disabled'))
-    def enable_sensor(self, gcmd, enable):
-        self.runout_helper.sensor_enabled = enable
-    def reset_sensor(self, gcmd, reset=1):
-        raise gcmd.error("Can not reset filament_switch_sensor")
-    def set_detection_length(self, gcmd, detection_length):
-        raise gcmd.error("Can not set detection length of filament_switch_sensor")
+    def set_filament_sensor(self, gcmd):
+        enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
+        if enable is None:
+            gcmd.respond_info(self.get_sensor_status())
+            return
+        else:
+            self.runout_helper.sensor_enabled = enable
 
 def load_config_prefix(config):
     return SwitchSensor(config)

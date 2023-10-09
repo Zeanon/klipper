@@ -491,9 +491,18 @@ status of the filament sensor. The data displayed on the terminal will
 depend on the sensor type defined in the configuration.
 
 #### SET_FILAMENT_SENSOR
-`SET_FILAMENT_SENSOR SENSOR=<sensor_name> ENABLE=[0|1]`: Sets the
-filament sensor on/off. If ENABLE is set to 0, the filament sensor
-will be disabled, if set to 1 it is enabled.
+`SET_FILAMENT_SENSOR SENSOR=<sensor_name> [ENABLE=0|1] [RESET=0|1]
+[DETECTION_LENGTH=<mm>]`: Sets values for the filament sensor. 
+If all parameters are omitted, the current stats will be reported.
+ENABLE sets the filament sensor on/off. If ENABLE is set to 0, the
+filament sensor will be disabled, if set to 1 it is enabled.
+RESET and DETECTION_LENGTH are only usable on filament_motion_sensors.
+RESET will reset the filament sensor and DETECTION_LENGTH will change
+the detection length.
+ENABLE will trigger a reset of the sensor if set to 1 and the sensor
+previously was not enabled.
+DETECTION_LENGTH will trigger a reset of the sensor of the detection
+length changes.
 
 ### [firmware_retraction]
 
