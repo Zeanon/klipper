@@ -136,7 +136,7 @@ class SwitchSensor:
     def reset_sensor(self, gcmd, reset=1):
         gcmd.error("Can not reset filament_switch_sensor")
     def set_detection_length(self, gcmd, detection_length):
-        gcmd.error("Can not set detection length of filament_switch_sensor")
+        gcmd.respond_info("Can not set detection length of filament_switch_sensor")
 
 def load_config_prefix(config):
     return SwitchSensor(config)

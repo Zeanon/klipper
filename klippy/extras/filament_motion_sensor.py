@@ -94,8 +94,6 @@ class EncoderSensor:
         if reset > 0:
             self._update_filament_runout_pos()
             self.runout_helper.note_filament_present(True)
-            if gcmd is not None:
-                gcmd.respond_info('RESET')
     def set_detection_length(self, gcmd, detection_length):
         if self.extruder is None:
             gcmd.error("Extruder not configured")
