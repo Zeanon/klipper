@@ -78,7 +78,7 @@ class EncoderSensor:
             # Filament is always assumed to be present on an encoder event
             self.runout_helper.note_filament_present(True)
     def get_sensor_status(self):
-        return ("Filament Sensor %s: %s"
+        return ("Filament Sensor %s: %s\n"
                 "Detection Length: %.2f"
                 % (self.runout_helper.name,
                    'enabled' if self.runout_helper.sensor_enabled > 0
