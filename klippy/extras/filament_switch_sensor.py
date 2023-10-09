@@ -154,7 +154,7 @@ class SwitchSensor:
     def get_sensor_status(self):
         return ("Filament Sensor %s: %s"
                 % (self.runout_helper.name,
-                   'enabled' if self.runout_helper.sensor_enabled > 0
+                   'enabled' if self.runout_helper.sensor_enabled
                    else 'disabled'))
     def set_filament_sensor(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
