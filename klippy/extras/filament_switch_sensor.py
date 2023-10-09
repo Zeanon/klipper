@@ -85,7 +85,7 @@ class RunoutHelper:
             logging.exception("Script running error")
         self.min_event_systime = self.reactor.monotonic() + self.event_delay
     def note_filament_present(self, is_filament_present, force=False):
-        if is_filament_present == self.filament_present or force:
+        if is_filament_present == self.filament_present or not force:
             return
         self.filament_present = is_filament_present
         eventtime = self.reactor.monotonic()
