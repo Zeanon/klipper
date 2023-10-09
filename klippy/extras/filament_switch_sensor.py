@@ -36,6 +36,7 @@ class RunoutHelper:
         self.sensor_enabled = True
         self.runout_position = 0.
         self.runout_distance_timer = None
+        self.force_trigger = False
         # Register commands and event handlers
         self.printer.register_event_handler("klippy:ready", self._handle_ready)
         self.printer.register_event_handler('idle_timeout:printing',
@@ -116,7 +117,10 @@ class RunoutHelper:
             logging.info(
                 "Filament Sensor %s: runout event detected, Time %.2f" %
                 (self.name, eventtime))
-            self.reactor.register_callback(self._runout_event_handler)
+            if force:
+                self.reactor.register_callback(self._execute_runout)
+            else:
+                self.reactor.register_callback(self._runout_event_handler)
     def get_status(self, eventtime):
         return {
             "filament_detected": bool(self.filament_present),
