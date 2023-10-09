@@ -50,7 +50,7 @@ class RunoutHelper:
             desc=self.cmd_SET_FILAMENT_SENSOR_help)
     def _handle_ready(self):
         self.min_event_systime = self.reactor.monotonic() + 2.
-    def _handle_printing(self):
+    def _handle_printing(self, print_time):
         self.note_filament_present(self.filament_present, True)
     def _runout_event_handler(self, eventtime):
         # Pausing from inside an event requires that the pause portion
