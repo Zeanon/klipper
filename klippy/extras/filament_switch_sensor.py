@@ -158,11 +158,14 @@ class SwitchSensor:
                    else 'disabled'))
     def set_filament_sensor(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
-        if enable is None:
+        runout_distance = gcmd.get_float('RUNOUT_DISTANCE', None, minval=0.)
+        if enable is None and runout_distance is None:
             gcmd.respond_info(self.get_sensor_status())
             return
-        else:
+        if enable is not None:
             self.runout_helper.sensor_enabled = enable
+        if runout_distance is not None:
+            self.runout_helper.runout_distance = runout_distance
 
 def load_config_prefix(config):
     return SwitchSensor(config)
