@@ -5,9 +5,13 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import logging
 
+from klippy.extras.filament_motion_sensor import EncoderSensor
+
+
 class RunoutHelper:
-    def __init__(self, config):
+    def __init__(self, config, defined_sensor):
         self.name = config.get_name().split()[-1]
+        self.defined_sensor = defined_sensor
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
         self.gcode = self.printer.lookup_object('gcode')
@@ -95,13 +99,25 @@ class RunoutHelper:
     cmd_QUERY_FILAMENT_SENSOR_help = "Query the status of the Filament Sensor"
     def cmd_QUERY_FILAMENT_SENSOR(self, gcmd):
         if self.filament_present:
-            msg = "Filament Sensor %s: filament detected" % (self.name)
+            msg = "Filament Sensor %s: filament detected" % self.name
         else:
-            msg = "Filament Sensor %s: filament not detected" % (self.name)
+            msg = "Filament Sensor %s: filament not detected" % self.name
         gcmd.respond_info(msg)
     cmd_SET_FILAMENT_SENSOR_help = "Sets the filament sensor on/off"
     def cmd_SET_FILAMENT_SENSOR(self, gcmd):
-        self.sensor_enabled = gcmd.get_int("ENABLE", 1)
+        enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
+        reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
+        detection_length = gcmd.get_float('DETECTION_LENGTH', None, minval=0.)
+        if enable is None and reset is None and detection_length is None:
+            gcmd.respond_info(self.defined_sensor.get_sensor_status())
+            return
+        if enable is not None:
+            self.defined_sensor.enable_sensor(gcmd, enable)
+        if reset is not None:
+            self.defined_sensor.reset_sensor(gcmd, reset)
+        if detection_length is not None:
+            self.defined_sensor.set_detection_length(gcmd, detection_length)
+
 
 class SwitchSensor:
     def __init__(self, config):
@@ -109,10 +125,21 @@ class SwitchSensor:
         buttons = printer.load_object(config, 'buttons')
         switch_pin = config.get('switch_pin')
         buttons.register_buttons([switch_pin], self._button_handler)
-        self.runout_helper = RunoutHelper(config)
+        self.runout_helper = RunoutHelper(config, self)
         self.get_status = self.runout_helper.get_status
     def _button_handler(self, eventtime, state):
         self.runout_helper.note_filament_present(state)
+    def get_sensor_status(self):
+        return ("Filament Sensor %s: %s"
+                % (self.runout_helper.name,
+                   'enabled' if self.runout_helper.sensor_enabled > 0
+                   else 'disabled'))
+    def enable_sensor(self, gcmd, enable):
+        self.runout_helper.sensor_enabled = enable
+    def reset_sensor(self, gcmd, reset=1):
+        gcmd.error("Can not reset filament_switch_sensor")
+    def set_detection_length(self, gcmd, detection_length):
+        gcmd.error("Can not set detection length of filament_switch_sensor")
 
 def load_config_prefix(config):
     return SwitchSensor(config)

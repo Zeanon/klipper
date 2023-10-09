@@ -11,7 +11,6 @@ CHECK_RUNOUT_TIMEOUT = .250
 class EncoderSensor:
     def __init__(self, config):
         # Read config
-        self.name = config.get_name().split()[-1]
         self.printer = config.get_printer()
         self.gcode = self.printer.lookup_object('gcode')
         switch_pin = config.get('switch_pin')
@@ -23,7 +22,7 @@ class EncoderSensor:
         buttons.register_buttons([switch_pin], self.encoder_event)
         # Get printer objects
         self.reactor = self.printer.get_reactor()
-        self.runout_helper = filament_switch_sensor.RunoutHelper(config)
+        self.runout_helper = filament_switch_sensor.RunoutHelper(config, self)
         self.get_status = self.runout_helper.get_status
         self.extruder = None
         self.estimated_print_time = None
@@ -31,19 +30,15 @@ class EncoderSensor:
         self.filament_runout_pos = None
         # Register commands and event handlers
         self.printer.register_event_handler('klippy:ready',
-                self._handle_ready)
+                                            self._handle_ready)
         self.printer.register_event_handler('idle_timeout:printing',
-                self._handle_printing)
+                                            self._handle_printing)
         self.printer.register_event_handler('idle_timeout:ready',
-                self._handle_not_printing)
+                                            self._handle_not_printing)
         self.printer.register_event_handler('idle_timeout:idle',
-                self._handle_not_printing)
+                                            self._handle_not_printing)
         self.gcode.register_mux_command(
-            "SET_DETECTION_LENGTH", "SENSOR", self.name,
-            self.cmd_SET_DETECTION_LENGTH,
-            desc=self.cmd_SET_DETECTION_LENGTH_help)
-        self.gcode.register_mux_command(
-            "GET_DETECTION_LENGTH", "SENSOR", self.name,
+            "GET_DETECTION_LENGTH", "SENSOR", self.runout_helper.name,
             self.cmd_GET_DETECTION_LENGTH,
             desc=self.cmd_GET_DETECTION_LENGTH_help)
     def _update_filament_runout_pos(self, eventtime=None):
@@ -82,23 +77,34 @@ class EncoderSensor:
             # Check for filament insertion
             # Filament is always assumed to be present on an encoder event
             self.runout_helper.note_filament_present(True)
-    cmd_SET_DETECTION_LENGTH_help = ("Set the detection length of the filament "
-                                     "motion sensor")
-    def cmd_SET_DETECTION_LENGTH(self, gcmd):
+    def get_sensor_status(self):
+        return ("Filament Sensor %s: %s"
+                "Detection Length: %.2f"
+                % (self.runout_helper.name,
+                   'enabled' if self.runout_helper.sensor_enabled > 0
+                   else 'disabled', self.detection_length))
+    def enable_sensor(self, gcmd, enable):
         if self.extruder is None:
             gcmd.error("Extruder not configured")
-        verbose = gcmd.get('VERBOSE', 'high').lower()
-        self.detection_length = gcmd.get_float('LENGTH', minval=0.)
-        self._update_filament_runout_pos()
-        self.runout_helper.note_filament_present(True)
-        if verbose != 'high':
-            return
-        gcmd.respond_info("Detection Length for Sensor %s set to: %.2f"
-                          % (self.name, self.detection_length))
+        self.runout_helper.sensor_enabled = enable
+        self.reset_sensor(gcmd)
+    def reset_sensor(self, gcmd, reset=1):
+        if self.extruder is None:
+            gcmd.error("Extruder not configured")
+        if reset > 0:
+            self._update_filament_runout_pos()
+            self.runout_helper.note_filament_present(True)
+            if gcmd is not None:
+                gcmd.respond_info('RESET')
+    def set_detection_length(self, gcmd, detection_length):
+        if self.extruder is None:
+            gcmd.error("Extruder not configured")
+        self.detection_length = detection_length
+        self.reset_sensor(gcmd)
     cmd_GET_DETECTION_LENGTH_help = "Query the status of the Filament Sensor"
     def cmd_GET_DETECTION_LENGTH(self, gcmd):
         gcmd.respond_info("Detection Length for Sensor %s set to: %.2f"
-                          % (self.name, self.detection_length))
+                          % (self.runout_helper.name, self.detection_length))
 
 def load_config_prefix(config):
     return EncoderSensor(config)
