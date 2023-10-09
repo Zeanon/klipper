@@ -84,8 +84,8 @@ class RunoutHelper:
         except Exception:
             logging.exception("Script running error")
         self.min_event_systime = self.reactor.monotonic() + self.event_delay
-    def note_filament_present(self, is_filament_present):
-        if is_filament_present == self.filament_present:
+    def note_filament_present(self, is_filament_present, force=False):
+        if is_filament_present == self.filament_present or force:
             return
         self.filament_present = is_filament_present
         eventtime = self.reactor.monotonic()
@@ -159,14 +159,20 @@ class SwitchSensor:
                    else 'disabled'))
     def set_filament_sensor(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
+        reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
         runout_distance = gcmd.get_float('RUNOUT_DISTANCE', None, minval=0.)
-        if enable is None and runout_distance is None:
+        if enable is None and reset is None and runout_distance is None:
             gcmd.respond_info(self.get_sensor_status())
             return
         if enable is not None:
+            if enable and not self.runout_helper.sensor_enabled:
+                reset = 1
             self.runout_helper.sensor_enabled = enable
         if runout_distance is not None:
             self.runout_helper.runout_distance = runout_distance
+        if reset is not None and reset > 0:
+            self.runout_helper.note_filament_present(
+                self.runout_helper.filament_present, True)
 
 def load_config_prefix(config):
     return SwitchSensor(config)
