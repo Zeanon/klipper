@@ -5,9 +5,6 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import logging
 
-from klippy.extras.filament_motion_sensor import EncoderSensor
-
-
 class RunoutHelper:
     def __init__(self, config, defined_sensor):
         self.name = config.get_name().split()[-1]
