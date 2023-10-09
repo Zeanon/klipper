@@ -93,7 +93,7 @@ class EncoderSensor:
             if detection_length != self.detection_length:
                 reset = 1
             self.detection_length = detection_length
-        if reset is not None and reset > 0:
+        if reset is not None and reset:
             self._update_filament_runout_pos()
             self.runout_helper.note_filament_present(True)
 

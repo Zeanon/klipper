@@ -38,6 +38,8 @@ class RunoutHelper:
         self.runout_distance_timer = None
         # Register commands and event handlers
         self.printer.register_event_handler("klippy:ready", self._handle_ready)
+        self.printer.register_event_handler('idle_timeout:printing',
+                                            self._handle_printing)
         self.gcode.register_mux_command(
             "QUERY_FILAMENT_SENSOR", "SENSOR", self.name,
             self.cmd_QUERY_FILAMENT_SENSOR,
@@ -48,6 +50,8 @@ class RunoutHelper:
             desc=self.cmd_SET_FILAMENT_SENSOR_help)
     def _handle_ready(self):
         self.min_event_systime = self.reactor.monotonic() + 2.
+    def _handle_printing(self):
+        self.note_filament_present(self.filament_present, True)
     def _runout_event_handler(self, eventtime):
         # Pausing from inside an event requires that the pause portion
         # of pause_resume execute immediately.
@@ -170,7 +174,7 @@ class SwitchSensor:
             self.runout_helper.sensor_enabled = enable
         if runout_distance is not None:
             self.runout_helper.runout_distance = runout_distance
-        if reset is not None and reset > 0:
+        if reset is not None and reset:
             self.runout_helper.note_filament_present(
                 self.runout_helper.filament_present, True)
 
