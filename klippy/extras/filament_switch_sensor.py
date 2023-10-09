@@ -27,8 +27,8 @@ class RunoutHelper:
         if config.get('insert_gcode', None) is not None:
             self.insert_gcode = gcode_macro.load_template(
                 config, 'insert_gcode')
-        self.pause_delay = config.getfloat('pause_delay', .5, above=0.)
-        self.event_delay = config.getfloat('event_delay', 3., above=0.)
+        self.pause_delay = config.getfloat('pause_delay', .5, minval=0.)
+        self.event_delay = config.getfloat('event_delay', 3., minval=0.)
         self.runout_distance = runout_distance
         # Internal state
         self.min_event_systime = self.reactor.NEVER
