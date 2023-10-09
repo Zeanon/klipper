@@ -53,7 +53,8 @@ class RunoutHelper:
         # of pause_resume execute immediately.
         if self.runout_distance > 0:
             if self.runout_distance_timer is None:
-                self.runout_position = self.defined_sensor.get_extruder_pos(eventtime)
+                self.runout_position = (self.defined_sensor
+                                        .get_extruder_pos(eventtime))
                 self.runout_distance_timer = self.reactor.register_timer(
                     self._pause_after_distance, self.reactor.NOW)
         else:
