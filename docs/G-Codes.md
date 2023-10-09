@@ -492,7 +492,7 @@ depend on the sensor type defined in the configuration.
 
 #### SET_FILAMENT_SENSOR
 `SET_FILAMENT_SENSOR SENSOR=<sensor_name> [ENABLE=0|1] [RESET=0|1]
-[DETECTION_LENGTH=<mm>]`: Sets values for the filament sensor. 
+[DETECTION_LENGTH=<mm>]`: Sets values for the filament sensor.
 If all parameters are omitted, the current stats will be reported.
 ENABLE sets the filament sensor on/off. If ENABLE is set to 0, the
 filament sensor will be disabled, if set to 1 it is enabled.
