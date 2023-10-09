@@ -72,14 +72,15 @@ class RunoutHelper:
             pause_prefix = "PAUSE\n"
             self.printer.get_reactor().pause(eventtime + self.pause_delay)
         self._exec_gcode(pause_prefix, self.runout_gcode)
+        if self.runout_distance_timer is not None:
+            self.reactor.unregister_timer(self.runout_distance_timer)
+            self.runout_distance_timer = None
     def _pause_after_distance(self, eventtime):
         if (self.defined_sensor.get_extruder_pos(eventtime)
                 < self.runout_position + self.runout_distance):
             return eventtime + CHECK_RUNOUT_TIMEOUT
         else:
             self._execute_runout(eventtime)
-            self.reactor.unregister_timer(self.runout_distance_timer)
-            self.runout_distance_timer = None
             return self.reactor.NEVER
     def _insert_event_handler(self, eventtime):
         self._exec_gcode("", self.insert_gcode)
@@ -117,10 +118,20 @@ class RunoutHelper:
             logging.info(
                 "Filament Sensor %s: runout event detected, Time %.2f" %
                 (self.name, eventtime))
-            if force:
-                self.reactor.register_callback(self._execute_runout)
+            # Pausing from inside an event requires that the pause portion
+            # of pause_resume execute immediately.
+            if self.runout_distance > 0 and not force:
+                if self.runout_distance_timer is None:
+                    self.runout_position = (self.defined_sensor
+                                            .get_extruder_pos(eventtime))
+                    self.runout_distance_timer = self.reactor.register_timer(
+                        self._pause_after_distance, self.reactor.NOW)
             else:
-                self.reactor.register_callback(self._runout_event_handler)
+                self._execute_runout(eventtime)
+            # if force:
+            #     self.reactor.register_callback(self._execute_runout)
+            # else:
+            #     self.reactor.register_callback(self._runout_event_handler)
     def get_status(self, eventtime):
         return {
             "filament_detected": bool(self.filament_present),
