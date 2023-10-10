@@ -19,6 +19,7 @@ Pretty much every normal klipper config is compatible, except for one thing: htt
 
 
 
+# Original README
 Welcome to the Klipper project!
 
 [![Klipper](docs/img/klipper-logo-small.png)](https://www.klipper3d.org/)
