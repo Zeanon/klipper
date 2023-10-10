@@ -73,6 +73,14 @@ class PrinterGCodeMacro:
         self.printer = config.get_printer()
         self.env = jinja2.Environment('{%', '%}', '{', '}')
         self.env.add_extension('jinja2.ext.loopcontrols')
+
+        # jinja does not provide a boolean filter, so a filter is added here
+        def boolean(value):
+            lowercase_value = str(value).lower()
+            return lowercase_value in ["true", "1"]
+
+        self.env.filters['boolean'] = boolean
+
     def load_template(self, config, option, default=None):
         name = "%s:%s" % (config.get_name(), option)
         if default is None:
