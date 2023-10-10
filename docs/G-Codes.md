@@ -955,7 +955,7 @@ in the config file.
 Loads the given PID_PROFILE for the specified heater. If DEFAULT is specified,
 the Profile specified in DEFAULT will be loaded when then given Profile for LOAD
 can't be found (like a getOrDefault method). If VERBOSE is set to LOW, minimal
-info will be written in console. 
+info will be written in console.
 If set to NONE, no console outputs will be given.
 
 `PID_PROFILE SAVE=<profile_name> HEATER=<config_name>`:
