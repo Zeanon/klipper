@@ -502,8 +502,7 @@ RUNOUT_DISTANCE is only valid for a filament_switch_sensor.
 RESET will remove all pending runout_gcodes (if runout_distance is higher
 than 0) for a switch sensor and reset the states of a motion sensor while
 setting it to filament detected.
-ENABLE will trigger a reset of the sensor if set to 1 and the sensor
-previously was not enabled.
+ENABLE will trigger a reset if it changes the enabled state of the sensor.
 DETECTION_LENGTH will trigger a reset of the sensor of the detection
 length changes.
 
