@@ -112,8 +112,8 @@ class RunoutHelper:
                     "Filament Sensor %s: insert event detected, Time %.2f" %
                     (self.name, eventtime))
                 self.reactor.register_callback(self._insert_event_handler)
-        elif self.runout_gcode is not None:
-        # elif is_printing and self.runout_gcode is not None:
+        # elif self.runout_gcode is not None:
+        elif is_printing and self.runout_gcode is not None:
             # runout detected
             self.min_event_systime = self.reactor.NEVER
             logging.info(
