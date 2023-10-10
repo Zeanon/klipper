@@ -72,6 +72,8 @@ class RunoutHelper:
             pause_prefix = "PAUSE\n"
             self.printer.get_reactor().pause(eventtime + self.pause_delay)
         self._exec_gcode(pause_prefix, self.runout_gcode)
+        self.reset_runout_distance_timer()
+    def reset_runout_distance_timer(self):
         if self.runout_distance_timer is not None:
             self.reactor.unregister_timer(self.runout_distance_timer)
             self.runout_distance_timer = None
@@ -167,9 +169,9 @@ class SwitchSensor:
                    else 'disabled', self.runout_helper.runout_distance))
     def set_filament_sensor(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
-        refresh = gcmd.get_int('REFRESH', None, minval=0, maxval=1)
+        reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
         runout_distance = gcmd.get_float('RUNOUT_DISTANCE', None, minval=0.)
-        if enable is None and refresh is None and runout_distance is None:
+        if enable is None and reset is None and runout_distance is None:
             gcmd.respond_info(self.get_sensor_status())
             return
         if enable is not None:
@@ -178,7 +180,8 @@ class SwitchSensor:
             self.runout_helper.sensor_enabled = enable
         if runout_distance is not None:
             self.runout_helper.runout_distance = runout_distance
-        if refresh is not None and refresh:
+        if reset is not None and reset:
+            self.runout_helper.reset_runout_distance_timer()
             self.runout_helper.note_filament_present(
                 self.runout_helper.filament_present, True)
 
