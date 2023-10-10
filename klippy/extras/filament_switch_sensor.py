@@ -190,7 +190,7 @@ class SwitchSensor:
             self.runout_helper.sensor_enabled = enable
         if runout_distance is not None:
             self.runout_helper.runout_distance = runout_distance
-        if reset is not None and reset:
+        if refresh is not None and refresh:
             self.runout_helper.note_filament_present(
                 self.runout_helper.filament_present, True)
 
