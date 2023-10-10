@@ -4615,6 +4615,13 @@ more information.
 #   detected. See docs/Command_Templates.md for G-Code format. The
 #   default is not to run any G-Code commands, which disables insert
 #   detection.
+#runout_distance: 0.0
+#   Defines how much filament can still be pulled after the
+#   switch sensor triggered (e.g. you have a 60cm reverse bowden between your
+#   extruder and your sensor, you would then set runout_distance to something
+#   like 590 to leave a small safety margin and now the print will not
+#   immediately pause when the sensor triggers but rather keep printing until
+#   the filament is at the extruder). The default is 0 millimeters.
 #event_delay: 3.0
 #   The minimum amount of time in seconds to delay between events.
 #   Events triggered during this time period will be silently

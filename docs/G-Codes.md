@@ -492,13 +492,16 @@ depend on the sensor type defined in the configuration.
 
 #### SET_FILAMENT_SENSOR
 `SET_FILAMENT_SENSOR SENSOR=<sensor_name> [ENABLE=0|1] [RESET=0|1]
-[DETECTION_LENGTH=<mm>]`: Sets values for the filament sensor.
-If all parameters are omitted, the current stats will be reported.
+[DETECTION_LENGTH=<mm>] [RUNOUT_DISTANCE=<mm>]`: Sets values for the
+filament sensor.  If all parameters are omitted, the current stats will
+be reported.
 ENABLE sets the filament sensor on/off. If ENABLE is set to 0, the
 filament sensor will be disabled, if set to 1 it is enabled.
-RESET and DETECTION_LENGTH are only usable on filament_motion_sensors.
-RESET will reset the filament sensor and DETECTION_LENGTH will change
-the detection length.
+DETECTION_LENGTH is only usable on filament_motion_sensors while
+RUNOUT_DISTANCE is only valid for a filament_switch_sensor.
+RESET will remove all pending runout_gcodes (if runout_distance is higher
+than 0) for a switch sensor and reset the states of a motion sensor while
+setting it to filament detected.
 ENABLE will trigger a reset of the sensor if set to 1 and the sensor
 previously was not enabled.
 DETECTION_LENGTH will trigger a reset of the sensor of the detection
