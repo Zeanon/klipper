@@ -120,7 +120,7 @@ class RunoutHelper:
                 (self.name, eventtime))
             # Pausing from inside an event requires that the pause portion
             # of pause_resume execute immediately.
-            if self.runout_distance > 0 and not force:
+            if self.runout_distance > 0:
                 if self.runout_distance_timer is None:
                     self.runout_position = (self.defined_sensor
                                             .get_extruder_pos(eventtime))
