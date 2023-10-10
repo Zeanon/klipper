@@ -86,7 +86,7 @@ class EncoderSensor:
             gcmd.respond_info(self.get_sensor_status())
             return
         if enable is not None:
-            if enable and not self.runout_helper.sensor_enabled:
+            if enable != self.runout_helper.sensor_enabled:
                 reset = 1
             self.runout_helper.sensor_enabled = enable
         if detection_length is not None:
