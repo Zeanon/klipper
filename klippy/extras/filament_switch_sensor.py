@@ -118,20 +118,7 @@ class RunoutHelper:
             logging.info(
                 "Filament Sensor %s: runout event detected, Time %.2f" %
                 (self.name, eventtime))
-            # Pausing from inside an event requires that the pause portion
-            # of pause_resume execute immediately.
-            if self.runout_distance > 0:
-                if self.runout_distance_timer is None:
-                    self.runout_position = (self.defined_sensor
-                                            .get_extruder_pos(eventtime))
-                    self.runout_distance_timer = self.reactor.register_timer(
-                        self._pause_after_distance, self.reactor.NOW)
-            else:
-                self._execute_runout(eventtime)
-            # if force:
-            #     self.reactor.register_callback(self._execute_runout)
-            # else:
-            #     self.reactor.register_callback(self._runout_event_handler)
+            self.reactor.register_callback(self._runout_event_handler)
     def get_status(self, eventtime):
         return {
             "filament_detected": bool(self.filament_present),
