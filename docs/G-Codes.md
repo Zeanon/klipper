@@ -1246,6 +1246,19 @@ The following commands are available when a
 the servo position to the given angle (in degrees) or pulse width (in
 seconds). Use `WIDTH=0` to disable the servo output.
 
+#### SET_SERVO_TEMPLATE
+`SET_SERVO_TEMPLATE SERVO=config_name TEMPLATE=<template_name>
+[<param_x>=<literal>]`: Applies a display_template to a servo.
+The template should produce a string in the following manner:
+`ANGLE: <angle>` or `WIDTH: <width>` (e.g. ANGLE: 90).
+The template will be continuously evaluated and the SERVO will be
+automatically set to the resulting angle or width. One may set
+display_template parameters to use during template evaluation
+(parameters will be parsed as Python literals). If TEMPLATE is an
+empty string then this command will clear any previous template
+assigned to the LED (one can then use `SET_SERVO` commands to manage
+the SERVO's position).
+
 ### [skew_correction]
 
 The following commands are available when the

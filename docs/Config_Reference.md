@@ -4484,6 +4484,9 @@ render('my_template') }` in a display_data section.
 This feature can also be used for continuous LED updates using the
 [SET_LED_TEMPLATE](G-Codes.md#set_led_template) command.
 
+This feature can also be used to continuosly update a servo useing
+the [SET_SERVO_TEMPLATE](G-Codes.md#set_servo_template) command.
+
 ```
 [display_template my_template_name]
 #param_<name>:
