@@ -18,7 +18,7 @@ Implemented controller_temperature_fan (look at the doc for explanation)<br>
 Implemented "curve" control algorithm for temperature_fan (look at the doc for explanation)<br>
 Other minor fixes and debug features that do not impact general use<br>
 
-All commands and config options for the ffeatures should be documented in the docs, if I forgot something, feel free to open an issue and I will get to it ASAP<br>
+All commands and config options for the features should be documented in the docs, if I forgot something, feel free to open an issue and I will get to it ASAP<br>
 
 Pretty much every normal klipper config is compatible, except for one thing: https://github.com/Klipper3d/klipper/pull/6307<br>
 
