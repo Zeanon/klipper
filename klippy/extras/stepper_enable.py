@@ -68,7 +68,7 @@ class StepperEnablePin:
         return systime + self.resend_interval
 
 
-def setup_enable_pin(printer, pin, disable_on_error=True):
+def setup_enable_pin(printer, pin, disable_on_error=False):
     if pin is None:
         # No enable line (stepper always enabled)
         enable = StepperEnablePin(None, 9999, printer)
@@ -139,7 +139,7 @@ class PrinterStepperEnable:
         enable = setup_enable_pin(self.printer,
                                   config.get('enable_pin', None),
                                   config.getboolean('disable_on_error',
-                                                    True))
+                                                    False))
         self.enable_lines[name] = EnableTracking(mcu_stepper, enable)
     def stepper_off(self, stepper_name, print_time, rail_name):
         el = self.enable_lines[stepper_name]

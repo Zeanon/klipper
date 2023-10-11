@@ -345,7 +345,7 @@ class PrinterRail:
         self.homing_retract_dist = config.getfloat(
             'homing_retract_dist', 5., minval=0.)
         self.homing_resting_retract_speed = config.getfloat(
-            'homing_resting_retract_speed', self.homing_speed, above=0.)
+            'homing_resting_retract_speed', self.homing_retract_speed, above=0.)
         self.homing_resting_retract_dist = config.getfloat(
             'homing_resting_retract_dist', self.homing_retract_dist, minval=0.)
         self.homing_positive_dir = config.getboolean(

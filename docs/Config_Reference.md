@@ -188,12 +188,29 @@ position_max:
 #second_homing_speed:
 #   Velocity (in mm/s) of the stepper when performing the second home.
 #   The default is homing_speed/2.
+#homing_resting_retract_dist:
+#   Distance to back off after successfully homing, the default is
+#   homing_retract_dist.
+#homing_resting_retract_speed:
+#   Velocity (in mm/s) of the stepper when retracting after successfully
+#   homing, the default is homing_retract_speed
 #homing_positive_dir:
 #   If true, homing will cause the stepper to move in a positive
 #   direction (away from zero); if false, home towards zero. It is
 #   better to use the default than to specify this parameter. The
 #   default is true if position_endstop is near position_max and false
 #   if near position_min.
+#disable_on_error: False
+#   Experimental feature to disable the steppers when the mcu looses
+#   connection to the host.
+#   If one stepper is set to true, the feature will be enabled for all
+#   steppers. (I currently have no idea how to modify the mcu firmware
+#   code to have the feature enabled individually)
+#   Currently this feature can also cause problems when disabling steppers
+#   and cause the firmware to shut down due to race-conditions.
+#   Even though this happens very very rarely, use this feature at your own
+#   risk (While the steppers are on, no problems occur, only when disabling,
+#   very rarely an error occurs)
 ```
 
 ### Cartesian Kinematics
@@ -947,6 +964,12 @@ max_temp:
 #   heater and sensor hardware failures. Set this range just wide
 #   enough so that reasonable temperatures do not result in an error.
 #   These parameters must be provided.
+#max_set_temp:
+#   The maximum temperature that can be requested. Usefull for heaters
+#   that have a large overshoot (e.g. max_temp is set to 280 but the heater
+#   overshoots by 10 you would set max_set_temp to 265 so you can only
+#   request 265 so when the heater overshoots it will not trigger a shutdown).
+#   The default is max_temp
 ```
 
 ### [heater_bed]
@@ -962,6 +985,7 @@ sensor_pin:
 control:
 min_temp:
 max_temp:
+#max_set_temp:
 #   See the "extruder" section for a description of the above parameters.
 ```
 
@@ -1351,6 +1375,7 @@ See also: [extended g-code commands](G-Codes.md#z_thermal_adjust).
 #sensor_pin:
 #min_temp:
 #max_temp:
+#max_set_temp:
 #   Temperature sensor configuration.
 #   See the "extruder" section for the definition of the above
 #   parameters.
@@ -1593,8 +1618,18 @@ using this feature may place the printer in an invalid state - see the
 ```
 [force_move]
 #enable_force_move: False
-#   Set to true to enable FORCE_MOVE and SET_KINEMATIC_POSITION
+#   Set to true to enable FORCE_MOVE, SET_KINEMATIC_POSITION
+#   and MARK_AS_HOMED.
 #   extended G-Code commands. The default is false.
+```
+
+### [unhome]
+
+Mark different axes as unhomed without disabling the steppers, usefull
+for really advanced macros.
+
+```
+[unhome]
 ```
 
 ### [pause_resume]

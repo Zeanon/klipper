@@ -9,7 +9,7 @@ Klipper supports the following standard G-Code commands:
 - Move (G0 or G1): `G1 [X<pos>] [Y<pos>] [Z<pos>] [E<pos>] [F<speed>]`
 - Dwell: `G4 P<milliseconds>`
 - Move to origin: `G28 [X] [Y] [Z]`
-- Turn off motors: `M18` or `M84`
+- Turn off motors: `M18 [X] [Y] [Z] [E]` or `M84 [X] [Y] [Z] [E]`
 - Wait for current moves to finish: `M400`
 - Use absolute/relative distances for extrusion: `M82`, `M83`
 - Use absolute/relative coordinates: `G90`, `G91`
@@ -491,20 +491,29 @@ status of the filament sensor. The data displayed on the terminal will
 depend on the sensor type defined in the configuration.
 
 #### SET_FILAMENT_SENSOR
+###### For filament_switch_sensor:
 `SET_FILAMENT_SENSOR SENSOR=<sensor_name> [ENABLE=0|1] [RESET=0|1]
-[DETECTION_LENGTH=<mm>] [RUNOUT_DISTANCE=<mm>]`: Sets values for the
+[RUNOUT_DISTANCE=<mm>]`: Sets values for the
 filament sensor.  If all parameters are omitted, the current stats will
-be reported.
+be reported. <br>
 ENABLE sets the filament sensor on/off. If ENABLE is set to 0, the
-filament sensor will be disabled, if set to 1 it is enabled.
-DETECTION_LENGTH is only usable on filament_motion_sensors while
-RUNOUT_DISTANCE is only valid for a filament_switch_sensor.
-RESET will remove all pending runout_gcodes (if runout_distance is higher
-than 0) for a switch sensor and reset the states of a motion sensor while
-setting it to filament detected.
-ENABLE will trigger a reset if it changes the enabled state of the sensor.
-DETECTION_LENGTH will trigger a reset of the sensor of the detection
-length changes.
+filament sensor will be disabled, if set to 1 it is enabled. If the state
+of the sensor changes, a reset will be triggered. <br>
+RESET removes all pending runout_gcodes and pauses and force a reevaluation
+of the sensor state. <br>
+RUNOUT_DISTANCE sets the runout_distance.
+
+###### For filament_motion_sensor:
+`SET_FILAMENT_SENSOR SENSOR=<sensor_name> [ENABLE=0|1] [RESET=0|1]
+[DETECTION_LENGTH=<mm>]`: Sets values for the
+filament sensor.  If all parameters are omitted, the current stats will
+be reported. <br>
+ENABLE sets the filament sensor on/off. If ENABLE is set to 0, the
+filament sensor will be disabled, if set to 1 it is enabled. If the sensor
+was previously disabled and gets enabled, a reset will be triggered. <br>
+RESET resets the state of the sensor and sets it to filament detected. <br>
+DETECTION_LENGTH sets the detection_length, if the new detection length is
+different than the old one, a reset will be triggered.
 
 ### [firmware_retraction]
 
@@ -574,6 +583,24 @@ head was last commanded to. Setting an incorrect or invalid position
 may lead to internal software errors. This command may invalidate
 future boundary checks; issue a G28 afterwards to reset the
 kinematics.
+
+#### MARK_AS_HOMED
+`MARK_AS_HOMED [AXES=X,Y,Z]`: Marks the given axes as homed, if AXES
+is omitted, all axes will be marked as homed.
+!!!USE WITH CAUTION!!!
+
+### [unhome]
+
+If the [unhome config section](Config_Reference.md#unhome) is enabled,
+the following command will be available.
+
+#### MARK_AS_UNHOMED
+`MARK_AS_UNHOMED [AXES=X,Y,Z]`: Marks the given axes as unhomed, if AXES
+is omitted, all axes will be marked as unhomed.
+
+#### D28
+`D28 [X] [Y] [Z]`: Same as MARK_AS_UNHOMED
+
 
 ### [gcode]
 
@@ -930,9 +957,9 @@ in the config file.
 
 #### PID_CALIBRATE
 `PID_CALIBRATE HEATER=<config_name> TARGET=<temperature> [TOLERANCE=<tolerance>]
-[WRITE_FILE=1] [PROFILE=<profile_name>]`: Perform a PID calibration test. The
-specified heater will be enabled until the specified target temperature
-is reached, and then the heater will be turned off and on for several
+[WRITE_FILE=1] [TUNE_PID_DELTA=<delta>] [PROFILE=<profile_name>]`: Perform a PID
+calibration test. The specified heater will be enabled until the specified target
+temperature is reached, and then the heater will be turned off and on for several
 cycles. If the WRITE_FILE parameter is enabled, then the file
 /tmp/heattest.txt will be created with a log of all temperature samples
 taken during the test. TOLERANCE defaults to 0.02 if not passed in. The
