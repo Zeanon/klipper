@@ -864,18 +864,23 @@ WHITE=<value> [INDEX=<index>] [TRANSMIT=0] [SYNC=1]`: This sets the
 LED output. Each color `<value>` must be between 0.0 and 1.0. The
 WHITE option is only valid on RGBW LEDs. If the LED supports multiple
 chips in a daisy-chain then one may specify INDEX to alter the color
-of just the given chip (1 for the first chip, 2 for the second,
-etc.). If INDEX is not provided then all LEDs in the daisy-chain will
-be set to the provided color. If TRANSMIT=0 is specified then the
-color change will only be made on the next SET_LED command that does
-not specify TRANSMIT=0; this may be useful in combination with the
-INDEX parameter to batch multiple updates in a daisy-chain. By
+of just the given chips (1 for the first chip, 2 for the second,
+etc. You can specify multiple LEDs by either separating Indices by comma:
+INDEX=1,3,4; specifying a range by using a dash: INDEX=1-4, which would
+update LED1, LED2, LED3 and LED4 or mix and match both methods: INDEX=
+1,2-5,7 would update LED1, LED2, LED3, LED4, LED5 and LED 7). You can
+also add |n behind a range, which would then only take every n LEDs in
+that range(e.g. INDEX=1-5|2 would update LED1, LED3 and LED5, INDEX1-7|3
+would update LED1, LED4 and LED7). If INDEX is not provided then all LEDs
+in the daisy-chain will be set to the provided color. If TRANSMIT=0 is
+specified then the color change will only be made on the next SET_LED
+command that doesnot specify TRANSMIT=0; this may be useful in combination
+with the INDEX parameter to batch multiple updates in a daisy-chain. By
 default, the SET_LED command will sync it's changes with other ongoing
-gcode commands.  This can lead to undesirable behavior if LEDs are
-being set while the printer is not printing as it will reset the idle
-timeout. If careful timing is not needed, the optional SYNC=0
-parameter can be specified to apply the changes without resetting the
-idle timeout.
+gcode commands. This can lead to undesirable behavior if LEDs are being
+set while the printer is not printing as it will reset the idle timeout.
+If careful timing is not needed, the optional SYNC=0 parameter can be
+specified to apply the changes without resetting the idle timeout.
 
 #### SET_LED_TEMPLATE
 `SET_LED_TEMPLATE LED=<led_name> TEMPLATE=<template_name>
@@ -889,11 +894,10 @@ numbers corresponding to red, green, blue, and white color settings.
 The template will be continuously evaluated and the LED will be
 automatically set to the resulting colors. One may set
 display_template parameters to use during template evaluation
-(parameters will be parsed as Python literals). If INDEX is not
-specified then all chips in the LED's daisy-chain will be set to the
-template, otherwise only the chip with the given index will be
-updated. If TEMPLATE is an empty string then this command will clear
-any previous template assigned to the LED (one can then use `SET_LED`
+(parameters will be parsed as Python literals). For INDEX see the
+description on INDEX in the [LED](Config_Reference.md#leds) section.
+If TEMPLATE is an empty string then this command will clear any
+previous template assigned to the LED (one can then use `SET_LED`
 commands to manage the LED's color settings).
 
 ### [output_pin]
@@ -1330,17 +1334,16 @@ settings. Requires `control_pin` to be provided in the config section.
 The stepper_enable module is automatically loaded.
 
 #### SET_STEPPER_ENABLE
-`SET_STEPPER_ENABLE STEPPERS=<config_name> [ENABLE=[0|1]]`: Enable or
-disable only the given steppers. `<config_name>` can be one or
-more configured steppers, delimited with comma, for example
-`STEPPERS=stepper_x,stepper_y`. This is a diagnostic and debugging`SET_STEPPER_ENABLE STEPPERS=<config_name> [ENABLE=[0|1]]`: Enable or
-disable only the given steppers. `<config_name>` can be one or
+`SET_STEPPER_ENABLE STEPPERS=<config_name> [ENABLE=[0|1]] [NOTIFY=[0|1]]`:
+Enable or disable only the given steppers. `<config_name>` can be one or
 more configured steppers, delimited with comma, for example
 `STEPPERS=stepper_x,stepper_y`. This is a diagnostic and debugging
 tool and must be used with care. Disabling an axis motor does not
 reset the homing information. Manually moving a disabled stepper may
 cause the machine to operate the motor outside of safe limits. This
 can lead to damage to axis components, hot ends, and print surface.
+Notify defines whether the axes controlled by the stepper should be marked
+as unhomed if the command is used to disable the stepper.
 
 ### [temperature_fan]
 
