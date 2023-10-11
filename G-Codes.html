@@ -1269,6 +1269,26 @@
     SET_FILAMENT_SENSOR
   </a>
   
+    <nav class="md-nav" aria-label="SET_FILAMENT_SENSOR">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#for-filament_switch_sensor" class="md-nav__link">
+    For filament_switch_sensor:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-filament_motion_sensor" class="md-nav__link">
+    For filament_motion_sensor:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -1328,6 +1348,40 @@
           <li class="md-nav__item">
   <a href="#set_kinematic_position" class="md-nav__link">
     SET_KINEMATIC_POSITION
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mark_as_homed" class="md-nav__link">
+    MARK_AS_HOMED
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unhome" class="md-nav__link">
+    [unhome]
+  </a>
+  
+    <nav class="md-nav" aria-label="[unhome]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mark_as_unhomed" class="md-nav__link">
+    MARK_AS_UNHOMED
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d28" class="md-nav__link">
+    D28
   </a>
   
 </li>
@@ -3448,6 +3502,26 @@
     SET_FILAMENT_SENSOR
   </a>
   
+    <nav class="md-nav" aria-label="SET_FILAMENT_SENSOR">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#for-filament_switch_sensor" class="md-nav__link">
+    For filament_switch_sensor:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#for-filament_motion_sensor" class="md-nav__link">
+    For filament_motion_sensor:
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -3507,6 +3581,40 @@
           <li class="md-nav__item">
   <a href="#set_kinematic_position" class="md-nav__link">
     SET_KINEMATIC_POSITION
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mark_as_homed" class="md-nav__link">
+    MARK_AS_HOMED
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unhome" class="md-nav__link">
+    [unhome]
+  </a>
+  
+    <nav class="md-nav" aria-label="[unhome]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mark_as_unhomed" class="md-nav__link">
+    MARK_AS_UNHOMED
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d28" class="md-nav__link">
+    D28
   </a>
   
 </li>
@@ -4602,7 +4710,7 @@ commands that one may enter into the OctoPrint terminal tab.</p>
 <li>Move (G0 or G1): <code>G1 [X&lt;pos&gt;] [Y&lt;pos&gt;] [Z&lt;pos&gt;] [E&lt;pos&gt;] [F&lt;speed&gt;]</code></li>
 <li>Dwell: <code>G4 P&lt;milliseconds&gt;</code></li>
 <li>Move to origin: <code>G28 [X] [Y] [Z]</code></li>
-<li>Turn off motors: <code>M18</code> or <code>M84</code></li>
+<li>Turn off motors: <code>M18 [X] [Y] [Z] [E]</code> or <code>M84 [X] [Y] [Z] [E]</code></li>
 <li>Wait for current moves to finish: <code>M400</code></li>
 <li>Use absolute/relative distances for extrusion: <code>M82</code>, <code>M83</code></li>
 <li>Use absolute/relative coordinates: <code>G90</code>, <code>G91</code></li>
@@ -5006,9 +5114,28 @@ config section is enabled.</p>
 status of the filament sensor. The data displayed on the terminal will
 depend on the sensor type defined in the configuration.</p>
 <h4 id="set_filament_sensor">SET_FILAMENT_SENSOR<a class="headerlink" href="#set_filament_sensor" title="Permanent link">&para;</a></h4>
-<p><code>SET_FILAMENT_SENSOR SENSOR=&lt;sensor_name&gt; ENABLE=[0|1]</code>: Sets the
-filament sensor on/off. If ENABLE is set to 0, the filament sensor
-will be disabled, if set to 1 it is enabled.</p>
+<h6 id="for-filament_switch_sensor">For filament_switch_sensor:<a class="headerlink" href="#for-filament_switch_sensor" title="Permanent link">&para;</a></h6>
+<p><code>SET_FILAMENT_SENSOR SENSOR=&lt;sensor_name&gt; [ENABLE=0|1] [RESET=0|1]
+[RUNOUT_DISTANCE=&lt;mm&gt;]</code>: Sets values for the
+filament sensor.  If all parameters are omitted, the current stats will
+be reported. <br>
+ENABLE sets the filament sensor on/off. If ENABLE is set to 0, the
+filament sensor will be disabled, if set to 1 it is enabled. If the state
+of the sensor changes, a reset will be triggered. <br>
+RESET removes all pending runout_gcodes and pauses and force a reevaluation
+of the sensor state. <br>
+RUNOUT_DISTANCE sets the runout_distance.</p>
+<h6 id="for-filament_motion_sensor">For filament_motion_sensor:<a class="headerlink" href="#for-filament_motion_sensor" title="Permanent link">&para;</a></h6>
+<p><code>SET_FILAMENT_SENSOR SENSOR=&lt;sensor_name&gt; [ENABLE=0|1] [RESET=0|1]
+[DETECTION_LENGTH=&lt;mm&gt;]</code>: Sets values for the
+filament sensor.  If all parameters are omitted, the current stats will
+be reported. <br>
+ENABLE sets the filament sensor on/off. If ENABLE is set to 0, the
+filament sensor will be disabled, if set to 1 it is enabled. If the sensor
+was previously disabled and gets enabled, a reset will be triggered. <br>
+RESET resets the state of the sensor and sets it to filament detected. <br>
+DETECTION_LENGTH sets the detection_length, if the new detection length is
+different than the old one, a reset will be triggered.</p>
 <h3 id="firmware_retraction">[firmware_retraction]<a class="headerlink" href="#firmware_retraction" title="Permanent link">&para;</a></h3>
 <p>The following standard G-Code commands are available when the
 <a href="Config_Reference.html#firmware_retraction">firmware_retraction config section</a>
@@ -5070,6 +5197,18 @@ head was last commanded to. Setting an incorrect or invalid position
 may lead to internal software errors. This command may invalidate
 future boundary checks; issue a G28 afterwards to reset the
 kinematics.</p>
+<h4 id="mark_as_homed">MARK_AS_HOMED<a class="headerlink" href="#mark_as_homed" title="Permanent link">&para;</a></h4>
+<p><code>MARK_AS_HOMED [AXES=X,Y,Z]</code>: Marks the given axes as homed, if AXES
+is omitted, all axes will be marked as homed.
+!!!USE WITH CAUTION!!!</p>
+<h3 id="unhome">[unhome]<a class="headerlink" href="#unhome" title="Permanent link">&para;</a></h3>
+<p>If the <a href="Config_Reference.html#unhome">unhome config section</a> is enabled,
+the following command will be available.</p>
+<h4 id="mark_as_unhomed">MARK_AS_UNHOMED<a class="headerlink" href="#mark_as_unhomed" title="Permanent link">&para;</a></h4>
+<p><code>MARK_AS_UNHOMED [AXES=X,Y,Z]</code>: Marks the given axes as unhomed, if AXES
+is omitted, all axes will be marked as unhomed.</p>
+<h4 id="d28">D28<a class="headerlink" href="#d28" title="Permanent link">&para;</a></h4>
+<p><code>D28 [X] [Y] [Z]</code>: Same as MARK_AS_UNHOMED</p>
 <h3 id="gcode">[gcode]<a class="headerlink" href="#gcode" title="Permanent link">&para;</a></h3>
 <p>The gcode module is automatically loaded.</p>
 <h4 id="restart">RESTART<a class="headerlink" href="#restart" title="Permanent link">&para;</a></h4>
@@ -5187,8 +5326,9 @@ above the supplied MINIMUM and/or at or below the supplied MAXIMUM.</p>
 [TARGET=&lt;target_temperature&gt;]</code>: Sets the target temperature for a
 heater. If a target temperature is not supplied, the target is 0.</p>
 <h4 id="cold_extrude">COLD_EXTRUDE<a class="headerlink" href="#cold_extrude" title="Permanent link">&para;</a></h4>
-<p>`COLD_EXTRUDE HEATER=<heater_name> [ENABLE=&lt;0 or 1&gt;]
+<p>`COLD_EXTRUDE [HEATER=<heater_name>] [ENABLE=&lt;0 or 1&gt;]
 [MIN_EXTRUDE_TEMP=<min_extrude_temp>]: Enables or disables cold extrusion.
+If no Heater is specified the current active extruder will be used.
 If neither ENABLE nor MIN_EXTRUDE_TEMP are supplied, it
 will report the current state. If ENABLE is 0, cold extrusion is disabled,
 if it is 1 it is enabled.</p>
@@ -5360,9 +5500,9 @@ the filament load is complete.</p>
 in the config file.</p>
 <h4 id="pid_calibrate_1">PID_CALIBRATE<a class="headerlink" href="#pid_calibrate_1" title="Permanent link">&para;</a></h4>
 <p><code>PID_CALIBRATE HEATER=&lt;config_name&gt; TARGET=&lt;temperature&gt; [TOLERANCE=&lt;tolerance&gt;]
-[WRITE_FILE=1] [PROFILE=&lt;profile_name&gt;]</code>: Perform a PID calibration test. The
-specified heater will be enabled until the specified target temperature
-is reached, and then the heater will be turned off and on for several
+[WRITE_FILE=1] [TUNE_PID_DELTA=&lt;delta&gt;] [PROFILE=&lt;profile_name&gt;]</code>: Perform a PID
+calibration test. The specified heater will be enabled until the specified target
+temperature is reached, and then the heater will be turned off and on for several
 cycles. If the WRITE_FILE parameter is enabled, then the file
 /tmp/heattest.txt will be created with a log of all temperature samples
 taken during the test. TOLERANCE defaults to 0.02 if not passed in. The
@@ -5380,8 +5520,9 @@ in the config file.</p>
 [VERBOSE=&lt;verbosity&gt;]</code>:
 Loads the given PID_PROFILE for the specified heater. If DEFAULT is specified,
 the Profile specified in DEFAULT will be loaded when then given Profile for LOAD
-can't be found (like a getOrDefault method). If VERBOSE is set to FALSE,
-no console outputs will be given.</p>
+can't be found (like a getOrDefault method). If VERBOSE is set to LOW, minimal
+info will be written in console.
+If set to NONE, no console outputs will be given.</p>
 <p><code>PID_PROFILE SAVE=&lt;profile_name&gt; HEATER=&lt;config_name&gt;</code>:
 Saves the currently loaded profile of the specified heater to the config under
 the given name.</p>
