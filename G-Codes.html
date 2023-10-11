@@ -2151,6 +2151,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#set_servo_template" class="md-nav__link">
+    SET_SERVO_TEMPLATE
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -4384,6 +4391,13 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#set_servo_template" class="md-nav__link">
+    SET_SERVO_TEMPLATE
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -5741,6 +5755,18 @@ iterations.</p>
 <p><code>SET_SERVO SERVO=config_name [ANGLE=&lt;degrees&gt; | WIDTH=&lt;seconds&gt;]</code>: Set
 the servo position to the given angle (in degrees) or pulse width (in
 seconds). Use <code>WIDTH=0</code> to disable the servo output.</p>
+<h4 id="set_servo_template">SET_SERVO_TEMPLATE<a class="headerlink" href="#set_servo_template" title="Permanent link">&para;</a></h4>
+<p><code>SET_SERVO_TEMPLATE SERVO=config_name TEMPLATE=&lt;template_name&gt;
+[&lt;param_x&gt;=&lt;literal&gt;]</code>: Applies a display_template to a servo.
+The template should produce a string in the following manner:
+<code>ANGLE: &lt;angle&gt;</code> or <code>WIDTH: &lt;width&gt;</code> (e.g. ANGLE: 90).
+The template will be continuously evaluated and the SERVO will be
+automatically set to the resulting angle or width. One may set
+display_template parameters to use during template evaluation
+(parameters will be parsed as Python literals). If TEMPLATE is an
+empty string then this command will clear any previous template
+assigned to the LED (one can then use <code>SET_SERVO</code> commands to manage
+the SERVO's position).</p>
 <h3 id="skew_correction">[skew_correction]<a class="headerlink" href="#skew_correction" title="Permanent link">&para;</a></h3>
 <p>The following commands are available when the
 <a href="Config_Reference.html#skew_correction">skew_correction config section</a>
