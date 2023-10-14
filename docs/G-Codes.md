@@ -999,7 +999,7 @@ the given name.
 Removes the given profile from the profiles List for the current session and config if SAVE_CONFIG is issued afterwards.
 
 `PID_PROFILE SET_VALUES=<profile_name> TARGET=<target_temp> TOLERANCE=<tolerance>
-CONTROL=<control_type> KP=<kp> KI=<ki> KD=<kd>`:
+CONTROL=<control_type> KP=<kp> KI=<ki> KD=<kd> [RESET_TARGET=0|1]`:
 Creates a new profile with the given PID values, CONTROL must either be `pid` or
 `pid_v`, TOLERANCE and TARGET must be specified to create a valid profile,
 though the values themselves don't matter.
