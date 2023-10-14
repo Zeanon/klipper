@@ -27,11 +27,11 @@ class PIDCalibrate:
             raise gcmd.error(str(e))
         self.printer.lookup_object('toolhead').get_last_move_time()
         calibrate = ControlAutoTune(heater, target, tolerance, tune_pid_delta)
-        old_control = heater.set_control(calibrate)
+        old_control = heater.set_control(calibrate, True)
         try:
             pheaters.set_temperature(heater, target, True)
         except self.printer.command_error as e:
-            heater.set_control(old_control)
+            heater.set_control(old_control, True)
             raise
         if write_file:
             calibrate.write_file('/tmp/heattest.csv')
@@ -57,7 +57,7 @@ class PIDCalibrate:
                    'pid_kd': Kd,
                    'name': profile_name}
 
-        heater.set_control(heater.lookup_control(profile))
+        heater.set_control(heater.lookup_control(profile), True)
         heater.pmgr.save_profile(profile_name, None, False)
 
 TUNE_PID_TOL = 0.02

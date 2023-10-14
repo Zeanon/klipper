@@ -158,11 +158,12 @@ class Heater:
         with self.lock:
             return self.control.check_busy(
                 eventtime, self.smoothed_temp, self.target_temp)
-    def set_control(self, control):
+    def set_control(self, control, reset_target=False):
         with self.lock:
             old_control = self.control
             self.control = control
-            # self.target_temp = 0.
+            if reset_target:
+                self.target_temp = 0.
         return old_control
     def get_control(self):
         return self.control
@@ -293,6 +294,7 @@ class Heater:
             kp = self._check_value_gcmd('KP', None, gcmd, float)
             ki = self._check_value_gcmd('KI', None, gcmd, float)
             kd = self._check_value_gcmd('KD', None, gcmd, float)
+            reset_target = self._check_value_gcmd('RESET_TARGET', 0, gcmd, int)
             temp_profile = {'pid_target': target,
                             'pid_tolerance': tolerance,
                             'control': control,
@@ -300,7 +302,7 @@ class Heater:
                             'pid_ki': ki,
                             'pid_kd': kd}
             temp_control = self.outer_instance.lookup_control(temp_profile)
-            self.outer_instance.set_control(temp_control)
+            self.outer_instance.set_control(temp_control, reset_target)
             self.outer_instance.gcode.respond_info(
                 "PID Parameters:\n"
                 "Target: %.2f,\n"
@@ -365,6 +367,7 @@ class Heater:
                     % (profile_name, self.outer_instance.name)
                 )
                 return
+            reset_target = self._check_value_gcmd('RESET_TARGET', 0, gcmd, int)
             profile = self.profiles.get(profile_name, None)
             defaulted = False
             default = gcmd.get('DEFAULT', None)
@@ -384,7 +387,7 @@ class Heater:
                            self.outer_instance.name)
                     )
             control = self.outer_instance.lookup_control(profile)
-            self.outer_instance.set_control(control)
+            self.outer_instance.set_control(control, reset_target)
 
             if verbose != 'high' and verbose != 'low':
                 return
