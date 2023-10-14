@@ -19,11 +19,16 @@ class RunoutHelper:
         self.runout_pause = config.getboolean('pause_on_runout', True)
         if self.runout_pause:
             self.printer.load_object(config, 'pause_resume')
-        self.runout_gcode = self.insert_gcode = None
+        self.runout_gcode = None
+        self.immediate_runout_gcode = None
+        self.insert_gcode = None
         gcode_macro = self.printer.load_object(config, 'gcode_macro')
         if self.runout_pause or config.get('runout_gcode', None) is not None:
             self.runout_gcode = gcode_macro.load_template(
                 config, 'runout_gcode', '')
+        if config.get('immediate_runout_gcode', None) is not None:
+            self.immediate_runout_gcode = gcode_macro.load_template(
+                config, 'immediate_runout_gcode', '')
         if config.get('insert_gcode', None) is not None:
             self.insert_gcode = gcode_macro.load_template(
                 config, 'insert_gcode')
@@ -58,6 +63,8 @@ class RunoutHelper:
         # of pause_resume execute immediately.
         if self.runout_distance > 0:
             if self.runout_distance_timer is None:
+                if self.immediate_runout_gcode is not None:
+                    self._exec_gcode("", self.immediate_runout_gcode)
                 self.runout_position = (self.defined_sensor
                                         .get_extruder_pos(eventtime))
                 self.runout_distance_timer = self.reactor.register_timer(
