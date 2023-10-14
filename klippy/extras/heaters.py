@@ -27,6 +27,7 @@ PID_PROFILE_OPTIONS = {
 class Heater:
     def __init__(self, config, sensor):
         self.printer = config.get_printer()
+        self.reactor = self.printer.get_reactor()
         self.name = config.get_name().split()[-1]
         self.config = config
         self.configfile = self.printer.lookup_object('configfile')
@@ -103,7 +104,10 @@ class Heater:
             'pid': ControlPID,
             'pid_v': ControlVelocityPID,
         })
-        return algos[profile['control']](profile, self)
+        return algos[profile['control']](profile,
+                                         self,
+                                         self.get_temp(self.reactor.monotonic())
+                                         )
     def set_pwm(self, read_time, value):
         if self.target_temp <= 0.:
             value = 0.
@@ -158,7 +162,7 @@ class Heater:
         with self.lock:
             old_control = self.control
             self.control = control
-            self.target_temp = 0.
+            # self.target_temp = 0.
         return old_control
     def get_control(self):
         return self.control
@@ -457,7 +461,7 @@ class Heater:
 ######################################################################
 
 class ControlBangBang:
-    def __init__(self, profile, heater):
+    def __init__(self, profile, heater, temp=None):
         self.profile = profile
         self.heater = heater
         self.heater_max_power = self.heater.get_max_power()
@@ -492,7 +496,7 @@ PID_SETTLE_DELTA = 1.
 PID_SETTLE_SLOPE = .1
 
 class ControlPID:
-    def __init__(self, profile, heater):
+    def __init__(self, profile, heater, temp=None):
         self.profile = profile
         self.heater = heater
         self.heater_max_power = self.heater.get_max_power()
@@ -501,7 +505,7 @@ class ControlPID:
         self.Ki = profile['pid_ki'] / PID_PARAM_BASE
         self.Kd = profile['pid_kd'] / PID_PARAM_BASE
         self.smooth = 1. + self.heater.get_smooth_time() / self.dt
-        self.prev_temp = AMBIENT_TEMP
+        self.prev_temp = AMBIENT_TEMP if temp is None else temp
         self.prev_err = 0.
         self.prev_der = 0.
         self.int_sum = 0.
@@ -557,7 +561,7 @@ class ControlPID:
 ######################################################################
 
 class ControlVelocityPID:
-    def __init__(self, profile, heater):
+    def __init__(self, profile, heater, temp=None):
         self.profile = profile
         self.heater = heater
         self.heater_max_power = self.heater.get_max_power()
@@ -565,7 +569,7 @@ class ControlVelocityPID:
         self.Ki = profile['pid_ki'] / PID_PARAM_BASE
         self.Kd = profile['pid_kd'] / PID_PARAM_BASE
         self.smooth_time = heater.get_smooth_time()  # smoothing window
-        self.temps = [AMBIENT_TEMP] * 3  # temperature readings
+        self.temps = ([AMBIENT_TEMP] * 3) if temp is None else ([temp] * 3)
         self.times = [0.] * 3  # temperature reading times
         self.d1 = 0.  # previous smoothed 1st derivative
         self.d2 = 0.  # previous smoothed 2nd derivative
