@@ -60,12 +60,12 @@ class RunoutHelper:
         # of pause_resume execute immediately.
         if self.runout_distance > 0:
             if self.runout_distance_timer is None:
-                if self.immediate_runout_gcode is not None:
-                    self._exec_gcode("", self.immediate_runout_gcode)
                 self.runout_position = (self.defined_sensor
                                         .get_extruder_pos(eventtime))
                 self.runout_distance_timer = self.reactor.register_timer(
                     self._pause_after_distance, self.reactor.NOW)
+                if self.immediate_runout_gcode is not None:
+                    self._exec_gcode("", self.immediate_runout_gcode)
         else:
             self._execute_runout(eventtime)
     def _execute_runout(self, eventtime):
