@@ -981,12 +981,15 @@ in the config file.
 
 #### PID_PROFILE
 `PID_PROFILE LOAD=<profile_name> HEATER=<config_name> [DEFAULT=<profile_name>]
-[VERBOSE=<verbosity>]`:
+[VERBOSE=<verbosity>] [RESET_TARGET=0|1]`:
 Loads the given PID_PROFILE for the specified heater. If DEFAULT is specified,
 the Profile specified in DEFAULT will be loaded when then given Profile for LOAD
 can't be found (like a getOrDefault method). If VERBOSE is set to LOW, minimal
 info will be written in console.
 If set to NONE, no console outputs will be given.
+If RESET_TARGET is set to 1, the target temperature of the heater will be set
+to 0 when changing profiles.
+By default the target temperature of the heater will not be reset.
 
 `PID_PROFILE SAVE=<profile_name> HEATER=<config_name>`:
 Saves the currently loaded profile of the specified heater to the config under
@@ -1000,6 +1003,9 @@ CONTROL=<control_type> KP=<kp> KI=<ki> KD=<kd>`:
 Creates a new profile with the given PID values, CONTROL must either be `pid` or
 `pid_v`, TOLERANCE and TARGET must be specified to create a valid profile,
 though the values themselves don't matter.
+If RESET_TARGET is set to 1, the target temperature of the heater will be set
+to 0 when setting the values.
+By default the target temperature of the heater will not be reset.
 
 
 
