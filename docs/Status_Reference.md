@@ -150,6 +150,7 @@ objects:
 - `enabled`: Returns True if the switch sensor is currently enabled.
 - `filament_detected`: Returns True if the sensor is in a triggered
   state.
+- `runout_distance`: Returns the runout_distance
 
 ## filament_motion_sensor
 
@@ -159,6 +160,7 @@ objects:
 - `enabled`: Returns True if the motion sensor is currently enabled.
 - `filament_detected`: Returns True if the sensor is in a triggered
   state.
+- `detection_length`: Returns the detection_length
 
 ## firmware_retraction
 

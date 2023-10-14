@@ -26,9 +26,6 @@ class RunoutHelper:
         if self.runout_pause or config.get('runout_gcode', None) is not None:
             self.runout_gcode = gcode_macro.load_template(
                 config, 'runout_gcode', '')
-        if config.get('immediate_runout_gcode', None) is not None:
-            self.immediate_runout_gcode = gcode_macro.load_template(
-                config, 'immediate_runout_gcode', '')
         if config.get('insert_gcode', None) is not None:
             self.insert_gcode = gcode_macro.load_template(
                 config, 'insert_gcode')
@@ -130,9 +127,7 @@ class RunoutHelper:
                 (self.name, eventtime))
             self.reactor.register_callback(self._runout_event_handler)
     def get_status(self, eventtime):
-        return {
-            "filament_detected": bool(self.filament_present),
-            "enabled": bool(self.sensor_enabled)}
+        return self.defined_sensor.sensor_get_status(eventtime)
     cmd_QUERY_FILAMENT_SENSOR_help = "Query the status of the Filament Sensor"
     def cmd_QUERY_FILAMENT_SENSOR(self, gcmd):
         msg = "Filament Sensor %s: filament %s" %\
@@ -147,6 +142,7 @@ class RunoutHelper:
 class SwitchSensor:
     def __init__(self, config):
         self.printer = config.get_printer()
+        gcode_macro = self.printer.load_object(config, 'gcode_macro')
         buttons = self.printer.load_object(config, 'buttons')
         switch_pin = config.get('switch_pin')
         runout_distance = config.getfloat('runout_distance', 0., minval=0.)
@@ -154,6 +150,10 @@ class SwitchSensor:
         self.reactor = self.printer.get_reactor()
         self.estimated_print_time = None
         self.runout_helper = RunoutHelper(config, self, runout_distance)
+        if config.get('immediate_runout_gcode', None) is not None:
+            self.runout_helper.immediate_runout_gcode = (
+                gcode_macro.load_template(config, 'immediate_runout_gcode', '')
+            )
         self.get_status = self.runout_helper.get_status
         self.printer.register_event_handler('klippy:ready',
                                             self._handle_ready)
@@ -174,6 +174,11 @@ class SwitchSensor:
                 % (self.runout_helper.name,
                    'enabled' if self.runout_helper.sensor_enabled
                    else 'disabled', self.runout_helper.runout_distance))
+    def sensor_get_status(self, eventtime):
+        return {
+            "filament_detected": bool(self.runout_helper.filament_present),
+            "enabled": bool(self.runout_helper.sensor_enabled),
+            "runout_distance": float(self.runout_helper.runout_distance)}
     def set_filament_sensor(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
         reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
