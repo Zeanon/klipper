@@ -88,20 +88,18 @@ class Heater:
                                         self.cmd_SET_HEATER_TEMPERATURE,
                                         desc=
                                         self.cmd_SET_HEATER_TEMPERATURE_help)
+        self.gcode.register_mux_command("SET_SMOOTH_TIME",
+                                        "HEATER",
+                                        self.name,
+                                        self.cmd_SET_SMOOTH_TIME,
+                                        desc=
+                                        self.cmd_SET_SMOOTH_TIME_help)
         self.gcode.register_mux_command("PID_PROFILE",
                                         "HEATER",
-                                        self
-                                        .name,
-                                        self
-                                        .pmgr
-                                        .cmd_PID_PROFILE,
+                                        self.name,
+                                        self.pmgr.cmd_PID_PROFILE,
                                         desc=
-                                        self
-                                        .pmgr
-                                        .cmd_PID_PROFILE_help
-                                        )
-        self.gcode.register_mux_command("SET_SMOOTH_TIME",
-                                        )
+                                        self.pmgr.cmd_PID_PROFILE_help)
     def lookup_control(self, profile, reset_temp=True):
         algos = collections.OrderedDict({
             'watermark': ControlBangBang,
@@ -378,7 +376,9 @@ class Heater:
             kp = temp_profile['pid_kp']
             ki = temp_profile['pid_ki']
             kd = temp_profile['pid_kd']
-            smooth_time = self.outer_instance.get_smooth_time()
+            smooth_time = (self.outer_instance.get_smooth_time()
+                           if temp_profile['smooth_time'] is None
+                           else temp_profile['smooth_time'])
             name = temp_profile['name']
             self.outer_instance.gcode.respond_info(
                 "PID Parameters:\n"
