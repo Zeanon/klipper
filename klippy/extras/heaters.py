@@ -311,18 +311,19 @@ class Heater:
             return self._init_profile(self.outer_instance.config,
                                       'default')
         def set_values(self, profile_name, gcmd, verbose):
+            current_profile = self.outer_instance.get_control().get_profile()
             target = self._check_value_gcmd('TARGET',
                                             None,
                                             gcmd,
                                             float,
                                             False)
             tolerance = self._check_value_gcmd('TOLERANCE',
-                                               None,
+                                               current_profile['tolerance'],
                                                gcmd,
                                                float,
                                                False)
             control = self._check_value_gcmd('CONTROL',
-                                             None,
+                                             current_profile['control'],
                                              gcmd,
                                              'lower',
                                              False)
