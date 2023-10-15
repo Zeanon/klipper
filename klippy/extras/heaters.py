@@ -200,9 +200,9 @@ class Heater:
         pheaters.set_temperature(self, temp)
     cmd_SET_SMOOTH_TIME_help = "Set the smooth time for the given heater"
     def cmd_SET_SMOOTH_TIME(self, gcmd):
-        self.smooth_time = gcmd.getfloat('smooth_time',
-                                         self.config_smooth_time,
-                                         minval=0.)
+        self.smooth_time = gcmd.get_float('smooth_time',
+                                          self.config_smooth_time,
+                                          minval=0.)
         self.inv_smooth_time = 1. / self.smooth_time
         self.get_control().update_smooth_time()
     class ProfileManager:
