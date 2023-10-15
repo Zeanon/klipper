@@ -55,9 +55,10 @@ class PIDCalibrate:
                    'pid_kp': Kp,
                    'pid_ki': Ki,
                    'pid_kd': Kd,
+                   'smooth_time': None,
                    'name': profile_name}
 
-        heater.set_control(heater.lookup_control(profile), True)
+        heater.set_control(heater.lookup_control(profile, True), True)
         heater.pmgr.save_profile(profile_name, None, False)
 
 TUNE_PID_TOL = 0.02
