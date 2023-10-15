@@ -397,9 +397,9 @@ class Heater:
             )
         def save_profile(self, profile_name=None, gcmd=None, verbose=True):
             temp_profile = self.outer_instance.get_control().get_profile()
-            section_name = (self._compute_section_name(temp_profile['name'])
-                            if profile_name is None
-                            else self._compute_section_name(profile_name))
+            if profile_name is None:
+                profile_name = temp_profile['name']
+            section_name = self._compute_section_name(profile_name)
             self.outer_instance.configfile.set(section_name,
                                                'pid_version',
                                                PID_PROFILE_VERSION)
