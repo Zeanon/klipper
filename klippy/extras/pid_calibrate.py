@@ -59,7 +59,7 @@ class PIDCalibrate:
                    'name': profile_name}
 
         heater.set_control(heater.lookup_control(profile, True), True)
-        heater.pmgr.save_profile(profile_name, None, False)
+        heater.pmgr.save_profile(profile_name=profile_name, verbose=False)
 
 TUNE_PID_TOL = 0.02
 TUNE_PID_SAMPLES = 3
@@ -280,6 +280,9 @@ class ControlAutoTune:
         Ki = Kp / Ti
         Kd = Kp * Td
         return Kp, Ki, Kd
+
+    def update_smooth_time(self, write_to_profile):
+        return
 
     def get_profile(self):
         return {'name': 'autotune'}

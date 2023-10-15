@@ -748,6 +748,14 @@ above the supplied MINIMUM and/or at or below the supplied MAXIMUM.
 [TARGET=<target_temperature>]`: Sets the target temperature for a
 heater. If a target temperature is not supplied, the target is 0.
 
+#### SET_SMOOTH_TIME
+`SET_SMOOTH_TIME HEATER=<heater_name> [SMOOTH_TIME=<smooth_time>]
+[SAVE_TO_PROFILE=0|1]`: Sets the smooth_time of the specified heater.
+If SMOOTH_TIME is omitted, the smooth_time will be reset to the value
+from the config.
+If SAVE_TO_PROFILE is set to 1, the new value will be written to the
+current PID_PROFILE.
+
 #### COLD_EXTRUDE
 `COLD_EXTRUDE [HEATER=<heater_name>] [ENABLE=<0 or 1>]
 [MIN_EXTRUDE_TEMP=<min_extrude_temp>]: Enables or disables cold extrusion.

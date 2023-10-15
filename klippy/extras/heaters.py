@@ -200,11 +200,18 @@ class Heater:
         pheaters.set_temperature(self, temp)
     cmd_SET_SMOOTH_TIME_help = "Set the smooth time for the given heater"
     def cmd_SET_SMOOTH_TIME(self, gcmd):
-        self.smooth_time = gcmd.get_float('smooth_time',
+        self.smooth_time = gcmd.get_float('SMOOTH_TIME',
                                           self.config_smooth_time,
                                           minval=0.)
+        save_to_profile = gcmd.get_int('SAVE_TO_PROFILE',
+                                       0,
+                                       minval=0,
+                                       maxval=1)
         self.inv_smooth_time = 1. / self.smooth_time
         self.get_control().update_smooth_time()
+        if save_to_profile:
+            self.get_control().get_profile()['smooth_time'] = self.smooth_time
+            self.pmgr.save_profile()
     class ProfileManager:
         def __init__(self, outer_instance):
             self.outer_instance = outer_instance
@@ -247,12 +254,15 @@ class Heater:
                                                                  config_section,
                                                                  type,
                                                                  can_be_none)
-                temp_profile['smooth_time'] = (
-                    self._check_value_config('smooth_time',
-                                             config_section,
-                                             float,
-                                             True)
-                )
+                if name == 'default':
+                    temp_profile['smooth_time'] = None
+                else:
+                    temp_profile['smooth_time'] = (
+                        self._check_value_config('smooth_time',
+                                                 config_section,
+                                                 float,
+                                                 True)
+                    )
             else:
                 raise self.outer_instance.printer.config_error(
                     "Unknown control type '%s' "
@@ -352,9 +362,8 @@ class Heater:
                             'control': control,
                             'pid_kp': kp,
                             'pid_ki': ki,
-                            'pid_kd': kd}
-            if smooth_time is not None:
-                temp_profile['smooth_time'] = smooth_time
+                            'pid_kd': kd,
+                            'smooth_time': smooth_time}
             temp_control = self.outer_instance.lookup_control(temp_profile,
                                                               False)
             self.outer_instance.set_control(temp_control, reset_target)
@@ -367,7 +376,7 @@ class Heater:
                 "have been set as current profile."
                 % (target, tolerance, control, kp, ki, kd)
             )
-            self.save_profile(profile_name, None, True)
+            self.save_profile(profile_name=profile_name, verbose=True)
         def get_values(self, profile_name, gcmd, verbose):
             temp_profile = self.outer_instance.get_control().get_profile()
             target = temp_profile['pid_target']
@@ -390,9 +399,11 @@ class Heater:
                 "name: %s"
                 % (target, tolerance, control, kp, ki, kd, smooth_time, name)
             )
-        def save_profile(self, profile_name, gcmd, verbose):
+        def save_profile(self, profile_name=None, gcmd=None, verbose=True):
             temp_profile = self.outer_instance.get_control().get_profile()
-            section_name = self._compute_section_name(profile_name)
+            section_name = (temp_profile['name']
+                            if profile_name is None
+                            else self._compute_section_name(profile_name))
             self.outer_instance.configfile.set(section_name,
                                                'pid_version',
                                                PID_PROFILE_VERSION)
@@ -476,17 +487,22 @@ class Heater:
                    self.outer_instance.name)
                 )
             if verbose == 'high':
+                smooth_time = (self.outer_instance.get_smooth_time()
+                               if profile['smooth_time'] is None
+                               else profile['smooth_time'])
                 self.outer_instance.gcode.respond_info(
                     "Target: %.2f\n"
                     "Tolerance: %.4f\n"
                     "Control: %s\n"
-                    "PID Parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f"
+                    "PID Parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
+                    "Smooth Time: %.3f\n"
                     % (profile['pid_target'],
                        profile['pid_tolerance'],
                        profile['control'],
                        profile['pid_kp'],
                        profile['pid_ki'],
-                       profile['pid_kd'])
+                       profile['pid_kd'],
+                       smooth_time)
                 )
         def remove_profile(self, profile_name, gcmd, verbose):
             if profile_name in self.profiles:
