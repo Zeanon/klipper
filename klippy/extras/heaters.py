@@ -101,7 +101,7 @@ class Heater:
                                         self.pmgr.cmd_PID_PROFILE,
                                         desc=
                                         self.pmgr.cmd_PID_PROFILE_help)
-    def lookup_control(self, profile, reset_temp=True):
+    def lookup_control(self, profile, load_clean=True):
         algos = collections.OrderedDict({
             'watermark': ControlBangBang,
             'pid': ControlPID,
@@ -110,7 +110,7 @@ class Heater:
         return algos[profile['control']](profile,
                                          self,
                                          None
-                                         if reset_temp else
+                                         if load_clean else
                                          self.get_temp(self.reactor.monotonic())
                                          )
     def set_pwm(self, read_time, value):
@@ -165,11 +165,11 @@ class Heater:
         with self.lock:
             return self.control.check_busy(
                 eventtime, self.smoothed_temp, self.target_temp)
-    def set_control(self, control, reset_target=False):
+    def set_control(self, control, keep_target=True):
         with self.lock:
             old_control = self.control
             self.control = control
-            if reset_target:
+            if not keep_target:
                 self.target_temp = 0.
         return old_control
     def get_control(self):
@@ -294,11 +294,24 @@ class Heater:
                           + " "
                           + profile_name)
                     )
-        def _check_value_gcmd(self, name, default, gcmd, type, can_be_none):
+        def _check_value_gcmd(self,
+                              name,
+                              default,
+                              gcmd,
+                              type,
+                              can_be_none,
+                              minval=None,
+                              maxval=None, ):
             if type is int:
-                value = gcmd.get_int(name, default)
+                value = gcmd.get_int(name,
+                                     default,
+                                     minval=minval,
+                                     maxval=maxval)
             elif type is float:
-                value = gcmd.get_float(name, default)
+                value = gcmd.get_float(name,
+                                       default,
+                                       minval=minval,
+                                       maxval=maxval)
             else:
                 value = gcmd.get(name, default)
             if not can_be_none and value is None:
@@ -347,11 +360,20 @@ class Heater:
                                                  gcmd,
                                                  float,
                                                  True)
-            reset_target = self._check_value_gcmd('RESET_TARGET',
-                                                  0,
-                                                  gcmd,
-                                                  int,
-                                                  False)
+            keep_target = self._check_value_gcmd('KEEP_TARGET',
+                                                 0,
+                                                 gcmd,
+                                                 int,
+                                                 True,
+                                                 minval=0,
+                                                 maxval=1)
+            load_clean = self._check_value_gcmd('LOAD_CLEAN',
+                                                0,
+                                                gcmd,
+                                                int,
+                                                True,
+                                                minval=0,
+                                                maxval=1)
             temp_profile = {'pid_target': target,
                             'pid_tolerance': tolerance,
                             'control': control,
@@ -360,8 +382,8 @@ class Heater:
                             'pid_ki': ki,
                             'pid_kd': kd}
             temp_control = self.outer_instance.lookup_control(temp_profile,
-                                                              False)
-            self.outer_instance.set_control(temp_control, reset_target)
+                                                              load_clean)
+            self.outer_instance.set_control(temp_control, keep_target)
             msg = ("PID Parameters:\n"
                    "Target: %.2f,\n"
                    "Tolerance: %.4f\n"
@@ -427,21 +449,30 @@ class Heater:
                                              gcmd,
                                              'lower',
                                              True)
+            load_clean = self._check_value_gcmd('LOAD_CLEAN',
+                                                0,
+                                                gcmd,
+                                                int,
+                                                True,
+                                                minval=0,
+                                                maxval=1)
             if (profile_name
                     ==
                     self.outer_instance.get_control().get_profile()['name']
-                    and
-                    (verbose == 'high' or verbose == 'low')):
-                self.outer_instance.gcode.respond_info(
-                    "PID Profile [%s] already loaded for heater [%s]."
-                    % (profile_name, self.outer_instance.name)
-                )
+                    and not load_clean):
+                if verbose == 'high' or verbose == 'low':
+                    self.outer_instance.gcode.respond_info(
+                        "PID Profile [%s] already loaded for heater [%s]."
+                        % (profile_name, self.outer_instance.name)
+                    )
                 return
-            reset_target = self._check_value_gcmd('RESET_TARGET',
-                                                  0,
-                                                  gcmd,
-                                                  int,
-                                                  True)
+            keep_target = self._check_value_gcmd('KEEP_TARGET',
+                                                 0,
+                                                 gcmd,
+                                                 int,
+                                                 True,
+                                                 minval=0,
+                                                 maxval=1)
             profile = self.profiles.get(profile_name, None)
             defaulted = False
             default = gcmd.get('DEFAULT', None)
@@ -460,8 +491,8 @@ class Heater:
                         % (default,
                            self.outer_instance.name)
                     )
-            control = self.outer_instance.lookup_control(profile, False)
-            self.outer_instance.set_control(control, reset_target)
+            control = self.outer_instance.lookup_control(profile, load_clean)
+            self.outer_instance.set_control(control, keep_target)
 
             if verbose != 'high' and verbose != 'low':
                 return
