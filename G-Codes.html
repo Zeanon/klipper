@@ -1599,6 +1599,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#set_smooth_time" class="md-nav__link">
+    SET_SMOOTH_TIME
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cold_extrude" class="md-nav__link">
     COLD_EXTRUDE
   </a>
@@ -3853,6 +3860,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#set_smooth_time" class="md-nav__link">
+    SET_SMOOTH_TIME
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#cold_extrude" class="md-nav__link">
     COLD_EXTRUDE
   </a>
@@ -5353,6 +5367,13 @@ above the supplied MINIMUM and/or at or below the supplied MAXIMUM.</p>
 <p><code>SET_HEATER_TEMPERATURE HEATER=&lt;heater_name&gt;
 [TARGET=&lt;target_temperature&gt;]</code>: Sets the target temperature for a
 heater. If a target temperature is not supplied, the target is 0.</p>
+<h4 id="set_smooth_time">SET_SMOOTH_TIME<a class="headerlink" href="#set_smooth_time" title="Permanent link">&para;</a></h4>
+<p><code>SET_SMOOTH_TIME HEATER=&lt;heater_name&gt; [SMOOTH_TIME=&lt;smooth_time&gt;]
+[SAVE_TO_PROFILE=0|1]</code>: Sets the smooth_time of the specified heater.
+If SMOOTH_TIME is omitted, the smooth_time will be reset to the value
+from the config.
+If SAVE_TO_PROFILE is set to 1, the new value will be written to the
+current PID_PROFILE.</p>
 <h4 id="cold_extrude">COLD_EXTRUDE<a class="headerlink" href="#cold_extrude" title="Permanent link">&para;</a></h4>
 <p>`COLD_EXTRUDE [HEATER=<heater_name>] [ENABLE=&lt;0 or 1&gt;]
 [MIN_EXTRUDE_TEMP=<min_extrude_temp>]: Enables or disables cold extrusion.
