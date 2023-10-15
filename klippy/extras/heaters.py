@@ -19,6 +19,7 @@ PID_PROFILE_OPTIONS = {
     'pid_target': (float, "%.2f"),
     'pid_tolerance': (float, "%.4f"),
     'control': (str, "%s"),
+    'smooth_time': (float, "%.3f"),
     'pid_kp': (float, "%.3f"),
     'pid_ki': (float, "%.3f"),
     'pid_kd': (float, "%.3f")
@@ -256,13 +257,6 @@ class Heater:
                                                                  can_be_none)
                 if name == 'default':
                     temp_profile['smooth_time'] = None
-                else:
-                    temp_profile['smooth_time'] = (
-                        self._check_value_config('smooth_time',
-                                                 config_section,
-                                                 float,
-                                                 True)
-                    )
             else:
                 raise self.outer_instance.printer.config_error(
                     "Unknown control type '%s' "
@@ -360,22 +354,24 @@ class Heater:
             temp_profile = {'pid_target': target,
                             'pid_tolerance': tolerance,
                             'control': control,
+                            'smooth_time': smooth_time,
                             'pid_kp': kp,
                             'pid_ki': ki,
-                            'pid_kd': kd,
-                            'smooth_time': smooth_time}
+                            'pid_kd': kd}
             temp_control = self.outer_instance.lookup_control(temp_profile,
                                                               False)
             self.outer_instance.set_control(temp_control, reset_target)
-            self.outer_instance.gcode.respond_info(
-                "PID Parameters:\n"
-                "Target: %.2f,\n"
-                "Tolerance: %.4f\n"
-                "Control: %s\n"
-                "pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
-                "have been set as current profile."
-                % (target, tolerance, control, kp, ki, kd)
-            )
+            msg = ("PID Parameters:\n"
+                   "Target: %.2f,\n"
+                   "Tolerance: %.4f\n"
+                   "Control: %s\n"
+                   % (target, tolerance, control))
+            if smooth_time is not None:
+                msg += "Smooth Time: %.3f\n" % smooth_time
+            msg += ("pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
+                    "have been set as current profile."
+                    % (kp, ki, kd))
+            self.outer_instance.gcode.respond_info(msg)
             self.save_profile(profile_name=profile_name, verbose=True)
         def get_values(self, profile_name, gcmd, verbose):
             temp_profile = self.outer_instance.get_control().get_profile()
@@ -394,10 +390,10 @@ class Heater:
                 "Target: %.2f,\n"
                 "Tolerance: %.4f\n"
                 "Control: %s\n"
+                "Smooth Time: %.3f\n"
                 "pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
-                "smooth_time: %.3f\n"
                 "name: %s"
-                % (target, tolerance, control, kp, ki, kd, smooth_time, name)
+                % (target, tolerance, smooth_time, control, kp, ki, kd, name)
             )
         def save_profile(self, profile_name=None, gcmd=None, verbose=True):
             temp_profile = self.outer_instance.get_control().get_profile()
@@ -409,16 +405,12 @@ class Heater:
                                                PID_PROFILE_VERSION)
             for key, (type,
                       placeholder) in PID_PROFILE_OPTIONS.items():
-                self.outer_instance.configfile.set(section_name,
-                                                   key,
-                                                   placeholder
-                                                   % temp_profile[key])
-            if temp_profile['smooth_time'] is not None:
-                self.outer_instance.configfile.set(section_name,
-                                                   'smooth_time',
-                                                   "%.3f"
-                                                   % temp_profile['smooth_time']
-                                                   )
+                value = temp_profile[key]
+                if value is not None:
+                    self.outer_instance.configfile.set(section_name,
+                                                       key,
+                                                       placeholder
+                                                       % value)
             temp_profile['name'] = profile_name
             self.profiles[profile_name] = temp_profile
             if verbose:
@@ -490,20 +482,19 @@ class Heater:
                 smooth_time = (self.outer_instance.get_smooth_time()
                                if profile['smooth_time'] is None
                                else profile['smooth_time'])
-                self.outer_instance.gcode.respond_info(
-                    "Target: %.2f\n"
-                    "Tolerance: %.4f\n"
-                    "Control: %s\n"
-                    "PID Parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
-                    "Smooth Time: %.3f\n"
-                    % (profile['pid_target'],
-                       profile['pid_tolerance'],
-                       profile['control'],
-                       profile['pid_kp'],
-                       profile['pid_ki'],
-                       profile['pid_kd'],
-                       smooth_time)
-                )
+                msg = ("Target: %.2f\n"
+                       "Tolerance: %.4f\n"
+                       "Control: %s\n"
+                       % (profile['pid_target'],
+                          profile['pid_tolerance'],
+                          profile['control']))
+                if smooth_time is not None:
+                    msg += "Smooth Time: %.3f\n" % smooth_time
+                msg += ("PID Parameters: pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
+                        % (profile['pid_kp'],
+                           profile['pid_ki'],
+                           profile['pid_kd']))
+                self.outer_instance.gcode.respond_info(msg)
         def remove_profile(self, profile_name, gcmd, verbose):
             if profile_name in self.profiles:
                 section_name = self._compute_section_name(profile_name)
