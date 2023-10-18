@@ -4,6 +4,10 @@ G28 supports conditional homing (G28 X0 will only home X if X has not been homed
 PID Profiles: generate profiles with PID values for different temperatures and load them with a command without restarting<br>
 Improved PID tuning algorithm and velocity based PID algorithm (https://github.com/Klipper3d/klipper/pull/5955)<br>
 Implemented https://github.com/Klipper3d/klipper/pull/6346 <br>
+Implemented https://github.com/Klipper3d/klipper/pull/6246 <br>
+Implemented https://github.com/Klipper3d/klipper/pull/6290 <br>
+Implemented https://github.com/Klipper3d/klipper/pull/6226 <br>
+Implemented https://github.com/Klipper3d/klipper/pull/6224 <br>
 MARK_AS_HOME and MARK_AS_UNHOMED commands (see docs) <br>
 max_set_temp option for heaters (see docs) <br>
 homing_resting_retract_dist and homing_resting_retract_speed (see docs) <br>
