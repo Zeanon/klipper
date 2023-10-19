@@ -9,6 +9,7 @@ PIN_MIN_TIME = 0.100
 
 class PrinterHeaterFan:
     def __init__(self, config):
+        self.name = config.get_name().split()[1]
         self.printer = config.get_printer()
         self.printer.load_object(config, 'heaters')
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
@@ -20,6 +21,12 @@ class PrinterHeaterFan:
         self.fan = fan.Fan(config, default_shutdown_speed=1.)
         self.fan_speed = config.getfloat("fan_speed", 1., minval=0., maxval=1.)
         self.last_speed = 0.
+        self.enabled = True
+        gcode = self.printer.lookup_object('gcode')
+        gcode.register_mux_command(
+            "SET_HEATER_FAN", "HEATER_FAN", self.name,
+            self.cmd_SET_HEATER_FAN,
+            desc=self.cmd_SET_HEATER_FAN_help)
     def handle_ready(self):
         pheaters = self.printer.lookup_object('heaters')
         self.heaters = [pheaters.lookup_heater(n) for n in self.heater_names]
@@ -38,12 +45,15 @@ class PrinterHeaterFan:
                              - self.heater_temp_off_offset))):
                 speed = self.fan_speed
 
-        if speed != self.last_speed:
+        if self.enabled and speed != self.last_speed:
             self.last_speed = speed
             curtime = self.printer.get_reactor().monotonic()
             print_time = self.fan.get_mcu().estimated_print_time(curtime)
             self.fan.set_speed(print_time + PIN_MIN_TIME, speed)
         return eventtime + 1.
+    cmd_SET_HEATER_FAN_help = "Enable or Disable a heater_fan"
+    def cmd_SET_HEATER_FAN(self, gcmd):
+        self.enabled = gcmd.get_int('ENABLE', 0, minval=0, maxval=1)
 
 def load_config_prefix(config):
     return PrinterHeaterFan(config)
