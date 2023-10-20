@@ -88,6 +88,8 @@ class TemperatureFan:
     cmd_SET_TEMPERATURE_FAN_TARGET_help = \
         "Sets a temperature fan target and fan speed limits"
     def cmd_SET_TEMPERATURE_FAN_TARGET(self, gcmd):
+        if self.control.get_type() == 'curve':
+            raise gcmd.error("Setting Target not supported for control curve")
         temp = gcmd.get_float('TARGET', self.target_temp_conf)
         self.set_temp(temp)
         min_speed = gcmd.get_float('MIN_SPEED', self.min_speed)
@@ -148,6 +150,9 @@ class ControlBangBang:
         else:
             self.controlled_fan.set_speed(read_time,
                                           self.temperature_fan.get_max_speed())
+    def get_type(self):
+        return 'watermark'
+
 
 ######################################################################
 # Proportional Integral Derivative (PID) control algo
@@ -202,6 +207,8 @@ class ControlPID:
         self.prev_temp_deriv = temp_deriv
         if co == bounded_co:
             self.prev_temp_integ = temp_integ
+    def get_type(self):
+        return 'pid'
 
 
 class ControlCurve:
@@ -298,6 +305,8 @@ class ControlCurve:
             self.stored_temps[i] = self.stored_temps[i-1]
         self.stored_temps[0] = temp
         return statistics.median(self.stored_temps)
+    def get_type(self):
+        return 'curve'
 
 
 def load_config_prefix(config):
