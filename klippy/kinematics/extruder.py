@@ -98,7 +98,7 @@ class ExtruderStepper:
         pressure_advance = gcmd.get_float(
             'ADVANCE', self.pressure_advance, minval=0.)
         pa_smooth_time = gcmd.get_float(
-            'SMOOTH_TIME', self.active_pa_smooth_time, minval=0., maxval=.200)
+            'SMOOTH_TIME', self.pa_smooth_time, minval=0., maxval=.200)
         pa_enabled = gcmd.get_int(
             'ENABLE', self.pa_enabled, minval=0, maxval=1)
         self.pressure_advance = pressure_advance
