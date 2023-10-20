@@ -93,10 +93,9 @@ class TemperatureFan:
     cmd_SET_TEMPERATURE_FAN_TARGET_help = \
         "Sets a temperature fan target and fan speed limits"
     def cmd_SET_TEMPERATURE_FAN_TARGET(self, gcmd):
-        if self.control.get_type() == 'curve':
+        target = gcmd.get_float('TARGET', None)
+        if target is not None and self.control.get_type() == 'curve':
             raise gcmd.error("Setting Target not supported for control curve")
-        temp = gcmd.get_float('TARGET', self.target_temp_conf)
-        self.set_temp(temp)
         min_speed = gcmd.get_float('MIN_SPEED', self.min_speed)
         max_speed = gcmd.get_float('MAX_SPEED', self.max_speed)
         if min_speed > max_speed:
@@ -105,6 +104,7 @@ class TemperatureFan:
                 % (min_speed, max_speed))
         self.set_min_speed(min_speed)
         self.set_max_speed(max_speed)
+        self.set_temp(self.target_temp_conf if target is None else target)
     cmd_SET_TEMPERATURE_FAN_help = "Enable or Disable a heater_fan"
     def cmd_SET_TEMPERATURE_FAN(self, gcmd):
         target = gcmd.get_float('TARGET', None)
@@ -120,9 +120,10 @@ class TemperatureFan:
         self.set_min_speed(min_speed)
         self.set_max_speed(max_speed)
         self.set_temp(self.target_temp_conf if target is None else target)
-        curtime = self.printer.get_reactor().monotonic()
-        print_time = self.fan.get_mcu().estimated_print_time(curtime)
-        self.fan.set_speed(print_time, 0.0)
+        if not self.enabled:
+            curtime = self.printer.get_reactor().monotonic()
+            print_time = self.fan.get_mcu().estimated_print_time(curtime)
+            self.fan.set_speed(print_time, 0.0)
 
     def set_temp(self, degrees):
         if degrees and (degrees < self.min_temp or degrees > self.max_temp):
