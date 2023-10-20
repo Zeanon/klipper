@@ -95,12 +95,15 @@ class ExtruderStepper:
         extruder.extruder_stepper.cmd_SET_PRESSURE_ADVANCE(gcmd)
     def cmd_SET_PRESSURE_ADVANCE(self, gcmd):
         verbose = gcmd.get('VERBOSE', 'high').lower()
-        self.pressure_advance = gcmd.get_float(
+        pressure_advance = gcmd.get_float(
             'ADVANCE', self.pressure_advance, minval=0.)
-        self.pa_smooth_time = gcmd.get_float(
+        pa_smooth_time = gcmd.get_float(
             'SMOOTH_TIME', self.active_pa_smooth_time, minval=0., maxval=.200)
-        self.pa_enabled = gcmd.get_int(
+        pa_enabled = gcmd.get_int(
             'ENABLE', self.pa_enabled, minval=0, maxval=1)
+        self.pressure_advance = pressure_advance
+        self.pa_smooth_time = pa_smooth_time
+        self.pa_enabled = pa_enabled
         self._update_pressure_advance()
         msg = ("pressure_advance: %.6f\n"
                "pressure_advance_smooth_time: %.6f\n"
