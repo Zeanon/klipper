@@ -78,8 +78,8 @@ class ExtruderStepper:
         if self.active_pa_smooth_time != new_smooth_time:
             toolhead = self.printer.lookup_object("toolhead")
             toolhead.note_step_generation_scan_time(
-                new_smooth_time * .5,
-                old_delay=self.active_pa_smooth_time * .5)
+                self,
+                new_smooth_time * .5)
             self.active_pa_smooth_time = new_smooth_time
         ffi_main, ffi_lib = chelper.get_ffi()
         espa = ffi_lib.extruder_set_pressure_advance
