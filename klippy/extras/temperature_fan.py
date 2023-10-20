@@ -50,11 +50,16 @@ class TemperatureFan:
                             super_fan)
         self.next_speed_time = 0.
         self.last_speed_value = 0.
+        self.enabled = 1
         gcode = self.printer.lookup_object('gcode')
         gcode.register_mux_command(
             "SET_TEMPERATURE_FAN_TARGET", "TEMPERATURE_FAN", self.name,
             self.cmd_SET_TEMPERATURE_FAN_TARGET,
             desc=self.cmd_SET_TEMPERATURE_FAN_TARGET_help)
+        gcode.register_mux_command(
+            "SET_TEMPERATURE_FAN", "TEMPERATURE_FAN", self.name,
+            self.cmd_SET_TEMPERATURE_FAN,
+            desc=self.cmd_SET_TEMPERATURE_FAN_help)
 
     def set_speed(self, read_time, value):
         if value <= 0.:
@@ -100,6 +105,24 @@ class TemperatureFan:
                 % (min_speed, max_speed))
         self.set_min_speed(min_speed)
         self.set_max_speed(max_speed)
+    cmd_SET_TEMPERATURE_FAN_help = "Enable or Disable a heater_fan"
+    def cmd_SET_TEMPERATURE_FAN(self, gcmd):
+        target = gcmd.get_float('TARGET', None)
+        min_speed = gcmd.get_float('MIN_SPEED', self.min_speed)
+        max_speed = gcmd.get_float('MAX_SPEED', self.max_speed)
+        if min_speed > max_speed:
+            raise self.printer.command_error(
+                "Requested min speed (%.1f) is greater than max speed (%.1f)"
+                % (min_speed, max_speed))
+        if target is not None and self.control.get_type() == 'curve':
+            raise gcmd.error("Setting Target not supported for control curve")
+        self.enabled = gcmd.get_int('ENABLE', self.enabled, minval=0, maxval=1)
+        self.set_min_speed(min_speed)
+        self.set_max_speed(max_speed)
+        self.set_temp(self.target_temp_conf if target is None else target)
+        curtime = self.printer.get_reactor().monotonic()
+        print_time = self.fan.get_mcu().estimated_print_time(curtime)
+        self.fan.set_speed(print_time, 0.0)
 
     def set_temp(self, degrees):
         if degrees and (degrees < self.min_temp or degrees > self.max_temp):

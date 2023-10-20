@@ -31,7 +31,7 @@ class ControllerFan:
         self.heater_names = config.getlist("heater", None)
         self.last_on = self.idle_timeout
         self.last_speed = 0.
-        self.enabled = True
+        self.enabled = 1
         gcode = self.printer.lookup_object('gcode')
         gcode.register_mux_command(
             "SET_CONTROLLER_FAN", "CONTROLLER_FAN", self.name,
@@ -89,7 +89,10 @@ class ControllerFan:
         return eventtime + 1.
     cmd_SET_CONTROLLER_FAN_help = "Enable or Disable a heater_fan"
     def cmd_SET_CONTROLLER_FAN(self, gcmd):
-        self.enabled = gcmd.get_int('ENABLE', 0, minval=0, maxval=1)
+        self.enabled = gcmd.get_int('ENABLE', self.enabled, minval=0, maxval=1)
+        curtime = self.printer.get_reactor().monotonic()
+        print_time = self.fan.get_mcu().estimated_print_time(curtime)
+        self.fan.set_speed(print_time + PIN_MIN_TIME, 0.0)
 
 def load_config_prefix(config):
     return ControllerFan(config)
