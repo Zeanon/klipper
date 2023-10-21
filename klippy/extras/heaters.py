@@ -413,7 +413,7 @@ class Heater:
                 "Smooth Time: %.3f\n"
                 "pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
                 "name: %s"
-                % (target, tolerance, smooth_time, control, kp, ki, kd, name)
+                % (target, tolerance, control, smooth_time, kp, ki, kd, name)
             )
         def save_profile(self, profile_name=None, gcmd=None, verbose=True):
             temp_profile = self.outer_instance.get_control().get_profile()
