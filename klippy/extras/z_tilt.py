@@ -90,8 +90,10 @@ class RetryHelper:
     def __init__(self, config, error_msg_extra=""):
         self.gcode = config.get_printer().lookup_object('gcode')
         self.default_max_retries = config.getint("retries", 0, minval=0)
-        self.default_retry_tolerance = \
-            config.getfloat("retry_tolerance", 0., above=0.)
+        self.default_retry_tolerance = (
+            config.getfloat("retry_tolerance", 0., above=0.))
+        self.default_max_deviation = (
+            config.getfloat("max_deviation", 2.5, above=0.))
         self.value_label = "Probed points range"
         self.error_msg_extra = error_msg_extra
     def start(self, gcmd):
@@ -100,6 +102,11 @@ class RetryHelper:
         self.retry_tolerance = gcmd.get_float('RETRY_TOLERANCE',
                                               self.default_retry_tolerance,
                                               minval=0.0, maxval=1.0)
+        self.max_deviation = gcmd.get_float('MAX_DEVIATION',
+                                            self.default_max_deviation,
+                                            minval=0.0, maxval=15.0)
+        self.ignore_increasing = gcmd.get_int('IGNORE_INCREASING',
+                                              0, minval=0, maxval=1)
         self.current_retry = 0
         self.previous = None
         self.increasing = 0
@@ -118,7 +125,11 @@ class RetryHelper:
             "Retries: %d/%d %s: %0.6f tolerance: %0.6f" % (
                 self.current_retry, self.max_retries, self.value_label,
                 error, self.retry_tolerance))
-        if self.check_increase(error):
+        if error > self.max_deviation:
+            raise self.gcode.error("Retries aborting: %s is exceeding "
+                                   "max_deviation of %.3f"
+                                   % (self.value_label, self.max_deviation))
+        if not self.ignore_increasing and self.check_increase(error):
             raise self.gcode.error("Retries aborting: %s is increasing. %s"
                                    % (self.value_label, self.error_msg_extra))
         if error <= self.retry_tolerance:
