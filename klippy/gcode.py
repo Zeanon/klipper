@@ -324,6 +324,9 @@ class GCodeDispatch:
             self.printer.send_event("gcode:request_restart", print_time)
             toolhead.dwell(0.500)
             toolhead.wait_moves()
+            self.run_script_from_command('TURN_OFF_HEATERS')
+            self.run_script_from_command('M84')
+            self.run_script_from_command('M107')
         self.printer.request_exit(result)
     cmd_RESTART_help = "Reload config file and restart host software"
     def cmd_RESTART(self, gcmd):
