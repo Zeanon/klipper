@@ -7,6 +7,10 @@ import logging
 import mathutil
 from . import probe
 
+MAX_RETRIES = 30
+MAX_RETRY_TOLERANCE = 1.0
+MAX_DEVIATION = 50.0
+
 class ZAdjustHelper:
     def __init__(self, config, z_count):
         self.printer = config.get_printer()
@@ -89,22 +93,35 @@ class ZAdjustStatus:
 class RetryHelper:
     def __init__(self, config, error_msg_extra=""):
         self.gcode = config.get_printer().lookup_object('gcode')
-        self.default_max_retries = config.getint("retries", 0, minval=0)
+        self.default_max_retries = config.getint("retries",
+                                                 0,
+                                                 minval=0,
+                                                 maxval=MAX_RETRIES)
         self.default_retry_tolerance = (
-            config.getfloat("retry_tolerance", 0., above=0.))
+            config.getfloat("retry_tolerance",
+                            0.,
+                            minval=0.,
+                            maxval=MAX_RETRY_TOLERANCE))
         self.default_max_deviation = (
-            config.getfloat("max_deviation", 2.5, above=0.))
+            config.getfloat("max_deviation",
+                            2.5,
+                            minval=0.,
+                            maxval=MAX_DEVIATION))
         self.value_label = "Probed points range"
         self.error_msg_extra = error_msg_extra
     def start(self, gcmd):
-        self.max_retries = gcmd.get_int('RETRIES', self.default_max_retries,
-                                        minval=0, maxval=30)
+        self.max_retries = gcmd.get_int('RETRIES',
+                                        self.default_max_retries,
+                                        minval=0,
+                                        maxval=MAX_RETRIES)
         self.retry_tolerance = gcmd.get_float('RETRY_TOLERANCE',
                                               self.default_retry_tolerance,
-                                              minval=0.0, maxval=1.0)
+                                              minval=0.0,
+                                              maxval=MAX_RETRY_TOLERANCE)
         self.max_deviation = gcmd.get_float('MAX_DEVIATION',
                                             self.default_max_deviation,
-                                            minval=0.0, maxval=15.0)
+                                            minval=0.0,
+                                            maxval=MAX_DEVIATION)
         self.ignore_increasing = gcmd.get_int('IGNORE_INCREASING',
                                               0, minval=0, maxval=1)
         self.current_retry = 0
