@@ -78,6 +78,7 @@ class PrinterGCodeMacro:
         self.env.add_extension("jinja2.ext.do")
 
         self.env.filters['boolean'] = self.boolean
+        self.env.filters['bool'] = self.boolean
         self.env.filters["repr"] = repr
         self.env.filters["shell_quote"] = pipes.quote
 
