@@ -37,7 +37,7 @@ class RunoutHelper:
         self.filament_present = False
         self.sensor_enabled = True
         self.runout_position = 0.
-        self.runout_since = -1
+        self.runout_elapsed = -1
         self.runout_distance_timer = None
         self.force_trigger = False
         # Register commands and event handlers
@@ -90,10 +90,10 @@ class RunoutHelper:
                            )
         if (runout_since
                 < self.runout_distance):
-            self.runout_since = runout_since
+            self.runout_elapsed = runout_since
             return eventtime + CHECK_RUNOUT_TIMEOUT
         else:
-            self.runout_since = -1
+            self.runout_elapsed = -1
             self._execute_runout(eventtime)
             return self.reactor.NEVER
     def _insert_event_handler(self, eventtime):
@@ -187,7 +187,7 @@ class SwitchSensor:
             "filament_detected": bool(self.runout_helper.filament_present),
             "enabled": bool(self.runout_helper.sensor_enabled),
             "runout_distance": float(self.runout_helper.runout_distance),
-            "runout_since": float(self.runout_helper.runout_since)}
+            "runout_elapsed": float(self.runout_helper.runout_elapsed)}
     def set_filament_sensor(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
         reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
