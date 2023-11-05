@@ -57,6 +57,8 @@ class RunoutHelper:
     def _handle_printing(self, print_time):
         self.note_filament_present(self.filament_present, True)
     def _runout_event_handler(self, eventtime):
+        if self.immediate_runout_gcode is not None:
+            self._exec_gcode("", self.immediate_runout_gcode)
         # Pausing from inside an event requires that the pause portion
         # of pause_resume execute immediately.
         if self.runout_distance > 0:
@@ -65,8 +67,6 @@ class RunoutHelper:
                                         .get_extruder_pos(eventtime))
                 self.runout_distance_timer = self.reactor.register_timer(
                     self._pause_after_distance, self.reactor.NOW)
-                if self.immediate_runout_gcode is not None:
-                    self._exec_gcode("", self.immediate_runout_gcode)
         else:
             self._execute_runout(eventtime)
     def _execute_runout(self, eventtime):
@@ -77,23 +77,23 @@ class RunoutHelper:
             pause_prefix = "PAUSE\n"
             self.printer.get_reactor().pause(eventtime + self.pause_delay)
         self._exec_gcode(pause_prefix, self.runout_gcode)
-        self.reset_runout_distance_timer()
-    def reset_runout_distance_timer(self):
+        self.reset_runout_distance_info()
+    def reset_runout_distance_info(self):
+        self.runout_elapsed = -1
         if self.runout_distance_timer is not None:
             self.reactor.unregister_timer(self.runout_distance_timer)
             self.runout_distance_timer = None
     def _pause_after_distance(self, eventtime):
-        runout_since = max(0.,
+        runout_elapsed = max(0.,
                            self.defined_sensor
                            .get_extruder_pos(eventtime)
                            - self.runout_position
                            )
-        if (runout_since
+        if (runout_elapsed
                 < self.runout_distance):
-            self.runout_elapsed = runout_since
+            self.runout_elapsed = runout_elapsed
             return eventtime + CHECK_RUNOUT_TIMEOUT
         else:
-            self.runout_elapsed = -1
             self._execute_runout(eventtime)
             return self.reactor.NEVER
     def _insert_event_handler(self, eventtime):
@@ -202,7 +202,7 @@ class SwitchSensor:
         if runout_distance is not None:
             self.runout_helper.runout_distance = runout_distance
         if reset is not None and reset:
-            self.runout_helper.reset_runout_distance_timer()
+            self.runout_helper.reset_runout_distance_info()
             self.runout_helper.note_filament_present(
                 self.runout_helper.filament_present, True)
 
