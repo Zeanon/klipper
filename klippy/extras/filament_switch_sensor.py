@@ -37,7 +37,7 @@ class RunoutHelper:
         self.filament_present = False
         self.sensor_enabled = True
         self.runout_position = 0.
-        self.runout_elapsed = -1
+        self.runout_elapsed = 0.
         self.runout_distance_timer = None
         self.force_trigger = False
         # Register commands and event handlers
@@ -79,7 +79,7 @@ class RunoutHelper:
         self._exec_gcode(pause_prefix, self.runout_gcode)
         self.reset_runout_distance_info()
     def reset_runout_distance_info(self):
-        self.runout_elapsed = -1
+        self.runout_elapsed = 0.
         if self.runout_distance_timer is not None:
             self.reactor.unregister_timer(self.runout_distance_timer)
             self.runout_distance_timer = None
