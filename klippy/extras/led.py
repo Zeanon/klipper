@@ -27,8 +27,6 @@ class LEDHelper:
         gcode = self.printer.lookup_object('gcode')
         gcode.register_mux_command("SET_LED", "LED", name, self.cmd_SET_LED,
                                    desc=self.cmd_SET_LED_help)
-        gcode.register_mux_command("GET_LED", "LED", name, self.cmd_GET_LED,
-                                   desc=self.cmd_SET_LED_help)
     def check_index(self, index, gcmd, led_count):
         try:
             i = int(index)
@@ -101,8 +99,6 @@ class LEDHelper:
             self.update_func(self.led_state, print_time)
         except self.printer.command_error as e:
             logging.exception("led update transmit error")
-    def cmd_GET_LED(self, gcmd):
-        gcmd.respond_info(str(self.led_state))
     cmd_SET_LED_help = "Set the color of an LED"
     def cmd_SET_LED(self, gcmd):
         # Parse parameters
