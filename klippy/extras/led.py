@@ -122,7 +122,6 @@ class LEDHelper:
         else:
             #Send update now (so as not to wake toolhead and reset idle_timeout)
             lookahead_bgfunc(None)
-        gcmd.respond_info(str(self.led_state))
     def get_status(self, eventtime=None):
         return {'color_data': self.led_state}
 
