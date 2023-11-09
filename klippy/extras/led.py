@@ -27,6 +27,8 @@ class LEDHelper:
         gcode = self.printer.lookup_object('gcode')
         gcode.register_mux_command("SET_LED", "LED", name, self.cmd_SET_LED,
                                    desc=self.cmd_SET_LED_help)
+        gcode.register_mux_command("GET_LED", "LED", name, self.cmd_GET_LED,
+                                   desc=self.cmd_SET_LED_help)
     def check_index(self, index, gcmd, led_count):
         try:
             i = int(index)
