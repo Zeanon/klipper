@@ -74,8 +74,13 @@ class LEDHelper:
                 elif len(range_steps) == 2:
                     step = range_steps[1]
                     max_val = range_steps[0]
-                for i in range(self.check_index(min_val, gcmd, led_count),
-                               (self.check_index(max_val, gcmd, led_count) + 1),
+                min = self.check_index(min_val, gcmd, led_count)
+                max = self.check_index(max_val, gcmd, led_count)
+                if max > min:
+                    raise gcmd.error("Min value greater than max value in '%s'"
+                                     % index)
+                for i in range(min,
+                               (max + 1),
                                self.check_step(step, gcmd)):
                     indices.add(i)
         return indices
@@ -117,6 +122,7 @@ class LEDHelper:
         else:
             #Send update now (so as not to wake toolhead and reset idle_timeout)
             lookahead_bgfunc(None)
+        gcmd.respond_info(self.led_state)
     def get_status(self, eventtime=None):
         return {'color_data': self.led_state}
 
