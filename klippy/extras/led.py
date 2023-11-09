@@ -99,6 +99,8 @@ class LEDHelper:
             self.update_func(self.led_state, print_time)
         except self.printer.command_error as e:
             logging.exception("led update transmit error")
+    def cmd_GET_LED(self, gcmd):
+        gcmd.respond_info(str(self.led_state))
     cmd_SET_LED_help = "Set the color of an LED"
     def cmd_SET_LED(self, gcmd):
         # Parse parameters
