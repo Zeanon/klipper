@@ -89,7 +89,9 @@ class LEDHelper:
     def set_color(self, index, color):
         if self.led_state[index - 1] == color:
             return
-        self.led_state[index - 1] = color
+        new_led_state = list(self.led_state)
+        new_led_state[index - 1] = color
+        self.led_state = new_led_state
         self.need_transmit = True
     def check_transmit(self, print_time):
         if not self.need_transmit:
