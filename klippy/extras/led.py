@@ -22,6 +22,7 @@ class LEDHelper:
         blue = config.getfloat('initial_BLUE', 0., minval=0., maxval=1.)
         white = config.getfloat('initial_WHITE', 0., minval=0., maxval=1.)
         self.led_state = [(red, green, blue, white)] * led_count
+        self.active_template = None
         # Register commands
         name = config.get_name().split()[-1]
         gcode = self.printer.lookup_object('gcode')
@@ -93,6 +94,8 @@ class LEDHelper:
         new_led_state[index - 1] = color
         self.led_state = new_led_state
         self.need_transmit = True
+    def set_active_template(self, template):
+        self.active_template = template
     def check_transmit(self, print_time):
         if not self.need_transmit:
             return
@@ -125,7 +128,8 @@ class LEDHelper:
             #Send update now (so as not to wake toolhead and reset idle_timeout)
             lookahead_bgfunc(None)
     def get_status(self, eventtime=None):
-        return {'color_data': self.led_state}
+        return {'color_data': self.led_state,
+                'active_template': self.active_template}
 
 # Main LED tracking code
 class PrinterLED:
@@ -157,14 +161,21 @@ class PrinterLED:
             return
         reactor = self.printer.get_reactor()
         self.render_timer = reactor.register_timer(self._render, reactor.NOW)
-    def _activate_template(self, led_helper, index, template, lparams):
+    def _activate_template(self,
+                           led_helper,
+                           index,
+                           template,
+                           lparams,
+                           tpl_name):
         key = (led_helper, index)
         if template is not None:
             uid = (template,) + tuple(sorted(lparams.items()))
             self.active_templates[key] = (uid, template, lparams)
+            led_helper.set_active_template(tpl_name)
             return
         if key in self.active_templates:
             del self.active_templates[key]
+            led_helper.set_active_template(None)
     def _render(self, eventtime):
         if not self.active_templates:
             # Nothing to do - unregister timer
@@ -228,7 +239,11 @@ class PrinterLED:
                 except ValueError as e:
                     raise gcmd.error("Unable to parse '%s' as a literal" % (v,))
         for index in led_helper.get_indices(gcmd, led_count):
-            self._activate_template(led_helper, index, template, lparams)
+            self._activate_template(led_helper,
+                                    index,
+                                    template,
+                                    lparams,
+                                    tpl_name)
         self._activate_timer()
 
 PIN_MIN_TIME = 0.100
