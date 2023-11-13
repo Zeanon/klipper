@@ -15,7 +15,7 @@ class StepperEnablePin:
     def __init__(self, mcu_enable,
                  enable_count,
                  printer,
-                 disable_on_error=True):
+                 disable_on_error=False):
         self.printer = printer
         self.reactor = self.printer.get_reactor()
         self.mcu_enable = mcu_enable
@@ -29,24 +29,23 @@ class StepperEnablePin:
         self.last_print_time = 0.
     def set_enable(self, print_time):
         if self.mcu_enable is not None:
+            if not self.enable_count:
+                self._set_pin(print_time, 1)
             self.enable_count += 1
-            self._set_pin(print_time, 1)
-    def set_disable(self):
+    def set_disable(self, print_time):
         if self.mcu_enable is not None:
             self.enable_count -= 1
             if not self.enable_count:
-                toolhead = self.printer.lookup_object('toolhead')
-                toolhead.wait_moves()
-                toolhead.register_lookahead_callback(
-                    lambda print_time: self._set_pin(print_time, 0))
+                self._set_pin(print_time, 0)
     def _set_pin(self, print_time, value, is_resend=False):
-        if value == self.last_value and not is_resend:
+        if (value == self.last_value
+                and not is_resend):
             return
-        self.last_value = value
 
         print_time = max(print_time, self.last_print_time + PIN_MIN_TIME)
-        self.last_print_time = print_time
         self.mcu_enable.set_digital(print_time, value)
+        self.last_value = value
+        self.last_print_time = print_time
         if self.resend_interval and self.resend_timer is None:
             self.resend_timer = self.reactor.register_timer(
                 self._resend_current_val, self.reactor.NOW)
@@ -111,7 +110,7 @@ class EnableTracking:
             # Enable stepper on future stepper movement
             for cb in self.callbacks:
                 cb(print_time, False)
-            self.enable.set_disable()
+            self.enable.set_disable(print_time)
             self.is_enabled = False
             self.stepper.add_active_callback(self.motor_enable)
     def is_motor_enabled(self):

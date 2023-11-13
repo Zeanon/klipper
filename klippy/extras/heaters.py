@@ -635,7 +635,7 @@ class ControlPID:
         # calculate the error
         err = target_temp - temp
         # calculate the current integral amount using the Trapezoidal rule
-        ic =  ((self.prev_err + err) / 2.) * self.dt
+        ic = ((self.prev_err + err) / 2.) * self.dt
         i = self.int_sum + ic
         # calculate the current derivative using a modified moving average,
         # and derivative on measurement, to account for derivative kick
