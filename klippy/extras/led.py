@@ -52,7 +52,8 @@ class LEDHelper:
         if i < 1:
             raise gcmd.error("step can not be less than 1(was '%d')" % i)
         if i > max - min:
-            raise gcmd.error("Steps can not be bigger than range (was '%d')" % i)
+            raise gcmd.error("Steps can not be bigger than range "
+                             "(was '%d')" % i)
         return i
     def get_indices(self, gcmd, led_count):
         given_indices = gcmd.get("INDEX", None)
