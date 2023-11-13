@@ -700,7 +700,7 @@ class ControlVelocityPID:
         self.temps = (([AMBIENT_TEMP] * 3)
                       if load_clean
                       else [self.heater.get_temp(self.heater
-                                                 .reactor.monotonic())] * 3)
+                                                 .reactor.monotonic())[0]] * 3)
         self.times = [0.] * 3  # temperature reading times
         self.d1 = 0.  # previous smoothed 1st derivative
         self.d2 = 0.  # previous smoothed 2nd derivative
