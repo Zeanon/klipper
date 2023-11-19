@@ -62,11 +62,11 @@ class PrinterOutputPin:
                 and not is_resend):
             return
         print_time = max(print_time, self.last_print_time + PIN_MIN_TIME)
+        self.last_value = value
         if self.is_pwm:
             self.mcu_pin.set_pwm(print_time, value, cycle_time)
         else:
             self.mcu_pin.set_digital(print_time, value)
-        self.last_value = value
         self.last_cycle_time = cycle_time
         self.last_print_time = print_time
         if self.resend_interval and self.resend_timer is None:

@@ -43,9 +43,9 @@ class StepperEnablePin:
                 and not is_resend):
             return
 
+        self.last_value = value
         print_time = max(print_time, self.last_print_time + PIN_MIN_TIME)
         self.mcu_enable.set_digital(print_time, value)
-        self.last_value = value
         self.last_print_time = print_time
         if self.resend_interval and self.resend_timer is None:
             self.resend_timer = self.reactor.register_timer(
