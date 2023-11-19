@@ -44,13 +44,16 @@ class StepperEnablePin:
 
         print_time = max(print_time, self.last_print_time + PIN_MIN_TIME)
         self.mcu_enable.set_digital(print_time, value)
-        toolhead = self.printer.lookup_object('toolhead')
-        toolhead.wait_moves()
-        self.last_value = value
-        self.last_print_time = print_time
-        if self.resend_interval and self.resend_timer is None:
-            self.resend_timer = self.reactor.register_timer(
-                self._resend_current_val, self.reactor.NOW)
+        if value != 0:
+            self.last_value = 1
+            self.last_print_time = print_time
+            if self.resend_interval and self.resend_timer is None:
+                self.resend_timer = self.reactor.register_timer(
+                    self._resend_current_val, self.reactor.NOW)
+        else:
+            toolhead = self.printer.lookup_object('toolhead')
+            toolhead.wait_moves()
+            self.last_value = 0
 
     def _resend_current_val(self, eventtime):
         if self.last_value == 0:
