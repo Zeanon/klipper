@@ -37,6 +37,7 @@ class StepperEnablePin:
             self.enable_count -= 1
             if not self.enable_count:
                 toolhead = self.printer.lookup_object('toolhead')
+                toolhead.wait_moves()
                 toolhead.register_lookahead_callback(
                     lambda time: self._set_pin(time, 0))
     def _set_pin(self, print_time, value, is_resend=False):
