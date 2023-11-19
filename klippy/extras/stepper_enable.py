@@ -36,27 +36,22 @@ class StepperEnablePin:
         if self.mcu_enable is not None:
             self.enable_count -= 1
             if not self.enable_count:
-                toolhead = self.printer.lookup_object('toolhead')
-                toolhead.register_lookahead_callback(
-                    lambda print_time: self._set_pin(print_time, 0))
+                self._set_pin(print_time, 0)
     def _set_pin(self, print_time, value, is_resend=False):
         if (value == self.last_value
                 and not is_resend):
             return
 
+        self.last_value = value
         print_time = max(print_time, self.last_print_time + PIN_MIN_TIME)
         self.mcu_enable.set_digital(print_time, value)
-        if value != 0:
-            self.last_value = 1
-            self.last_print_time = print_time
-            if self.resend_interval and self.resend_timer is None:
-                self.resend_timer = self.reactor.register_timer(
-                    self._resend_current_val, self.reactor.NOW)
-        else:
-            self.last_value = 0
+        self.last_print_time = print_time
+        if self.resend_interval and self.resend_timer is None:
+            self.resend_timer = self.reactor.register_timer(
+                self._resend_current_val, self.reactor.NOW)
 
     def _resend_current_val(self, eventtime):
-        if self.last_value == 0:
+        if self.last_value < 1:
             self.reactor.unregister_timer(self.resend_timer)
             self.resend_timer = None
             return self.reactor.NEVER
@@ -88,7 +83,6 @@ def setup_enable_pin(printer, pin, disable_on_error=False):
         return enable
     mcu_enable = pin_params['chip'].setup_pin('digital_out', pin_params)
     mcu_enable.setup_max_duration(MAX_ENABLE_TIME if disable_on_error else 0.)
-    mcu_enable.setup_start_value(0, 0)
     enable = pin_params['class'] = StepperEnablePin(mcu_enable,
                                                     0,
                                                     printer,
