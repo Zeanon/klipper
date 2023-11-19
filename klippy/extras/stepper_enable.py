@@ -53,8 +53,6 @@ class StepperEnablePin:
                 self.resend_timer = self.reactor.register_timer(
                     self._resend_current_val, self.reactor.NOW)
         else:
-            toolhead = self.printer.lookup_object('toolhead')
-            toolhead.wait_moves()
             self.last_value = 0
 
     def _resend_current_val(self, eventtime):
