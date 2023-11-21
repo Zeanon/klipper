@@ -7,7 +7,7 @@ import logging
 
 PIN_MIN_TIME = 0.100
 MAX_ENABLE_TIME = 5.0
-RESEND_HOST_TIME = (MAX_ENABLE_TIME / 2) - PIN_MIN_TIME
+RESEND_HOST_TIME = (MAX_ENABLE_TIME / 2) + PIN_MIN_TIME
 DISABLE_STALL_TIME = 0.100
 
 # Tracking of shared stepper enable pins
