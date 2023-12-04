@@ -3,9 +3,11 @@
 # Copyright (C) 2016-2020  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
+import logging
 from . import pulse_counter
 
 FAN_MIN_TIME = 0.100
+SAFETY_CHECK_INIT_TIME = 3.
 
 class Fan:
     def __init__(self, config, default_shutdown_speed=0.):
@@ -45,10 +47,24 @@ class Fan:
         # Setup tachometer
         self.tachometer = FanTachometer(config)
 
+        self.name = config.get_name().split()[-1]
+        self.num_err = 0
+        self.max_err = 3
+        self.min_rpm = config.getint("min_rpm", 0, minval=0)
+        if self.min_rpm > 0 and self.tachometer._freq_counter is None:
+            raise config.error(
+                "'tachometer_pin' must be specified before enabling `min_rpm`")
+
+        self.printer.register_event_handler("klippy:ready", self.handle_ready)
         # Register callbacks
         self.printer.register_event_handler("gcode:request_restart",
                                             self._handle_request_restart)
 
+    def handle_ready(self):
+        reactor = self.printer.get_reactor()
+        if self.min_rpm > 0:
+            reactor.register_timer(
+                self.fan_check, reactor.monotonic()+SAFETY_CHECK_INIT_TIME)
     def get_mcu(self):
         return self.mcu_fan.get_mcu()
     def set_speed(self, print_time, value):
@@ -89,6 +105,21 @@ class Fan:
             'speed': self.last_fan_value,
             'rpm': tachometer_status['rpm'],
         }
+
+    def fan_check(self, eventtime):
+        rpm = self.tachometer.get_status(eventtime)['rpm']
+        if self.last_fan_value and rpm is not None and rpm < self.min_rpm:
+            self.num_err += 1
+            if self.num_err > self.max_err:
+                msg = "'%s' spinning below minimum safe speed of %d rev/min" % (
+                    self.name, self.min_rpm)
+                logging.error(msg)
+                self.printer.invoke_shutdown(msg)
+                return self.printer.get_reactor().NEVER
+        else:
+            self.num_err = 0
+        return eventtime + 1.5
+
 
 class FanTachometer:
     def __init__(self, config):
