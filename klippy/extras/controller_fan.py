@@ -87,7 +87,7 @@ class ControllerFan:
             print_time = self.fan.get_mcu().estimated_print_time(curtime)
             self.fan.set_speed(print_time + PIN_MIN_TIME, speed)
         return eventtime + 1.
-    cmd_SET_CONTROLLER_FAN_help = "Enable or Disable a heater_fan"
+    cmd_SET_CONTROLLER_FAN_help = "Enable or Disable a controller_fan"
     def cmd_SET_CONTROLLER_FAN(self, gcmd):
         self.enabled = gcmd.get_int('ENABLE', self.enabled, minval=0, maxval=1)
         if not self.enabled:
