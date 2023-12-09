@@ -6,14 +6,22 @@
 import math, logging
 import stepper, chelper
 
+DEFAULT_PA = 0.
+DEFAULT_SMOOTH_TIME = 0.040
+
 class ExtruderStepper:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.name = config.get_name().split()[-1]
         self.pressure_advance = self.pressure_advance_smooth_time = 0.
-        self.config_pa = config.getfloat('pressure_advance', 0., minval=0.)
+        self.config_pa = config.getfloat('pressure_advance',
+                                         DEFAULT_PA,
+                                         minval=0.)
         self.config_smooth_time = config.getfloat(
-                'pressure_advance_smooth_time', 0.040, above=0., maxval=.200)
+            'pressure_advance_smooth_time',
+            DEFAULT_SMOOTH_TIME,
+            above=0.,
+            maxval=.200)
         self.stored_pa = self.config_pa
         self.stored_smooth_time = self.config_smooth_time
         self.pa_enabled = 1
@@ -113,8 +121,8 @@ class ExtruderStepper:
             pressure_advance = self.stored_pa
             smooth_time = self.stored_smooth_time
         else:
-            pressure_advance = 0.
-            smooth_time = 0.
+            pressure_advance = DEFAULT_PA
+            smooth_time = DEFAULT_SMOOTH_TIME
         verbose = gcmd.get('VERBOSE', 'high').lower()
         self._set_pressure_advance(pressure_advance, smooth_time)
         msg = ("pressure_advance: %.6f\n"
