@@ -60,8 +60,8 @@ class ExtruderStepper:
         toolhead.register_step_generator(self.stepper.generate_steps)
         self._set_pressure_advance(self.config_pa, self.config_smooth_time)
     def get_status(self, eventtime):
-        return {'pressure_advance': self.stored_pa,
-                'smooth_time': self.stored_smooth_time,
+        return {'pressure_advance': self.pressure_advance,
+                'smooth_time': self.pressure_advance_smooth_time,
                 'pressure_advance_enabled': self.pa_enabled,
                 'motion_queue': self.motion_queue}
     def find_past_position(self, print_time):
@@ -117,13 +117,14 @@ class ExtruderStepper:
                                                  self.stored_smooth_time,
                                                  minval=0.,
                                                  maxval=.200)
+        verbose = gcmd.get('VERBOSE', 'high').lower()
+
         if self.pa_enabled:
             pressure_advance = self.stored_pa
             smooth_time = self.stored_smooth_time
         else:
             pressure_advance = DEFAULT_PA
             smooth_time = DEFAULT_SMOOTH_TIME
-        verbose = gcmd.get('VERBOSE', 'high').lower()
         self._set_pressure_advance(pressure_advance, smooth_time)
         msg = ("pressure_advance: %.6f\n"
                "pressure_advance_smooth_time: %.6f\n"
