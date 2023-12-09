@@ -10,12 +10,10 @@ class ExtruderStepper:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.name = config.get_name().split()[-1]
-        self.active_pa_smooth_time = 0.
-        self.pa_enabled = 1
-        self.pressure_advance = config.getfloat(
-            'pressure_advance', 0., minval=0.)
-        self.pa_smooth_time = config.getfloat(
-            'pressure_advance_smooth_time', 0.040, above=0., maxval=.200)
+        self.pressure_advance = self.pressure_advance_smooth_time = 0.
+        self.config_pa = config.getfloat('pressure_advance', 0., minval=0.)
+        self.config_smooth_time = config.getfloat(
+                'pressure_advance_smooth_time', 0.040, above=0., maxval=.200)
         # Setup stepper
         self.stepper = stepper.PrinterStepper(config)
         ffi_main, ffi_lib = chelper.get_ffi()
@@ -49,11 +47,10 @@ class ExtruderStepper:
     def _handle_connect(self):
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_step_generator(self.stepper.generate_steps)
-        self._update_pressure_advance()
+        self._set_pressure_advance(self.config_pa, self.config_smooth_time)
     def get_status(self, eventtime):
         return {'pressure_advance': self.pressure_advance,
-                'pressure_advance_enabled': self.pa_enabled,
-                'smooth_time': self.pa_smooth_time,
+                'smooth_time': self.pressure_advance_smooth_time,
                 'motion_queue': self.motion_queue}
     def find_past_position(self, print_time):
         mcu_pos = self.stepper.get_past_mcu_position(print_time)
@@ -72,18 +69,21 @@ class ExtruderStepper:
         self.stepper.set_position([extruder.last_position, 0., 0.])
         self.stepper.set_trapq(extruder.get_trapq())
         self.motion_queue = extruder_name
-    def _update_pressure_advance(self):
-        new_advance = self.pressure_advance if self.pa_enabled else 0.0
-        new_smooth_time = self.pa_smooth_time if self.pa_enabled else 0.0
-        if self.active_pa_smooth_time != new_smooth_time:
-            toolhead = self.printer.lookup_object("toolhead")
-            toolhead.note_step_generation_scan_time(
-                new_smooth_time * .5,
-                old_delay=self.active_pa_smooth_time * .5)
-            self.active_pa_smooth_time = new_smooth_time
+    def _set_pressure_advance(self, pressure_advance, smooth_time):
+        old_smooth_time = self.pressure_advance_smooth_time
+        if not self.pressure_advance:
+            old_smooth_time = 0.
+        new_smooth_time = smooth_time
+        if not pressure_advance:
+            new_smooth_time = 0.
+        toolhead = self.printer.lookup_object("toolhead")
+        toolhead.note_step_generation_scan_time(new_smooth_time * .5,
+                                                old_delay=old_smooth_time * .5)
         ffi_main, ffi_lib = chelper.get_ffi()
         espa = ffi_lib.extruder_set_pressure_advance
-        espa(self.sk_extruder, new_advance, new_smooth_time)
+        espa(self.sk_extruder, pressure_advance, new_smooth_time)
+        self.pressure_advance = pressure_advance
+        self.pressure_advance_smooth_time = smooth_time
     cmd_SET_PRESSURE_ADVANCE_help = "Set pressure advance parameters"
     def cmd_default_SET_PRESSURE_ADVANCE(self, gcmd):
         extruder = self.printer.lookup_object('toolhead').get_extruder()
@@ -94,21 +94,16 @@ class ExtruderStepper:
             raise gcmd.error("Unable to infer active extruder stepper")
         extruder.extruder_stepper.cmd_SET_PRESSURE_ADVANCE(gcmd)
     def cmd_SET_PRESSURE_ADVANCE(self, gcmd):
+        pressure_advance = gcmd.get_float('ADVANCE', self.pressure_advance,
+                                          minval=0.)
+        smooth_time = gcmd.get_float('SMOOTH_TIME',
+                                     self.pressure_advance_smooth_time,
+                                     minval=0., maxval=.200)
         verbose = gcmd.get('VERBOSE', 'high').lower()
-        pressure_advance = gcmd.get_float(
-            'ADVANCE', self.pressure_advance, minval=0.)
-        pa_smooth_time = gcmd.get_float(
-            'SMOOTH_TIME', self.pa_smooth_time, minval=0., maxval=.200)
-        pa_enabled = gcmd.get_int(
-            'ENABLE', self.pa_enabled, minval=0, maxval=1)
-        self.pressure_advance = pressure_advance
-        self.pa_smooth_time = pa_smooth_time
-        self.pa_enabled = pa_enabled
-        self._update_pressure_advance()
+        self._set_pressure_advance(pressure_advance, smooth_time)
         msg = ("pressure_advance: %.6f\n"
-               "pressure_advance_smooth_time: %.6f\n"
-               "pressure_advance_enabled: %d\n"
-               % (self.pressure_advance, self.pa_smooth_time, self.pa_enabled))
+               "pressure_advance_smooth_time: %.6f"
+               % (pressure_advance, smooth_time))
         self.printer.set_rollover_info(self.name, "%s: %s" % (self.name, msg))
         if verbose != 'high':
             return
