@@ -113,8 +113,8 @@ class ExtruderStepper:
             pressure_advance = self.stored_pa
             smooth_time = self.stored_smooth_time
         else:
-            pressure_advance = 0
-            smooth_time = 0
+            pressure_advance = 0.
+            smooth_time = 0.
         verbose = gcmd.get('VERBOSE', 'high').lower()
         self._set_pressure_advance(pressure_advance, smooth_time)
         msg = ("pressure_advance: %.6f\n"
