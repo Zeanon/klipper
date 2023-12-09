@@ -215,7 +215,7 @@ class ControlAutoTune:
             # the new power is to high so just return max power
             self.powers.append(self.heater_max_power)
             return
-        self.powers.append(mid * 2.)
+        self.powers.append(max(0., mid * 2.))
     def finish(self, time):
             self.heater.set_pwm(time, 0)
             self.heater.alter_target(0)
