@@ -212,7 +212,7 @@ class ControlAutoTune:
         power = self.powers[-1]
         mid = power * ((self.target - peak_low)/(peak_high - peak_low))
         if mid * 2. > self.heater_max_power:
-            # the new power is to high so just return max power
+            # the new power is too high so just return max power
             self.powers.append(self.heater_max_power)
             return
         self.powers.append(max(0., mid * 2.))
