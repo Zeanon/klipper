@@ -183,7 +183,7 @@ class ControlAutoTune:
         # provide some useful info to the user
         sample = len(self.powers)
         pwm = self.powers[-1]
-        asymmetry =  (self.peaks[-2][1] + self.peaks[-1][1])/2. - self.target
+        asymmetry = (self.peaks[-2][1] + self.peaks[-1][1])/2. - self.target
         tolerance = self.get_sample_tolerance()
         if tolerance is False:
             fmt = "sample:%d pwm:%.4f asymmetry:%.4f tolerance:n/a\n"
