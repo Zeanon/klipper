@@ -199,8 +199,12 @@ class GCodeDispatch:
             parts = []
             for regex_part in regex_parts:
                 split_part = regex_part.split(' ')
-                for part in split_part:
-                    parts.append(part)
+                if len(split_part) > 2:
+                    parts.append(split_part[0])
+                    parts.append(split_part[1])
+                    parts.append('')
+                else:
+                    parts.append(regex_part)
             numparts = len(parts)
             cmd = ""
             if numparts >= 3 and parts[1] != 'N':
