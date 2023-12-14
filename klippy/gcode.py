@@ -30,8 +30,6 @@ class GCodeCommand:
         command = self._command
         if command.startswith("M117 ") or command.startswith("M118 "):
             command = command[:4]
-        if command.startswith("H28"):
-            return self._commandline
         rawparams = self._commandline
         urawparams = rawparams.upper()
         if not urawparams.startswith(command):
