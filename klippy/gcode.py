@@ -196,8 +196,8 @@ class GCodeDispatch:
             regex_parts = self.args_r.split(line.upper())
             parts = []
             for regex_part in regex_parts:
-                split_part = regex_part.split(' ')
-                if len(split_part) > 2:
+                split_part = regex_part.strip().split(' ')
+                if len(split_part) > 1:
                     parts.append(split_part[0])
                     parts.append(split_part[1])
                     parts.append('')
