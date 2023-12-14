@@ -304,6 +304,8 @@ class GCodeDispatch:
             return
         elif cmd == 'H28':
             return
+        elif cmd == 'H28 0':
+            return
         gcmd.respond_info('Unknown command:"%s"' % (cmd,))
     def _cmd_mux(self, command, gcmd):
         key, values = self.mux_commands[command]
