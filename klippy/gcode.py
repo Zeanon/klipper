@@ -193,7 +193,12 @@ class GCodeDispatch:
             if cpos >= 0:
                 line = line[:cpos]
             # Break line into parts and determine command
-            parts = self.args_r.split(line.upper())
+            regex_parts = self.args_r.split(line.upper())
+            parts = []
+            for regex_part in regex_parts:
+                split_part = regex_part.split(' ')
+                for part in split_part:
+                    parts.append(part)
             numparts = len(parts)
             cmd = ""
             if numparts >= 3 and parts[1] != 'N':
@@ -301,10 +306,6 @@ class GCodeDispatch:
         elif cmd == 'M107' or (cmd == 'M106' and (
                 not gcmd.get_float('S', 1.) or self.is_fileinput)):
             # Don't warn about requests to turn off fan when fan not present
-            return
-        elif cmd == 'H28':
-            return
-        elif cmd == 'H28 0':
             return
         gcmd.respond_info('Unknown command:"%s"' % (cmd,))
     def _cmd_mux(self, command, gcmd):
