@@ -85,10 +85,10 @@ class RunoutHelper:
             self.runout_distance_timer = None
     def _pause_after_distance(self, eventtime):
         runout_elapsed = max(0.,
-                           self.defined_sensor
-                           .get_extruder_pos(eventtime)
-                           - self.runout_position
-                           )
+                             self.defined_sensor
+                             .get_extruder_pos(eventtime)
+                             - self.runout_position
+                             )
         if (runout_elapsed
                 < self.runout_distance):
             self.runout_elapsed = runout_elapsed
@@ -119,21 +119,34 @@ class RunoutHelper:
         is_printing = idle_timeout.get_status(eventtime)["state"] == "Printing"
         # Perform filament action associated with status change (if any)
         if is_filament_present:
+            # insert detected
+            self.min_event_systime = self.reactor.NEVER
+            logging.info(
+                "Filament Sensor %s: insert event detected, Time %.2f" %
+                (self.name, eventtime))
+            self.printer.send_event("filament:insert", eventtime, self.name)
+
             if not is_printing and self.insert_gcode is not None:
-                # insert detected
-                self.min_event_systime = self.reactor.NEVER
-                logging.info(
-                    "Filament Sensor %s: insert event detected, Time %.2f" %
-                    (self.name, eventtime))
+                # min_event_systime will be set in the callback
                 self.reactor.register_callback(self._insert_event_handler)
         # elif self.runout_gcode is not None:
-        elif is_printing and self.runout_gcode is not None:
+            else:
+                self.min_event_systime = (self.reactor.monotonic() +
+                                          self.event_delay)
+        else:
             # runout detected
             self.min_event_systime = self.reactor.NEVER
             logging.info(
                 "Filament Sensor %s: runout event detected, Time %.2f" %
                 (self.name, eventtime))
-            self.reactor.register_callback(self._runout_event_handler)
+            self.printer.send_event("filament:runout", eventtime, self.name)
+
+            if is_printing and self.runout_gcode is not None:
+                # min_event_systime will be set in the callback
+                self.reactor.register_callback(self._runout_event_handler)
+            else:
+                self.min_event_systime = (self.reactor.monotonic() +
+                                          self.event_delay)
     def get_status(self, eventtime):
         return self.defined_sensor.sensor_get_status(eventtime)
     cmd_QUERY_FILAMENT_SENSOR_help = "Query the status of the Filament Sensor"
