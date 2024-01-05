@@ -94,8 +94,8 @@ def suspend_limits(printer, max_accel, max_velocity, input_shaping):
             gcode.respond_info("Re-enabled [input_shaper]")
         # Restore the original acceleration values
         gcode.run_script_from_command(
-                "SET_VELOCITY_LIMIT ACCEL=%.3f ACCEL_TO_DECEL=%.3f VELOCITY=%.3f"\
-                % (old_max_accel, old_max_accel_to_decel, old_max_velocity))
+            "SET_VELOCITY_LIMIT ACCEL=%.3f ACCEL_TO_DECEL=%.3f VELOCITY=%.3f"
+            % (old_max_accel, old_max_accel_to_decel, old_max_velocity))
         if old_max_velocities is not None:
             kin.max_velocities = old_max_velocities
         if old_max_accels is not None:
