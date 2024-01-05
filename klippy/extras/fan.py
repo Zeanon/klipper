@@ -50,7 +50,7 @@ class Fan:
         self.name = config.get_name().split()[-1]
         self.num_err = 0
         self.max_err = 3
-        self.min_rpm = config.getfloat("min_rpm", 0, minval=0)
+        self.min_rpm = config.getint("min_rpm", 0, minval=0)
         if self.min_rpm > 0 and self.tachometer._freq_counter is None:
             raise config.error(
                 "'tachometer_pin' must be specified before enabling `min_rpm`")
