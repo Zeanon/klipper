@@ -36,6 +36,7 @@ class RunoutHelper:
         self.min_event_systime = self.reactor.NEVER
         self.filament_present = False
         self.sensor_enabled = True
+        self.smart = True
         self.runout_position = 0.
         self.runout_elapsed = 0.
         self.runout_distance_timer = None
@@ -123,7 +124,9 @@ class RunoutHelper:
         # Determine "printing" status
         idle_timeout = self.printer.lookup_object("idle_timeout")
         print_stats = self.printer.lookup_object("print_stats")
-        is_printing = print_stats.get_status(eventtime)["state"] == "printing"
+        is_printing = (print_stats.get_status(eventtime)["state"] == "printing"
+                       if self.smart
+                       else idle_timeout.get_status(eventtime)["state"] == "Printing")
         # Perform filament action associated with status change (if any)
         if is_filament_present:
             if not is_printing and self.insert_gcode is not None:
@@ -193,13 +196,18 @@ class SwitchSensor:
         return {
             "filament_detected": bool(self.runout_helper.filament_present),
             "enabled": bool(self.runout_helper.sensor_enabled),
+            "smart": bool(self.runout_helper.smart),
             "runout_distance": float(self.runout_helper.runout_distance),
             "runout_elapsed": float(self.runout_helper.runout_elapsed)}
     def set_filament_sensor(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
         reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
+        smart = gcmd.get_int('SMART', None, minval=0, maxval=1)
         runout_distance = gcmd.get_float('RUNOUT_DISTANCE', None, minval=0.)
-        if enable is None and reset is None and runout_distance is None:
+        if (enable is None
+                and reset is None
+                and runout_distance is None
+                and smart is None):
             gcmd.respond_info(self.get_sensor_status())
             return
         if enable is not None:
@@ -208,6 +216,8 @@ class SwitchSensor:
             self.runout_helper.sensor_enabled = enable
         if runout_distance is not None:
             self.runout_helper.runout_distance = runout_distance
+        if smart is not None:
+            self.runout_helper.smart = smart
         if reset is not None and reset:
             self.runout_helper.reset_runout_distance_info()
             self.runout_helper.note_filament_present(
