@@ -5761,6 +5761,22 @@ PCA9632 LED support. The PCA9632 is used on the FlashForge Dreamer.
 <h1 id="initial_blue-00_4">initial_BLUE: 0.0<a class="headerlink" href="#initial_blue-00_4" title="Permanent link">&para;</a></h1>
 <h1 id="initial_white-00_3">initial_WHITE: 0.0<a class="headerlink" href="#initial_white-00_3" title="Permanent link">&para;</a></h1>
 <h1 id="see-the-led-section-for-information-on-these-parameters_3">See the "led" section for information on these parameters.<a class="headerlink" href="#see-the-led-section-for-information-on-these-parameters_3" title="Permanent link">&para;</a></h1>
+<div class="highlight"><pre><span></span><code>### [led_group]
+Groups LEDs together into LED groups, which then can be used like any LED
+chain.
+</code></pre></div>
+
+<p>[led_group my_group]</p>
+<h1 id="leds">leds:<a class="headerlink" href="#leds" title="Permanent link">&para;</a></h1>
+<h1 id="a-list-of-leds-to-put-in-the-group-every-chain-in-a-new-line-with-the-chain">A list of LEDs to put in the group. Every chain in a new line with the chain<a class="headerlink" href="#a-list-of-leds-to-put-in-the-group-every-chain-in-a-new-line-with-the-chain" title="Permanent link">&para;</a></h1>
+<h1 id="name-optionally-followed-by-the-index-range-in-brackets-ranges-can-be">name, optionally followed by the index range in brackets. Ranges can be<a class="headerlink" href="#name-optionally-followed-by-the-index-range-in-brackets-ranges-can-be" title="Permanent link">&para;</a></h1>
+<h1 id="combined-by-separating-them-with-a-comma-example">combined by separating them with a comma. Example:<a class="headerlink" href="#combined-by-separating-them-with-a-comma-example" title="Permanent link">&para;</a></h1>
+<h1 id="neopixelmy_neopixel-2-46-710">neopixel:my_neopixel (2-4,6-7,10)<a class="headerlink" href="#neopixelmy_neopixel-2-46-710" title="Permanent link">&para;</a></h1>
+<h1 id="combined-by-separating-them-with-a-comma-leds-are-indexed-in-the-order-they">combined by separating them with a comma. LEDs are indexed in the order they<a class="headerlink" href="#combined-by-separating-them-with-a-comma-leds-are-indexed-in-the-order-they" title="Permanent link">&para;</a></h1>
+<h1 id="are-configured-example">are configured. Example:<a class="headerlink" href="#are-configured-example" title="Permanent link">&para;</a></h1>
+<h1 id="my_neopixelw-2-46-710">my_neopixelw (2-4,6-7,10)<a class="headerlink" href="#my_neopixelw-2-46-710" title="Permanent link">&para;</a></h1>
+<h1 id="my_neopixel">my_neopixel<a class="headerlink" href="#my_neopixel" title="Permanent link">&para;</a></h1>
+<h1 id="my_dotstar">my_dotstar<a class="headerlink" href="#my_dotstar" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code>## Additional servos, buttons, and other pins
 
 ### [servo]
