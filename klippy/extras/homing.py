@@ -268,6 +268,7 @@ class PrinterHoming:
         curtime = self.printer.get_reactor().monotonic()
         axes = []
         home_all = True
+        unconditional = True
         for pos, axis in enumerate('XYZ'):
             a = gcmd.get(axis, None)
             if a is not None:
@@ -278,7 +279,14 @@ class PrinterHoming:
                         not in
                         toolhead.get_status(curtime)['homed_axes']):
                     axes.append(pos)
-        if home_all and not axes:
+        if home_all and gcmd.get('0', None) is not None:
+            for pos, axis in enumerate('XYZ'):
+                unconditional = False
+                if (axis.lower()
+                        not in
+                        toolhead.get_status(curtime)['homed_axes']):
+                    axes.append(pos)
+        if home_all and unconditional and not axes:
             axes = [0, 1, 2]
         homing_state = Homing(self.printer)
         homing_state.set_axes(axes)

@@ -193,7 +193,16 @@ class GCodeDispatch:
             if cpos >= 0:
                 line = line[:cpos]
             # Break line into parts and determine command
-            parts = self.args_r.split(line.upper())
+            regex_parts = self.args_r.split(line.upper())
+            parts = []
+            for regex_part in regex_parts:
+                split_part = regex_part.strip().split(' ')
+                if len(split_part) > 1:
+                    parts.append(split_part[0])
+                    parts.append(split_part[1])
+                    parts.append('')
+                else:
+                    parts.append(regex_part)
             numparts = len(parts)
             cmd = ""
             if numparts >= 3 and parts[1] != 'N':
