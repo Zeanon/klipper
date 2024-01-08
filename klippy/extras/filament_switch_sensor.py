@@ -36,7 +36,7 @@ class RunoutHelper:
         self.min_event_systime = self.reactor.NEVER
         self.filament_present = False
         self.sensor_enabled = True
-        self.smart = True
+        self.smart = config.getboolean('smart', False)
         self.runout_position = 0.
         self.runout_elapsed = 0.
         self.runout_distance_timer = None
