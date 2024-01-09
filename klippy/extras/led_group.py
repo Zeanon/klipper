@@ -10,13 +10,13 @@ class PrinterLEDGroup:
         self.config_leds = config.get('leds')
         self.printer_led = None
         self.config_chains = self.config_leds.split('\n')
-        self.leds=[]
-        self.led_helpers=[]
+        self.leds = []
+        self.led_helpers = []
         self.printer.register_event_handler('klippy:connect',
                                             self._handle_connect)
 
     def _handle_connect(self):
-        self.leds = self.printer.lookup_object('led')
+        self.printer_led = self.printer.lookup_object('led')
         for chain in self.config_chains:
             chain = chain.strip()
             parms = [parameter.strip() for parameter in chain.split()
