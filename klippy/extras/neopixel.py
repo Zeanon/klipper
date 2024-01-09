@@ -16,6 +16,7 @@ class PrinterNeoPixel:
     def __init__(self, config):
         self.printer = printer = config.get_printer()
         self.mutex = printer.get_reactor().mutex()
+        self.reactor = self.printer.get_reactor()
         gcode_macro = self.printer.load_object(config, 'gcode_macro')
         # Configure neopixel
         ppins = printer.lookup_object('pins')
@@ -52,7 +53,12 @@ class PrinterNeoPixel:
         printer.register_event_handler("klippy:connect", self.send_data)
         printer.register_event_handler("klippy:ready", self._handle_ready)
     def _handle_ready(self):
+        self.timer_handler = self.reactor.register_timer(
+            self._init_gcode(), self.reactor.monotonic())
+        # self.init_gcode.run_gcode_from_command()
+    def _init_gcode(self):
         self.init_gcode.run_gcode_from_command()
+        return self.reactor.NEVER
     def build_config(self):
         bmt = self.mcu.seconds_to_clock(BIT_MAX_TIME)
         rmt = self.mcu.seconds_to_clock(RESET_MIN_TIME)

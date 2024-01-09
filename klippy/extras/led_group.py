@@ -20,7 +20,7 @@ class PrinterLEDGroup:
         for chain in self.config_chains:
             chain = chain.strip()
             parms = [parameter.strip() for parameter in chain.split()
-                        if parameter.strip()]
+                     if parameter.strip()]
             if parms:
                 led_helper = self.printer_led.lookup_led_helper(parms[0],
                                                                 self.config)
@@ -30,11 +30,11 @@ class PrinterLEDGroup:
                     if led:
                         if '-' in led:
                             start, stop = map(int,led.split('-'))
-                            if start > led_count or stop > led_count or \
-                                start < 1 or stop < 1:
+                            if (start > led_count or stop > led_count or
+                                    start < 1 or stop < 1):
                                 raise self.printer.config_error(
                                     "LED index out of range for '%s' in '%s'"
-                                        % (parms[0],parms[1],))
+                                    % (parms[0],parms[1],))
                             if stop == start:
                                 led_list = [start-1]
                             elif stop > start:
@@ -59,7 +59,7 @@ class PrinterLEDGroup:
 
         pled = self.printer.load_object(self.config, "led")
         self.led_helper = pled.setup_helper(self.config, self.update_leds,
-                                                self.ledCount)
+                                            self.ledCount)
 
     def update_leds(self, led_state, print_time):
         for i, (led_helper, index) in enumerate(self.leds):
