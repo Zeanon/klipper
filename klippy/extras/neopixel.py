@@ -54,9 +54,9 @@ class PrinterNeoPixel:
         printer.register_event_handler("klippy:connect", self.send_data)
         printer.register_event_handler("klippy:ready", self._handle_ready)
     def _handle_ready(self):
-        self.gcode.run_script(self.init_gcode.render())
-        # self.timer_handler = self.reactor.register_timer(
-        #     self._init_gcode, self.reactor.monotonic())
+        # self.gcode.run_script(self.init_gcode.render())
+        self.timer_handler = self.reactor.register_timer(
+            self._init_gcode, self.reactor.monotonic())
         # self.init_gcode.run_gcode_from_command()
     def _init_gcode(self, eventtime):
         self.gcode.run_script(self.init_gcode.render())
