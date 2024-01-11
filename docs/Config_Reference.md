@@ -2868,6 +2868,15 @@ pin:
 #   input. In such a case, the PWM pin can be used normally, and e.g. a
 #   ground-switched FET(standard fan pin) can be used to control power to
 #   the fan.
+#min_rpm: 0
+#   The minimum expected fan speed in RPM. Klipper shuts down if the
+#   fan is enabled but fan RPM reading from the tachometer is below
+#   this value. This parameter is optional but tachometer_pin must
+#   be specified for this parameter to be valid.
+#max_error: 3
+#   The maximum amount of times the fan is allowed to be below the expected
+#   RPM. This parameter is optional but only allowed when min_rpm is specified.
+#   Usefull for fans that need a ramp up time to get up to speed.
 ```
 
 ### [multi_fan first_fan]
@@ -2914,11 +2923,6 @@ a shutdown_speed equal to max_power.
 #   The fan speed (expressed as a value from 0.0 to 1.0) that the fan
 #   will be set to when its associated heater is enabled. The default
 #   is 1.0
-#min_rpm: 0
-#   The minimum expected fan speed in RPM. Klipper shuts down if the
-#   fan is enabled but fan RPM reading from the tachometer is below
-#   this value. This parameter is optional but tachometer_pin must
-#   be specified for this parameter to be valid.
 ```
 ```
 
