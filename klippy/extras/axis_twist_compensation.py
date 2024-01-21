@@ -29,7 +29,8 @@ class AxisTwistCompensation:
 
         TYPES = ['linear', 'multilinear']
         self.compensation_type = config.getchoice('compensation_type',
-                                                  {t: t for t in TYPES})
+                                                  {t: t for t in TYPES},
+                                                  default='multilinear')
 
         self.wait_for_continue = config.getboolean('wait_for_continue', True)
         self.start_gcode = gcode_macro.load_template(config, 'start_gcode', '')
