@@ -92,6 +92,7 @@ class LimitedCoreXYKinematics(corexy.CoreXYKinematics):
     def get_status(self, eventtime):
         axes = [a for a, (l, h) in zip("xyz", self.limits) if l <= h]
         return {
+            'kinematic': 'limited_corexy',
             'homed_axes': "".join(axes),
             'axis_minimum': self.axes_min,
             'axis_maximum': self.axes_max,

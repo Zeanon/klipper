@@ -48,6 +48,7 @@ class WinchKinematics:
     def get_status(self, eventtime):
         # XXX - homed_checks and rail limits not implemented
         return {
+            'kinematic': 'winch',
             'homed_axes': 'xyz',
             'axis_minimum': self.axes_min,
             'axis_maximum': self.axes_max,
