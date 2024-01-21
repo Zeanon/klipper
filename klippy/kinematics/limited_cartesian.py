@@ -127,6 +127,17 @@ class LimitedCartKinematics(cartesian.CartKinematics):
             max_v = min(max_v, z_max_v / z_r)
             max_a = min(max_a, z_max_a / z_r)
         move.limit_speed(max_v, max_a)
+    def get_status(self, eventtime):
+        axes = [a for a, (l, h) in zip("xyz", self.limits) if l <= h]
+        return {
+            'homed_axes': "".join(axes),
+            'axis_minimum': self.axes_min,
+            'axis_maximum': self.axes_max,
+            'max_x_accel': self.max_accels[0],
+            'max_y_accel': self.max_accels[1],
+            'max_x_velocity': self.max_velocities[0],
+            'max_y_velocity': self.max_velocities[1],
+        }
 
 def load_kinematics(toolhead, config):
     return LimitedCartKinematics(toolhead, config)
