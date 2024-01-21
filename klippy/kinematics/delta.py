@@ -183,7 +183,7 @@ class DeltaKinematics:
         self.limit_xy2 = min(limit_xy2, self.slow_xy2)
     def get_status(self, eventtime):
         return {
-            'kinematic': 'delta',
+            'kinematics': 'delta',
             'homed_axes': '' if self.need_home else 'xyz',
             'axis_minimum': self.axes_min,
             'axis_maximum': self.axes_max,

@@ -215,7 +215,7 @@ class DeltesianKinematics:
     def get_status(self, eventtime):
         axes = [a for a, b in zip("xyz", self.homed_axis) if b]
         return {
-            'kinematic': 'deltesian',
+            'kinematics': 'deltesian',
             'homed_axes': "".join(axes),
             'axis_minimum': self.axes_min,
             'axis_maximum': self.axes_max,
