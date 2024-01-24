@@ -57,9 +57,10 @@ class PrinterOutputPin:
     def get_status(self, eventtime):
         return {'value': self.last_value}
     def _set_pin(self, print_time, value, cycle_time, is_resend=False):
-        if value == self.last_value and cycle_time == self.last_cycle_time:
-            if not is_resend:
-                return
+        if (value == self.last_value
+                and cycle_time == self.last_cycle_time
+                and not is_resend):
+            return
         print_time = max(print_time, self.last_print_time + PIN_MIN_TIME)
         if self.is_pwm:
             self.mcu_pin.set_pwm(print_time, value, cycle_time)
