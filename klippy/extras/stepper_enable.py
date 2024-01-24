@@ -15,7 +15,7 @@ class StepperEnablePin:
     def __init__(self, mcu_enable,
                  enable_count,
                  printer,
-                 max_on_time=0):
+                 max_on_time=0.):
         self.printer = printer
         self.reactor = self.printer.get_reactor()
         self.mcu_enable = mcu_enable
@@ -65,7 +65,7 @@ class StepperEnablePin:
         return systime + self.resend_interval
 
 
-def setup_enable_pin(printer, pin, disable_on_error=False):
+def setup_enable_pin(printer, pin, max_on_time=0.):
     if pin is None:
         # No enable line (stepper always enabled)
         enable = StepperEnablePin(None, 9999, printer)
@@ -80,12 +80,12 @@ def setup_enable_pin(printer, pin, disable_on_error=False):
         enable.is_dedicated = False
         return enable
     mcu_enable = pin_params['chip'].setup_pin('digital_out', pin_params)
-    mcu_enable.setup_max_duration(MAX_ENABLE_TIME if disable_on_error else 0.)
+    mcu_enable.setup_max_duration(max_on_time)
     # mcu_enable.setup_start_value(0, 0)
     enable = pin_params['class'] = StepperEnablePin(mcu_enable,
                                                     0,
                                                     printer,
-                                                    disable_on_error)
+                                                    max_on_time)
     return enable
 
 # Enable line tracking for each stepper motor
