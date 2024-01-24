@@ -15,7 +15,7 @@ class StepperEnablePin:
     def __init__(self, mcu_enable,
                  enable_count,
                  printer,
-                 disable_on_error=False):
+                 max_on_time=0):
         self.printer = printer
         self.reactor = self.printer.get_reactor()
         self.mcu_enable = mcu_enable
@@ -23,9 +23,9 @@ class StepperEnablePin:
         self.is_dedicated = True
         self.last_value = 0
         self.resend_timer = None
-        self.resend_interval = (MAX_ENABLE_TIME - RESEND_HOST_TIME
+        self.resend_interval = ((max_on_time / 2) - PIN_MIN_TIME
                                 if
-                                disable_on_error else 0.)
+                                max_on_time else 0.)
         self.last_print_time = 0.
     def set_enable(self, print_time):
         if self.mcu_enable is not None:
@@ -136,8 +136,8 @@ class PrinterStepperEnable:
         name = mcu_stepper.get_name()
         enable = setup_enable_pin(self.printer,
                                   config.get('enable_pin', None),
-                                  config.getboolean('disable_on_error',
-                                                    False))
+                                  config.getfloat('max_on_time',
+                                                  0))
         self.enable_lines[name] = EnableTracking(mcu_stepper, enable)
     def stepper_off(self, stepper_name, print_time, rail_name):
         el = self.enable_lines[stepper_name]
