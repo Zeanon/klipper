@@ -5856,24 +5856,12 @@ pin:</p>
 <h1 id="if-this-is-true-the-value-fields-should-be-between-0-and-1-if-it">If this is true, the value fields should be between 0 and 1; if it<a class="headerlink" href="#if-this-is-true-the-value-fields-should-be-between-0-and-1-if-it" title="Permanent link">&para;</a></h1>
 <h1 id="is-false-the-value-fields-should-be-either-0-or-1-the-default-is">is false the value fields should be either 0 or 1. The default is<a class="headerlink" href="#is-false-the-value-fields-should-be-either-0-or-1-the-default-is" title="Permanent link">&para;</a></h1>
 <h1 id="false">False.<a class="headerlink" href="#false" title="Permanent link">&para;</a></h1>
-<h1 id="static_value">static_value:<a class="headerlink" href="#static_value" title="Permanent link">&para;</a></h1>
-<h1 id="if-this-is-set-then-the-pin-is-assigned-to-this-value-at-startup">If this is set, then the pin is assigned to this value at startup<a class="headerlink" href="#if-this-is-set-then-the-pin-is-assigned-to-this-value-at-startup" title="Permanent link">&para;</a></h1>
-<h1 id="and-the-pin-can-not-be-changed-during-runtime-a-static-pin-uses">and the pin can not be changed during runtime. A static pin uses<a class="headerlink" href="#and-the-pin-can-not-be-changed-during-runtime-a-static-pin-uses" title="Permanent link">&para;</a></h1>
-<h1 id="slightly-less-ram-in-the-micro-controller-the-default-is-to-use">slightly less ram in the micro-controller. The default is to use<a class="headerlink" href="#slightly-less-ram-in-the-micro-controller-the-default-is-to-use" title="Permanent link">&para;</a></h1>
-<h1 id="runtime-configuration-of-pins">runtime configuration of pins.<a class="headerlink" href="#runtime-configuration-of-pins" title="Permanent link">&para;</a></h1>
 <h1 id="value">value:<a class="headerlink" href="#value" title="Permanent link">&para;</a></h1>
 <h1 id="the-value-to-initially-set-the-pin-to-during-mcu-configuration">The value to initially set the pin to during MCU configuration.<a class="headerlink" href="#the-value-to-initially-set-the-pin-to-during-mcu-configuration" title="Permanent link">&para;</a></h1>
 <h1 id="the-default-is-0-for-low-voltage">The default is 0 (for low voltage).<a class="headerlink" href="#the-default-is-0-for-low-voltage" title="Permanent link">&para;</a></h1>
 <h1 id="shutdown_value">shutdown_value:<a class="headerlink" href="#shutdown_value" title="Permanent link">&para;</a></h1>
 <h1 id="the-value-to-set-the-pin-to-on-an-mcu-shutdown-event-the-default">The value to set the pin to on an MCU shutdown event. The default<a class="headerlink" href="#the-value-to-set-the-pin-to-on-an-mcu-shutdown-event-the-default" title="Permanent link">&para;</a></h1>
 <h1 id="is-0-for-low-voltage">is 0 (for low voltage).<a class="headerlink" href="#is-0-for-low-voltage" title="Permanent link">&para;</a></h1>
-<h1 id="maximum_mcu_duration">maximum_mcu_duration:<a class="headerlink" href="#maximum_mcu_duration" title="Permanent link">&para;</a></h1>
-<h1 id="the-maximum-duration-a-non-shutdown-value-may-be-driven-by-the-mcu">The maximum duration a non-shutdown value may be driven by the MCU<a class="headerlink" href="#the-maximum-duration-a-non-shutdown-value-may-be-driven-by-the-mcu" title="Permanent link">&para;</a></h1>
-<h1 id="without-an-acknowledge-from-the-host">without an acknowledge from the host.<a class="headerlink" href="#without-an-acknowledge-from-the-host" title="Permanent link">&para;</a></h1>
-<h1 id="if-host-can-not-keep-up-with-an-update-the-mcu-will-shutdown">If host can not keep up with an update, the MCU will shutdown<a class="headerlink" href="#if-host-can-not-keep-up-with-an-update-the-mcu-will-shutdown" title="Permanent link">&para;</a></h1>
-<h1 id="and-set-all-pins-to-their-respective-shutdown-values">and set all pins to their respective shutdown values.<a class="headerlink" href="#and-set-all-pins-to-their-respective-shutdown-values" title="Permanent link">&para;</a></h1>
-<h1 id="default-0-disabled">Default: 0 (disabled)<a class="headerlink" href="#default-0-disabled" title="Permanent link">&para;</a></h1>
-<h1 id="usual-values-are-around-5-seconds">Usual values are around 5 seconds.<a class="headerlink" href="#usual-values-are-around-5-seconds" title="Permanent link">&para;</a></h1>
 <h1 id="cycle_time-0100">cycle_time: 0.100<a class="headerlink" href="#cycle_time-0100" title="Permanent link">&para;</a></h1>
 <h1 id="the-amount-of-time-in-seconds-per-pwm-cycle-it-is-recommended_1">The amount of time (in seconds) per PWM cycle. It is recommended<a class="headerlink" href="#the-amount-of-time-in-seconds-per-pwm-cycle-it-is-recommended_1" title="Permanent link">&para;</a></h1>
 <h1 id="this-be-10-milliseconds-or-greater-when-using-software-based-pwm_1">this be 10 milliseconds or greater when using software based PWM.<a class="headerlink" href="#this-be-10-milliseconds-or-greater-when-using-software-based-pwm_1" title="Permanent link">&para;</a></h1>
@@ -5893,6 +5881,9 @@ pin:</p>
 <h1 id="then-the-value-parameter-can-be-specified-using-the-desired">then the 'value' parameter can be specified using the desired<a class="headerlink" href="#then-the-value-parameter-can-be-specified-using-the-desired" title="Permanent link">&para;</a></h1>
 <h1 id="amperage-for-the-stepper-the-default-is-to-not-scale-the-value">amperage for the stepper. The default is to not scale the 'value'<a class="headerlink" href="#amperage-for-the-stepper-the-default-is-to-not-scale-the-value" title="Permanent link">&para;</a></h1>
 <h1 id="parameter">parameter.<a class="headerlink" href="#parameter" title="Permanent link">&para;</a></h1>
+<h1 id="maximum_mcu_duration">maximum_mcu_duration:<a class="headerlink" href="#maximum_mcu_duration" title="Permanent link">&para;</a></h1>
+<h1 id="static_value">static_value:<a class="headerlink" href="#static_value" title="Permanent link">&para;</a></h1>
+<h1 id="these-options-are-deprecated-and-should-no-longer-be-specified">These options are deprecated and should no longer be specified.<a class="headerlink" href="#these-options-are-deprecated-and-should-no-longer-be-specified" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code>### [pwm_tool]
 
 Pulse width modulation digital output pins capable of high speed
@@ -5905,13 +5896,35 @@ extended [g-code commands](G-Codes.md#output_pin).
 <p>[pwm_tool my_tool]
 pin:</p>
 <h1 id="the-pin-to-configure-as-an-output-this-parameter-must-be-provided">The pin to configure as an output. This parameter must be provided.<a class="headerlink" href="#the-pin-to-configure-as-an-output-this-parameter-must-be-provided" title="Permanent link">&para;</a></h1>
+<h1 id="maximum_mcu_duration_1">maximum_mcu_duration:<a class="headerlink" href="#maximum_mcu_duration_1" title="Permanent link">&para;</a></h1>
+<h1 id="the-maximum-duration-a-non-shutdown-value-may-be-driven-by-the-mcu">The maximum duration a non-shutdown value may be driven by the MCU<a class="headerlink" href="#the-maximum-duration-a-non-shutdown-value-may-be-driven-by-the-mcu" title="Permanent link">&para;</a></h1>
+<h1 id="without-an-acknowledge-from-the-host">without an acknowledge from the host.<a class="headerlink" href="#without-an-acknowledge-from-the-host" title="Permanent link">&para;</a></h1>
+<h1 id="if-host-can-not-keep-up-with-an-update-the-mcu-will-shutdown">If host can not keep up with an update, the MCU will shutdown<a class="headerlink" href="#if-host-can-not-keep-up-with-an-update-the-mcu-will-shutdown" title="Permanent link">&para;</a></h1>
+<h1 id="and-set-all-pins-to-their-respective-shutdown-values">and set all pins to their respective shutdown values.<a class="headerlink" href="#and-set-all-pins-to-their-respective-shutdown-values" title="Permanent link">&para;</a></h1>
+<h1 id="default-0-disabled">Default: 0 (disabled)<a class="headerlink" href="#default-0-disabled" title="Permanent link">&para;</a></h1>
+<h1 id="usual-values-are-around-5-seconds">Usual values are around 5 seconds.<a class="headerlink" href="#usual-values-are-around-5-seconds" title="Permanent link">&para;</a></h1>
 <h1 id="value_1">value:<a class="headerlink" href="#value_1" title="Permanent link">&para;</a></h1>
 <h1 id="shutdown_value_1">shutdown_value:<a class="headerlink" href="#shutdown_value_1" title="Permanent link">&para;</a></h1>
-<h1 id="maximum_mcu_duration_1">maximum_mcu_duration:<a class="headerlink" href="#maximum_mcu_duration_1" title="Permanent link">&para;</a></h1>
 <h1 id="cycle_time-0100_1">cycle_time: 0.100<a class="headerlink" href="#cycle_time-0100_1" title="Permanent link">&para;</a></h1>
 <h1 id="hardware_pwm-false_2">hardware_pwm: False<a class="headerlink" href="#hardware_pwm-false_2" title="Permanent link">&para;</a></h1>
 <h1 id="scale_1">scale:<a class="headerlink" href="#scale_1" title="Permanent link">&para;</a></h1>
 <h1 id="see-the-output_pin-section-for-the-definition-of-these-parameters">See the "output_pin" section for the definition of these parameters.<a class="headerlink" href="#see-the-output_pin-section-for-the-definition-of-these-parameters" title="Permanent link">&para;</a></h1>
+<div class="highlight"><pre><span></span><code>### [pwm_cycle_time]
+
+Run-time configurable output pins with dynamic pwm cycle timing (one
+may define any number of sections with an &quot;pwm_cycle_time&quot; prefix).
+Pins configured here will be setup as output pins and one may modify
+them at run-time using &quot;SET_PIN PIN=my_pin VALUE=.1 CYCLE_TIME=0.100&quot;
+type extended [g-code commands](G-Codes.md#pwm_cycle_time).
+</code></pre></div>
+
+<p>[pwm_cycle_time my_pin]
+pin:</p>
+<h1 id="value_2">value:<a class="headerlink" href="#value_2" title="Permanent link">&para;</a></h1>
+<h1 id="shutdown_value_2">shutdown_value:<a class="headerlink" href="#shutdown_value_2" title="Permanent link">&para;</a></h1>
+<h1 id="cycle_time-0100_2">cycle_time: 0.100<a class="headerlink" href="#cycle_time-0100_2" title="Permanent link">&para;</a></h1>
+<h1 id="scale_2">scale:<a class="headerlink" href="#scale_2" title="Permanent link">&para;</a></h1>
+<h1 id="see-the-output_pin-section-for-information-on-these-parameters">See the "output_pin" section for information on these parameters.<a class="headerlink" href="#see-the-output_pin-section-for-information-on-these-parameters" title="Permanent link">&para;</a></h1>
 <div class="highlight"><pre><span></span><code>### [static_digital_output]
 
 Statically configured digital output pins (one may define any number
@@ -6630,7 +6643,7 @@ enable_pin:</p>
 <h1 id="highest-resistance-and-00-being-the-lowest-resistance-however">highest resistance and 0.0 being the lowest resistance. However,<a class="headerlink" href="#highest-resistance-and-00-being-the-lowest-resistance-however" title="Permanent link">&para;</a></h1>
 <h1 id="the-range-may-be-changed-with-the-scale-parameter-see-below">the range may be changed with the 'scale' parameter (see below).<a class="headerlink" href="#the-range-may-be-changed-with-the-scale-parameter-see-below" title="Permanent link">&para;</a></h1>
 <h1 id="if-a-channel-is-not-specified-then-it-is-left-unconfigured">If a channel is not specified then it is left unconfigured.<a class="headerlink" href="#if-a-channel-is-not-specified-then-it-is-left-unconfigured" title="Permanent link">&para;</a></h1>
-<h1 id="scale_2">scale:<a class="headerlink" href="#scale_2" title="Permanent link">&para;</a></h1>
+<h1 id="scale_3">scale:<a class="headerlink" href="#scale_3" title="Permanent link">&para;</a></h1>
 <h1 id="this-parameter-can-be-used-to-alter-how-the-channel_x-parameters">This parameter can be used to alter how the 'channel_x' parameters<a class="headerlink" href="#this-parameter-can-be-used-to-alter-how-the-channel_x-parameters" title="Permanent link">&para;</a></h1>
 <h1 id="are-interpreted-if-provided-then-the-channel_x-parameters">are interpreted. If provided, then the 'channel_x' parameters<a class="headerlink" href="#are-interpreted-if-provided-then-the-channel_x-parameters" title="Permanent link">&para;</a></h1>
 <h1 id="should-be-between-00-and-scale-this-may-be-useful-when-the">should be between 0.0 and 'scale'. This may be useful when the<a class="headerlink" href="#should-be-between-00-and-scale-this-may-be-useful-when-the" title="Permanent link">&para;</a></h1>
@@ -6665,7 +6678,7 @@ i2c_address:</p>
 <h1 id="highest-resistance-and-00-being-the-lowest-resistance-however_1">highest resistance and 0.0 being the lowest resistance. However,<a class="headerlink" href="#highest-resistance-and-00-being-the-lowest-resistance-however_1" title="Permanent link">&para;</a></h1>
 <h1 id="the-range-may-be-changed-with-the-scale-parameter-see-below_1">the range may be changed with the 'scale' parameter (see below).<a class="headerlink" href="#the-range-may-be-changed-with-the-scale-parameter-see-below_1" title="Permanent link">&para;</a></h1>
 <h1 id="if-a-wiper-is-not-specified-then-it-is-left-unconfigured">If a wiper is not specified then it is left unconfigured.<a class="headerlink" href="#if-a-wiper-is-not-specified-then-it-is-left-unconfigured" title="Permanent link">&para;</a></h1>
-<h1 id="scale_3">scale:<a class="headerlink" href="#scale_3" title="Permanent link">&para;</a></h1>
+<h1 id="scale_4">scale:<a class="headerlink" href="#scale_4" title="Permanent link">&para;</a></h1>
 <h1 id="this-parameter-can-be-used-to-alter-how-the-wiper_x-parameters">This parameter can be used to alter how the 'wiper_x' parameters<a class="headerlink" href="#this-parameter-can-be-used-to-alter-how-the-wiper_x-parameters" title="Permanent link">&para;</a></h1>
 <h1 id="are-interpreted-if-provided-then-the-wiper_x-parameters-should">are interpreted. If provided, then the 'wiper_x' parameters should<a class="headerlink" href="#are-interpreted-if-provided-then-the-wiper_x-parameters-should" title="Permanent link">&para;</a></h1>
 <h1 id="be-between-00-and-scale-this-may-be-useful-when-the-mcp4451-is">be between 0.0 and 'scale'. This may be useful when the MCP4451 is<a class="headerlink" href="#be-between-00-and-scale-this-may-be-useful-when-the-mcp4451-is" title="Permanent link">&para;</a></h1>
@@ -6702,7 +6715,7 @@ prefix).
 <h1 id="however-the-range-may-be-changed-with-the-scale-parameter-see">However, the range may be changed with the 'scale' parameter (see<a class="headerlink" href="#however-the-range-may-be-changed-with-the-scale-parameter-see" title="Permanent link">&para;</a></h1>
 <h1 id="below-if-a-channel-is-not-specified-then-it-is-left">below). If a channel is not specified then it is left<a class="headerlink" href="#below-if-a-channel-is-not-specified-then-it-is-left" title="Permanent link">&para;</a></h1>
 <h1 id="unconfigured">unconfigured.<a class="headerlink" href="#unconfigured" title="Permanent link">&para;</a></h1>
-<h1 id="scale_4">scale:<a class="headerlink" href="#scale_4" title="Permanent link">&para;</a></h1>
+<h1 id="scale_5">scale:<a class="headerlink" href="#scale_5" title="Permanent link">&para;</a></h1>
 <h1 id="this-parameter-can-be-used-to-alter-how-the-channel_x-parameters_1">This parameter can be used to alter how the 'channel_x' parameters<a class="headerlink" href="#this-parameter-can-be-used-to-alter-how-the-channel_x-parameters_1" title="Permanent link">&para;</a></h1>
 <h1 id="are-interpreted-if-provided-then-the-channel_x-parameters_1">are interpreted. If provided, then the 'channel_x' parameters<a class="headerlink" href="#are-interpreted-if-provided-then-the-channel_x-parameters_1" title="Permanent link">&para;</a></h1>
 <h1 id="should-be-between-00-and-scale-this-may-be-useful-when-the_1">should be between 0.0 and 'scale'. This may be useful when the<a class="headerlink" href="#should-be-between-00-and-scale-this-may-be-useful-when-the_1" title="Permanent link">&para;</a></h1>
@@ -6729,7 +6742,7 @@ scl_pin:</p>
 <h1 id="highest-resistance-and-00-being-the-lowest-resistance-however_2">highest resistance and 0.0 being the lowest resistance. However,<a class="headerlink" href="#highest-resistance-and-00-being-the-lowest-resistance-however_2" title="Permanent link">&para;</a></h1>
 <h1 id="the-range-may-be-changed-with-the-scale-parameter-see-below_2">the range may be changed with the 'scale' parameter (see below).<a class="headerlink" href="#the-range-may-be-changed-with-the-scale-parameter-see-below_2" title="Permanent link">&para;</a></h1>
 <h1 id="this-parameter-must-be-provided">This parameter must be provided.<a class="headerlink" href="#this-parameter-must-be-provided" title="Permanent link">&para;</a></h1>
-<h1 id="scale_5">scale:<a class="headerlink" href="#scale_5" title="Permanent link">&para;</a></h1>
+<h1 id="scale_6">scale:<a class="headerlink" href="#scale_6" title="Permanent link">&para;</a></h1>
 <h1 id="this-parameter-can-be-used-to-alter-how-the-wiper-parameter-is">This parameter can be used to alter how the 'wiper' parameter is<a class="headerlink" href="#this-parameter-can-be-used-to-alter-how-the-wiper-parameter-is" title="Permanent link">&para;</a></h1>
 <h1 id="interpreted-if-provided-then-the-wiper-parameter-should-be">interpreted. If provided, then the 'wiper' parameter should be<a class="headerlink" href="#interpreted-if-provided-then-the-wiper-parameter-should-be" title="Permanent link">&para;</a></h1>
 <h1 id="between-00-and-scale-this-may-be-useful-when-the-mcp4018-is">between 0.0 and 'scale'. This may be useful when the MCP4018 is<a class="headerlink" href="#between-00-and-scale-this-may-be-useful-when-the-mcp4018-is" title="Permanent link">&para;</a></h1>
