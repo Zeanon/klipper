@@ -134,10 +134,15 @@ class PrinterStepperEnable:
                                desc=self.cmd_SET_STEPPER_ENABLE_help)
     def register_stepper(self, config, mcu_stepper):
         name = mcu_stepper.get_name()
+        max_on_time = config.getfloat('max_on_time', 0.)
+        disable_on_error = config.getboolean('disable_on_error', False)
+        if disable_on_error:
+            config.deprecate('disable_on_error')
+            if not max_on_time:
+                max_on_time = 5.
         enable = setup_enable_pin(self.printer,
                                   config.get('enable_pin', None),
-                                  config.getfloat('max_on_time',
-                                                  0))
+                                  max_on_time)
         self.enable_lines[name] = EnableTracking(mcu_stepper, enable)
     def stepper_off(self, stepper_name, print_time, rail_name):
         el = self.enable_lines[stepper_name]
