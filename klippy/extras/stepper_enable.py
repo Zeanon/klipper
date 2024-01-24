@@ -27,12 +27,10 @@ class StepperEnablePin:
                                 if
                                 max_on_time else 0.)
         self.last_print_time = 0.
-    def set_enable(self, print_timed):
+    def set_enable(self, print_time):
         if self.mcu_enable is not None:
             if not self.enable_count:
-                toolhead = self.printer.lookup_object('toolhead')
-                toolhead.register_lookahead_callback(
-                    lambda print_time: self._set_pin(print_time, 1))
+                self._set_pin(print_time, 1)
             self.enable_count += 1
     def set_disable(self, print_timed):
         if self.mcu_enable is not None:
