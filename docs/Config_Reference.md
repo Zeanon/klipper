@@ -208,12 +208,15 @@ position_max:
 #   better to use the default than to specify this parameter. The
 #   default is true if position_endstop is near position_max and false
 #   if near position_min.
-#disable_on_error: False
+#max_enable_time: 5.0
 #   Experimental feature to disable the steppers when the mcu looses
 #   connection to the host.
-#   If one stepper is set to true, the feature will be enabled for all
+#   If this is set, the steppers will be disabled if the mcu has not
+#   gotten an update from the host for the set amount of seconds.
+#   If one stepper is set, the feature will be enabled for all
 #   steppers. (I currently have no idea how to modify the mcu firmware
 #   code to have the feature enabled individually)
+#   The minimum value is 1s, the maximum is 10s.
 #   Currently this feature can also cause problems when disabling steppers
 #   and cause the firmware to shut down due to race-conditions.
 #   Even though this happens very very rarely, use this feature at your own
