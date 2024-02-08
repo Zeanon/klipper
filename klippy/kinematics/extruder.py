@@ -331,7 +331,7 @@ class PrinterExtruder:
         self.cmd_M104(gcmd, wait=True)
     def cmd_QUERY_CAN_EXTRUDE(self, gcmd):
         extruder = self.printer.lookup_object('toolhead').get_extruder()
-        if extruder.can_extrude:
+        if extruder.get_heater().can_extrude:
             gcmd.respond_info("CAN_EXTRUDE:TRUE")
         else:
             gcmd.respond_info("CAN_EXTRUDE:FALSE")
