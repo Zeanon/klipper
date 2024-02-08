@@ -73,8 +73,8 @@ class Fan:
         gcode = self.printer.lookup_object('gcode')
         gcode.register_mux_command(
             "SET_FAN", "FAN", self.name,
-            self.cmd_SET_CONTROLLER_FAN,
-            desc=self.cmd_SET_CONTROLLER_FAN_help)
+            self.cmd_SET_FAN,
+            desc=self.cmd_SET_FAN_help)
 
     def handle_ready(self):
         reactor = self.printer.get_reactor()
