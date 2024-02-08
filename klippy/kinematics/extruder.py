@@ -237,6 +237,7 @@ class PrinterExtruder:
             toolhead.set_extruder(self, 0.)
             gcode.register_command("M104", self.cmd_M104)
             gcode.register_command("M109", self.cmd_M109)
+            gcode.register_command("CAN_EXTRUDE", self.cmd_CAN_EXTRUDE)
         gcode.register_mux_command("ACTIVATE_EXTRUDER", "EXTRUDER",
                                    self.name, self.cmd_ACTIVATE_EXTRUDER,
                                    desc=self.cmd_ACTIVATE_EXTRUDER_help)
@@ -327,6 +328,12 @@ class PrinterExtruder:
     def cmd_M109(self, gcmd):
         # Set Extruder Temperature and Wait
         self.cmd_M104(gcmd, wait=True)
+    def cmd_CAN_EXTRUDE(self, gcmd):
+        extruder = self.printer.lookup_object('toolhead').get_extruder()
+        if extruder.can_extrude:
+            gcmd.respond_info("CAN_EXTRUDE:TRUE")
+        else:
+            gcmd.respond_info("CAN_EXTRUDE:FALSE")
     cmd_ACTIVATE_EXTRUDER_help = "Change the active extruder"
     def cmd_ACTIVATE_EXTRUDER(self, gcmd):
         toolhead = self.printer.lookup_object('toolhead')

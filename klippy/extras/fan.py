@@ -64,10 +64,17 @@ class Fan:
         if self.max_err is None:
             self.max_err = 3
 
+        self.speed = None
+
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
         # Register callbacks
         self.printer.register_event_handler("gcode:request_restart",
                                             self._handle_request_restart)
+        gcode = self.printer.lookup_object('gcode')
+        gcode.register_mux_command(
+            "SET_FAN", "FAN", self.name,
+            self.cmd_SET_CONTROLLER_FAN,
+            desc=self.cmd_SET_CONTROLLER_FAN_help)
 
     def handle_ready(self):
         reactor = self.printer.get_reactor()
@@ -76,8 +83,9 @@ class Fan:
                 self.fan_check, reactor.monotonic()+SAFETY_CHECK_INIT_TIME)
     def get_mcu(self):
         return self.mcu_fan.get_mcu()
-    def set_speed(self, print_time, value):
-        if value == self.last_fan_value:
+    def set_speed(self, print_time, value, force=False):
+        self.speed = value
+        if value == self.last_fan_value and not force:
             return
         if value > 0:
             # Scale value between min_power and max_power
@@ -128,7 +136,22 @@ class Fan:
         else:
             self.num_err = 0
         return eventtime + 1.5
-
+    cmd_SET_FAN_help = "Change settings for a fan"
+    def cmd_SET_FAN(self, gcmd):
+        self.min_power = gcmd.get_float("MIN_POWER",
+                                        self.min_power,
+                                        minval=0.,
+                                        maxval=1.)
+        self.max_power = gcmd.get_float("MAX_POWER",
+                                        self.max_power,
+                                        above=self.min_power,
+                                        maxval=1.)
+        self.min_rpm = gcmd.get_float("MIN_RPM",
+                                      self.min_rpm,
+                                      minval=0.)
+        curtime = self.printer.get_reactor().monotonic()
+        print_time = self.get_mcu().estimated_print_time(curtime)
+        self.set_speed(print_time, self.speed, force=True)
 
 class FanTachometer:
     def __init__(self, config):
