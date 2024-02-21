@@ -45,18 +45,23 @@ class PIDCalibrate:
             "pid_Kp=%.3f pid_Ki=%.3f pid_Kd=%.3f\n"
             "Heater: %s\n"
             "Tolerance: %.4f\n"
-            "Profile: %s"
-            % (target, Kp, Ki, Kd, heater_name, tolerance, profile_name))
+            "Profile: %s\n"
+            "The SAVE_CONFIG command will update the printer config file\n"
+            "with these parameters and restart the printer."
+            % (target, Kp, Ki, Kd, heater_name, tolerance, profile_name)
+        )
         control = 'pid_v' if old_control.get_type() == 'pid_v' else 'pid'
 
-        profile = {'pid_target': target,
-                   'pid_tolerance': tolerance,
-                   'control': control,
-                   'pid_kp': Kp,
-                   'pid_ki': Ki,
-                   'pid_kd': Kd,
-                   'smooth_time': None,
-                   'name': profile_name}
+        profile = {
+            'pid_target': target,
+            'pid_tolerance': tolerance,
+            'control': control,
+            'pid_kp': Kp,
+            'pid_ki': Ki,
+            'pid_kd': Kd,
+            'smooth_time': None,
+            'name': profile_name
+        }
 
         heater.set_control(heater.lookup_control(profile, True), False)
         heater.pmgr.save_profile(profile_name=profile_name, verbose=False)
@@ -107,8 +112,9 @@ class ControlAutoTune:
         if self.done:
             return
         # store test data
-        self.data.append((read_time, temp, self.heater.last_pwm_value,
-            self.target))
+        self.data.append(
+            (read_time, temp, self.heater.last_pwm_value, self.target)
+        )
         # ensure the starting temp is low enough to run the test.
         if not self.started and temp >= self.temp_low:
             self.errored = True
@@ -129,7 +135,7 @@ class ControlAutoTune:
         # only do work if the target temp has been crossed at-least once
         if self.target_crossed:
             # check for a new peak value
-            if temp > self.temp_high or temp < self.temp_low :
+            if temp > self.temp_high or temp < self.temp_low:
                 self.check_peak(read_time, temp)
             # it's time to calculate and store a high peak
             if self.peak > self.temp_high and temp < self.target:
@@ -217,10 +223,10 @@ class ControlAutoTune:
             return
         self.powers.append(max(0., mid * 2.))
     def finish(self, time):
-            self.heater.set_pwm(time, 0)
-            self.heater.alter_target(0)
-            self.done = True
-            self.heating = False
+        self.heater.set_pwm(time, 0)
+        self.heater.alter_target(0)
+        self.done = True
+        self.heating = False
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         if eventtime == 0. and smoothed_temp == 0. and target_temp == 0.:
             if self.errored:
@@ -232,8 +238,10 @@ class ControlAutoTune:
     def write_file(self, filename):
         f = open(filename, "w")
         f.write('time, temp, pwm, target\n')
-        data = ["%.5f, %.5f, %.5f, %.5f" % (time, temp, pwm, target)
-               for time, temp, pwm, target in self.data]
+        data = [
+            "%.5f, %.5f, %.5f, %.5f" % (time, temp, pwm, target)
+            for time, temp, pwm, target in self.data
+        ]
         f.write('\n'.join(data))
         peaks = self.peaks[:]
         powers = self.powers[:]
@@ -241,12 +249,22 @@ class ControlAutoTune:
         peaks.pop(0)
         samples = []
         for i in range(len(powers)):
-            samples.append((i, peaks[i*2][0], peaks[i*2][1], peaks[i*2+1][0],
-                peaks[i*2+1][1], powers[i]))
+            samples.append(
+                (
+                    i,
+                    peaks[i*2][0],
+                    peaks[i*2][1],
+                    peaks[i*2+1][0],
+                    peaks[i*2+1][1],
+                    powers[i]
+                )
+            )
         f.write('\nsample, low time, low, high time, high, max power\n')
-        data = ["%.5f, %.5f, %.5f, %.5f, %.5f, %.5f" % (sample, low_time,
-            low, high_time, high, max_power) for sample, low_time, low,
-            high_time, high, max_power in samples]
+        data = [
+            "%.5f, %.5f, %.5f, %.5f, %.5f, %.5f"
+            % (sample, low_time, low, high_time, high, max_power)
+            for sample, low_time, low, high_time, high, max_power in samples
+        ]
         f.write('\n'.join(data))
         f.close()
     def calc_pid(self):
@@ -271,8 +289,9 @@ class ControlAutoTune:
         Km = -math.sqrt(tau**2 * Wu**2 + 1.)/Ku
         # log the extra details
         logging.info("Ziegler-Nichols constants: Ku=%f Tu=%f", Ku, Tu)
-        logging.info("Cohen-Coon constants: Km=%f Theta=%f Tau=%f", Km,
-            theta, tau)
+        logging.info(
+            "Cohen-Coon constants: Km=%f Theta=%f Tau=%f", Km, theta, tau
+        )
         # Use Ziegler-Nichols method to generate PID parameters
         Ti = 0.5 * Tu
         Td = 0.125 * Tu
