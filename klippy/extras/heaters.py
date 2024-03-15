@@ -29,9 +29,10 @@ class Heater:
     def __init__(self, config, sensor):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
-        self.short_name = config.get_name().split()[-1]
         self.config = config
         self.configfile = self.printer.lookup_object('configfile')
+        self.name = config.get_name()
+        self.short_name = short_name = self.name.split()[-1]
         # Setup sensor
         self.sensor = sensor
         self.min_temp = config.getfloat('min_temp', minval=KELVIN_TO_CELSIUS)
@@ -54,6 +55,7 @@ class Heater:
         self.config_smooth_time = config.getfloat('smooth_time', 1., above=0.)
         self.smooth_time = self.config_smooth_time
         self.inv_smooth_time = 1. / self.smooth_time
+        self.is_shutdown = False
         self.lock = threading.Lock()
         self.last_temp = self.smoothed_temp = self.target_temp = 0.
         self.last_temp_time = 0.
@@ -101,6 +103,8 @@ class Heater:
                                         self.pmgr.cmd_PID_PROFILE,
                                         desc=
                                         self.pmgr.cmd_PID_PROFILE_help)
+        self.printer.register_event_handler("klippy:shutdown",
+                                            self._handle_shutdown)
     def lookup_control(self, profile, load_clean=False):
         algos = collections.OrderedDict({
             'watermark': ControlBangBang,
@@ -111,7 +115,7 @@ class Heater:
                                          self,
                                          load_clean)
     def set_pwm(self, read_time, value):
-        if self.target_temp <= 0.:
+        if self.target_temp <= 0. or self.is_shutdown:
             value = 0.
         if ((read_time < self.next_pwm_time or not self.last_pwm_value)
             and abs(value - self.last_pwm_value) < 0.05):
@@ -136,7 +140,11 @@ class Heater:
             self.can_extrude = (self.smoothed_temp >= self.min_extrude_temp
                                 or self.cold_extrude)
         #logging.debug("temp: %.3f %f = %f", read_time, temp)
+    def _handle_shutdown(self):
+        self.is_shutdown = True
     # External commands
+    def get_name(self):
+        return self.name
     def get_pwm_delay(self):
         return self.pwm_delay
     def get_max_power(self):
