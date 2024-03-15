@@ -32,7 +32,7 @@ class Heater:
         self.config = config
         self.configfile = self.printer.lookup_object('configfile')
         self.name = config.get_name()
-        self.short_name = short_name = self.name.split()[-1]
+        self.short_name = self.name.split()[-1]
         # Setup sensor
         self.sensor = sensor
         self.min_temp = config.getfloat('min_temp', minval=KELVIN_TO_CELSIUS)
