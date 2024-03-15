@@ -29,7 +29,7 @@ class Heater:
     def __init__(self, config, sensor):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
-        self.name = config.get_name().split()[-1]
+        self.short_name = config.get_name().split()[-1]
         self.config = config
         self.configfile = self.printer.lookup_object('configfile')
         # Setup sensor
@@ -75,7 +75,7 @@ class Heater:
         self.mcu_pwm.setup_cycle_time(pwm_cycle_time)
         self.mcu_pwm.setup_max_duration(MAX_HEAT_TIME)
         # Load additional modules
-        self.printer.load_object(config, "verify_heater %s" % (self.name,))
+        self.printer.load_object(config, "verify_heater %s" % (self.short_name,))
         self.printer.load_object(config, "pid_calibrate")
         self.gcode = self.printer.lookup_object('gcode')
         self.pmgr = self.ProfileManager(self)
@@ -85,19 +85,19 @@ class Heater:
         )
         self.gcode.register_mux_command("SET_HEATER_TEMPERATURE",
                                         "HEATER",
-                                        self.name,
+                                        self.short_name,
                                         self.cmd_SET_HEATER_TEMPERATURE,
                                         desc=
                                         self.cmd_SET_HEATER_TEMPERATURE_help)
         self.gcode.register_mux_command("SET_SMOOTH_TIME",
                                         "HEATER",
-                                        self.name,
+                                        self.short_name,
                                         self.cmd_SET_SMOOTH_TIME,
                                         desc=
                                         self.cmd_SET_SMOOTH_TIME_help)
         self.gcode.register_mux_command("PID_PROFILE",
                                         "HEATER",
-                                        self.name,
+                                        self.short_name,
                                         self.pmgr.cmd_PID_PROFILE,
                                         desc=
                                         self.pmgr.cmd_PID_PROFILE_help)
@@ -182,7 +182,7 @@ class Heater:
             last_pwm_value = self.last_pwm_value
         is_active = target_temp or last_temp > 50.
         return is_active, '%s: target=%.0f temp=%.1f pwm=%.3f' % (
-            self.name, target_temp, last_temp, last_pwm_value)
+            self.short_name, target_temp, last_temp, last_pwm_value)
     def get_status(self, eventtime):
         with self.lock:
             target_temp = self.target_temp
@@ -218,7 +218,7 @@ class Heater:
             # Fetch stored profiles from Config
             stored_profs = self.outer_instance.config.get_prefix_sections(
                 "pid_profile %s"
-                % self.outer_instance.name
+                % self.outer_instance.short_name
             )
             for profile in stored_profs:
                 self._init_profile(profile,
@@ -258,7 +258,7 @@ class Heater:
                 raise self.outer_instance.printer.config_error(
                     "Unknown control type '%s' "
                     "in [pid_profile %s %s]."
-                    % (control, self.outer_instance.name, name)
+                    % (control, self.outer_instance.short_name, name)
                 )
             temp_profile['control'] = control
             temp_profile['name'] = name
@@ -280,14 +280,14 @@ class Heater:
                     "pid_profile: '%s' has to be "
                     "specified in [pid_profile %s %s]."
                     % (key,
-                       self.outer_instance.name,
+                       self.outer_instance.short_name,
                        config_section.get_name())
                 )
             return value
         def _compute_section_name(self, profile_name):
-            return (self.outer_instance.name if profile_name == 'default'
+            return (self.outer_instance.short_name if profile_name == 'default'
                     else ("pid_profile "
-                          + self.outer_instance.name
+                          + self.outer_instance.short_name
                           + " "
                           + profile_name)
                     )
@@ -439,7 +439,7 @@ class Heater:
                     "has been saved to profile [%s] "
                     "for the current session.  The SAVE_CONFIG command will\n"
                     "update the printer config file and restart the printer."
-                    % (self.outer_instance.name, profile_name))
+                    % (self.outer_instance.short_name, profile_name))
         def load_profile(self, profile_name, gcmd, verbose):
             verbose = self._check_value_gcmd('VERBOSE',
                                              'low',
@@ -460,7 +460,7 @@ class Heater:
                 if verbose == 'high' or verbose == 'low':
                     self.outer_instance.gcode.respond_info(
                         "PID Profile [%s] already loaded for heater [%s]."
-                        % (profile_name, self.outer_instance.name)
+                        % (profile_name, self.outer_instance.short_name)
                     )
                 return
             keep_target = self._check_value_gcmd('KEEP_TARGET',
@@ -477,7 +477,7 @@ class Heater:
                 if default is None:
                     raise self.outer_instance.gcode.error(
                         "pid_profile: Unknown profile [%s] for heater [%s]."
-                        % (profile_name, self.outer_instance.name)
+                        % (profile_name, self.outer_instance.short_name)
                     )
                 profile = self.profiles.get(default, None)
                 defaulted = True
@@ -486,7 +486,7 @@ class Heater:
                         "pid_profile: Unknown default "
                         "profile [%s] for heater [%s]."
                         % (default,
-                           self.outer_instance.name)
+                           self.outer_instance.short_name)
                     )
             control = self.outer_instance.lookup_control(profile, load_clean)
             self.outer_instance.set_control(control, keep_target)
@@ -500,12 +500,12 @@ class Heater:
                                                        % (profile_name,
                                                           self
                                                           .outer_instance
-                                                          .name,
+                                                          .short_name,
                                                           default))
             self.outer_instance.gcode.respond_info(
                 "PID Profile [%s] loaded for heater [%s].\n"
                 % (profile['name'],
-                   self.outer_instance.name)
+                   self.outer_instance.short_name)
                 )
             if verbose == 'high':
                 smooth_time = (self.outer_instance.get_smooth_time()
@@ -536,7 +536,7 @@ class Heater:
                     "removed from storage for this session.\n"
                     "The SAVE_CONFIG command will update the printer\n"
                     "configuration and restart the printer"
-                    % (profile_name, self.outer_instance.name)
+                    % (profile_name, self.outer_instance.short_name)
                 )
             else:
                 self.outer_instance.gcode.respond_info(
