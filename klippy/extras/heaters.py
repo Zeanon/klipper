@@ -77,7 +77,8 @@ class Heater:
         self.mcu_pwm.setup_cycle_time(pwm_cycle_time)
         self.mcu_pwm.setup_max_duration(MAX_HEAT_TIME)
         # Load additional modules
-        self.printer.load_object(config, "verify_heater %s" % (self.short_name,))
+        self.printer.load_object(config, "verify_heater %s"
+                                 % (self.short_name,))
         self.printer.load_object(config, "pid_calibrate")
         self.gcode = self.printer.lookup_object('gcode')
         self.pmgr = self.ProfileManager(self)
