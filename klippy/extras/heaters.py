@@ -213,7 +213,7 @@ class Heater:
                                        maxval=1)
         self.smooth_time = gcmd.get_float('SMOOTH_TIME',
                                           self.config_smooth_time,
-                                          minval=0.)
+                                          above=0.)
         self.inv_smooth_time = 1. / self.smooth_time
         self.get_control().update_smooth_time()
         if save_to_profile:
@@ -257,10 +257,12 @@ class Heater:
                     can_be_none = (key != 'pid_kp'
                                    and key != 'pid_ki'
                                    and key != 'pid_kd')
+                    above = 0. if key == 'smooth_time' else None
                     temp_profile[key] = self._check_value_config(key,
                                                                  config_section,
                                                                  type,
-                                                                 can_be_none)
+                                                                 can_be_none,
+                                                                 above)
                 if name == 'default':
                     temp_profile['smooth_time'] = None
             else:
@@ -277,11 +279,12 @@ class Heater:
                                 key,
                                 config_section,
                                 type,
-                                can_be_none):
+                                can_be_none,
+                                above=None):
             if type is int:
-                value = config_section.getint(key, None)
+                value = config_section.getint(key, None, above=above)
             elif type is float:
-                value = config_section.getfloat(key, None)
+                value = config_section.getfloat(key, None, above=above)
             else:
                 value = config_section.get(key, None)
             if not can_be_none and value is None:
@@ -307,17 +310,20 @@ class Heater:
                               type,
                               can_be_none,
                               minval=None,
-                              maxval=None, ):
+                              maxval=None,
+                              above=None):
             if type is int:
                 value = gcmd.get_int(name,
                                      default,
                                      minval=minval,
-                                     maxval=maxval)
+                                     maxval=maxval,
+                                     above=above)
             elif type is float:
                 value = gcmd.get_float(name,
                                        default,
                                        minval=minval,
-                                       maxval=maxval)
+                                       maxval=maxval,
+                                       above=above)
             else:
                 value = gcmd.get(name, default)
             if not can_be_none and value is None:
@@ -365,7 +371,8 @@ class Heater:
                                                  None,
                                                  gcmd,
                                                  float,
-                                                 True)
+                                                 True,
+                                                 above=0.)
             keep_target = self._check_value_gcmd('KEEP_TARGET',
                                                  0,
                                                  gcmd,
