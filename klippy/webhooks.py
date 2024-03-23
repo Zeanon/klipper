@@ -491,6 +491,7 @@ class QueryStatusHelper:
                 if res is None:
                     po = self.printer.lookup_object(obj_name, None)
                     if po is None or not hasattr(po, 'get_status'):
+                        logging.info(obj_name)
                         res = query[obj_name] = {}
                     else:
                         res = query[obj_name] = po.get_status(eventtime)
