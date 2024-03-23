@@ -4756,6 +4756,10 @@ more information.
 #switch_pin:
 #   The pin on which the switch is connected. This parameter must be
 #   provided.
+#smart:
+#   If set to true the sensor will use the virtual_sd_card module to determine
+#   whether the printer is printing which is more reliable but will not work
+#   when streaming a print over usb or similar.
 ```
 
 ### [filament_motion_sensor]
