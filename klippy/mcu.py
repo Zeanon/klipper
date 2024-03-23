@@ -587,6 +587,7 @@ class MCU:
             self.non_critical_recon_event
         )
         self.is_non_critical = False
+        logging.info(printer.lookup_object('non_critical_mcus', None))
         if (printer.lookup_object('non_critical_mcus', None) is not None):
             self.is_non_critical = config.getboolean("is_non_critical", False)
         self._non_critical_disconnected = False
