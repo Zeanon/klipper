@@ -45,6 +45,7 @@ class MCU_SPI:
         self.bus = bus
         # Config SPI object (set all CS pins high before spi_set_bus commands)
         self.oid = mcu.create_oid()
+        self.cs_pin = pin
         if pin is None:
             mcu.add_config_cmd("config_spi_without_cs oid=%d" % (self.oid,))
         else:
@@ -72,6 +73,8 @@ class MCU_SPI:
         return self.oid
     def get_mcu(self):
         return self.mcu
+    def get_cs_pin(self):
+        return self.cs_pin
     def get_command_queue(self):
         return self.cmd_queue
     def build_config(self):

@@ -201,7 +201,7 @@ class ADXL345:
         # Setup mcu sensor_adxl345 bulk query code
         self.spi = bus.MCU_SPI_from_config(config, 3, default_speed=5000000)
         self.mcu = mcu = self.spi.get_mcu()
-        logging.info(self.mcu)
+        logging.info(self.spi.cs_pin)
         self.oid = oid = mcu.create_oid()
         self.query_adxl345_cmd = None
         mcu.add_config_cmd("config_adxl345 oid=%d spi_oid=%d"
