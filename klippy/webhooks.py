@@ -501,7 +501,6 @@ class QueryStatusHelper:
                 lres = last_query.get(obj_name, {})
                 cres = {}
                 for ri in req_items:
-                    logging.info(res)
                     rd = res.get(ri, None)
                     if is_query or rd != lres.get(ri):
                         cres[ri] = rd
