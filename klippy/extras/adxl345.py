@@ -201,7 +201,7 @@ class ADXL345:
         # Setup mcu sensor_adxl345 bulk query code
         self.spi = bus.MCU_SPI_from_config(config, 3, default_speed=5000000)
         self.mcu = mcu = self.spi.get_mcu()
-        if config.get('cs_pin', None) is not None:
+        if self.spi.get_cs_pin() is not None:
             logging.info(
                 self
                 .printer
