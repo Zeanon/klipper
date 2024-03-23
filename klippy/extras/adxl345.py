@@ -201,7 +201,6 @@ class ADXL345:
         # Setup mcu sensor_adxl345 bulk query code
         self.spi = bus.MCU_SPI_from_config(config, 3, default_speed=5000000)
         self.mcu = mcu = self.spi.get_mcu()
-        logging.info(self.mcu.is_connected)
         self.oid = oid = mcu.create_oid()
         self.query_adxl345_cmd = None
         mcu.add_config_cmd("config_adxl345 oid=%d spi_oid=%d"
@@ -224,6 +223,10 @@ class ADXL345:
         hdr = ('time', 'x_acceleration', 'y_acceleration', 'z_acceleration')
         self.batch_bulk.add_mux_endpoint("adxl345/dump_adxl345", "sensor",
                                          self.name, {'header': hdr})
+        self.printer.register_event_handler("klippy:ready", self.handle_ready)
+    def handle_ready(self):
+        logging.info("Is Ready:")
+        logging.info(self.mcu.is_connected)
     def _build_config(self):
         cmdqueue = self.spi.get_command_queue()
         self.query_adxl345_cmd = self.mcu.lookup_command(
