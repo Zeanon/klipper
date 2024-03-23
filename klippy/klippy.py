@@ -6,7 +6,8 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import sys, os, gc, optparse, logging, time, collections, importlib
 import util, reactor, queuelogger, msgproto
-import gcode, configfile, pins, non_critical_mcus, mcu, toolhead, webhooks
+import gcode, configfile, pins, mcu, toolhead, webhooks
+from klippy.extras import non_critical_mcus
 
 message_ready = "Printer is ready"
 
