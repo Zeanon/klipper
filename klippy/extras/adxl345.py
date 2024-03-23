@@ -131,6 +131,11 @@ class AccelCommandHelper:
         gcode.register_mux_command("ACCELEROMETER_DEBUG_WRITE", "CHIP", name,
                                    self.cmd_ACCELEROMETER_DEBUG_WRITE,
                                    desc=self.cmd_ACCELEROMETER_DEBUG_WRITE_help)
+    def read_acceleromater(self):
+        aclient = self.chip.start_internal_client()
+        self.printer.lookup_object('toolhead').dwell(1.)
+        aclient.finish_measurements()
+        return aclient.get_samples()
     cmd_ACCELEROMETER_MEASURE_help = "Start/stop accelerometer"
     def cmd_ACCELEROMETER_MEASURE(self, gcmd):
         if self.bg_client is None:
@@ -193,7 +198,7 @@ BATCH_UPDATES = 0.100
 class ADXL345:
     def __init__(self, config):
         self.printer = config.get_printer()
-        AccelCommandHelper(config, self)
+        self.command_helper = AccelCommandHelper(config, self)
         self.axes_map = read_axes_map(config)
         self.data_rate = config.getint('rate', 3200)
         if self.data_rate not in QUERY_RATES:
@@ -202,6 +207,7 @@ class ADXL345:
         self.spi = bus.MCU_SPI_from_config(config, 3, default_speed=5000000)
         self.mcu = mcu = self.spi.get_mcu()
         self.oid = oid = mcu.create_oid()
+        self.connected = False
         self.query_adxl345_cmd = None
         mcu.add_config_cmd("config_adxl345 oid=%d spi_oid=%d"
                            % (oid, self.spi.get_oid()))
@@ -223,6 +229,14 @@ class ADXL345:
         hdr = ('time', 'x_acceleration', 'y_acceleration', 'z_acceleration')
         self.batch_bulk.add_mux_endpoint("adxl345/dump_adxl345", "sensor",
                                          self.name, {'header': hdr})
+        self.printer.register_event_handler('klippy:ready', self.handle_ready)
+    def handle_ready(self):
+        try:
+            self.command_helper.read_accelerometer()
+            self.connected = True
+        except:
+            self.connected = False
+        logging.info(self.connected)
     def _build_config(self):
         cmdqueue = self.spi.get_command_queue()
         self.query_adxl345_cmd = self.mcu.lookup_command(
