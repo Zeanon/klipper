@@ -1030,6 +1030,9 @@ class MCU:
         if (self._clocksync.is_active() or self.is_fileoutput()
             or self._is_timeout):
             return
+        if self.is_non_critical:
+            self.handle_non_critical_disconnect()
+            return
         self._is_timeout = True
         logging.info("Timeout with MCU '%s' (eventtime=%f)",
                      self._name, eventtime)
