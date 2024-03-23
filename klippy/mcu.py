@@ -586,7 +586,9 @@ class MCU:
         self.non_critical_recon_timer = self._reactor.register_timer(
             self.non_critical_recon_event
         )
-        self.is_non_critical = config.getboolean("is_non_critical", False)
+        self.is_non_critical = False
+        if (printer.lookup_object('non_critical_mcus', None) is not None):
+            self.is_non_critical = config.getboolean("is_non_critical", False)
         self._non_critical_disconnected = False
         # self.last_noncrit_recon_eventtime = None
         self.reconnect_interval = (
@@ -1027,8 +1029,9 @@ class MCU:
             return
         offset, freq = self._clocksync.calibrate_clock(print_time, eventtime)
         self._ffi_lib.steppersync_set_time(self._steppersync, offset, freq)
-        if (self._clocksync.is_active() or self.is_fileoutput()
-            or self._is_timeout):
+        if (self._clocksync.is_active()
+                or self.is_fileoutput()
+                or self._is_timeout):
             return
         if self.is_non_critical:
             self.handle_non_critical_disconnect()
