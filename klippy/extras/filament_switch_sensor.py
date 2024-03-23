@@ -147,7 +147,12 @@ class RunoutHelper:
                 (self.name, eventtime))
             self.reactor.register_callback(self._runout_event_handler)
     def get_status(self, eventtime):
-        return self.defined_sensor.sensor_get_status(eventtime)
+        status = {
+            "filament_detected": bool(self.filament_present),
+            "enabled": bool(self.sensor_enabled),
+            "smart": bool(self.smart),
+        }
+        return self.defined_sensor.sensor_get_status(eventtime).update(status)
     cmd_QUERY_FILAMENT_SENSOR_help = "Query the status of the Filament Sensor"
     def cmd_QUERY_FILAMENT_SENSOR(self, gcmd):
         msg = "Filament Sensor %s: filament %s" %\
@@ -156,7 +161,24 @@ class RunoutHelper:
         gcmd.respond_info(msg)
     cmd_SET_FILAMENT_SENSOR_help = "Sets the filament sensor on/off"
     def cmd_SET_FILAMENT_SENSOR(self, gcmd):
-        self.defined_sensor.set_filament_sensor(gcmd)
+        enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
+        reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
+        smart = gcmd.get_int('SMART', None, minval=0, maxval=1)
+        if (enable is None
+                and reset is None
+                and smart is None
+                and self.defined_sensor.get_info(gcmd)):
+            return
+        if enable is not None:
+            if self.defined_sensor.enable(enable):
+                reset = 1
+            self.sensor_enabled = enable
+        if smart is not None:
+            self.smart = smart
+        if self.defined_sensor.set_filament_sensor(gcmd):
+            reset = 1
+        if reset is not None and reset:
+            self.defined_sensor.reset()
 
 
 class SwitchSensor:
@@ -196,34 +218,28 @@ class SwitchSensor:
                    else 'disabled', self.runout_helper.runout_distance))
     def sensor_get_status(self, eventtime):
         return {
-            "filament_detected": bool(self.runout_helper.filament_present),
-            "enabled": bool(self.runout_helper.sensor_enabled),
-            "smart": bool(self.runout_helper.smart),
             "runout_distance": float(self.runout_helper.runout_distance),
-            "runout_elapsed": float(self.runout_helper.runout_elapsed)}
-    def set_filament_sensor(self, gcmd):
-        enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
-        reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
-        smart = gcmd.get_int('SMART', None, minval=0, maxval=1)
+            "runout_elapsed": float(self.runout_helper.runout_elapsed)
+        }
+    def get_info(self, gcmd):
         runout_distance = gcmd.get_float('RUNOUT_DISTANCE', None, minval=0.)
-        if (enable is None
-                and reset is None
-                and runout_distance is None
-                and smart is None):
+        if runout_distance is None:
             gcmd.respond_info(self.get_sensor_status())
-            return
-        if enable is not None:
-            if enable != self.runout_helper.sensor_enabled:
-                reset = 1
-            self.runout_helper.sensor_enabled = enable
+            return 1
+        return 0
+    def enable(self, enable):
+        if enable != self.runout_helper.sensor_enabled:
+            return 1
+        return 0
+    def set_filament_sensor(self, gcmd):
+        runout_distance = gcmd.get_float('RUNOUT_DISTANCE', None, minval=0.)
         if runout_distance is not None:
             self.runout_helper.runout_distance = runout_distance
-        if smart is not None:
-            self.runout_helper.smart = smart
-        if reset is not None and reset:
-            self.runout_helper.reset_runout_distance_info()
-            self.runout_helper.note_filament_present(
-                self.runout_helper.filament_present, True)
+        return 0
+    def reset(self):
+        self.runout_helper.reset_runout_distance_info()
+        self.runout_helper.note_filament_present(
+            self.runout_helper.filament_present, True)
 
 def load_config_prefix(config):
     return SwitchSensor(config)
