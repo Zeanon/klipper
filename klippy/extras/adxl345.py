@@ -234,7 +234,8 @@ class ADXL345:
         try:
             self.command_helper.read_accelerometer()
             self.connected = True
-        except:
+        except Exception as e:
+            logging.info(e)
             self.connected = False
         logging.info("Accel Connected:")
         logging.info(self.connected)
