@@ -236,6 +236,7 @@ class ADXL345:
             self.connected = True
         except:
             self.connected = False
+        logging.info("Accel Connected:")
         logging.info(self.connected)
     def _build_config(self):
         cmdqueue = self.spi.get_command_queue()
