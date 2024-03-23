@@ -494,6 +494,7 @@ class QueryStatusHelper:
                         logging.info(obj_name)
                         res = query[obj_name] = {}
                     else:
+                        logging.info(obj_name)
                         res = query[obj_name] = po.get_status(eventtime)
                 if req_items is None:
                     req_items = list(res.keys())
