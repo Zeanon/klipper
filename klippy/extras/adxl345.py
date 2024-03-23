@@ -131,7 +131,7 @@ class AccelCommandHelper:
         gcode.register_mux_command("ACCELEROMETER_DEBUG_WRITE", "CHIP", name,
                                    self.cmd_ACCELEROMETER_DEBUG_WRITE,
                                    desc=self.cmd_ACCELEROMETER_DEBUG_WRITE_help)
-    def read_acceleromater(self):
+    def read_accelerometer(self):
         aclient = self.chip.start_internal_client()
         self.printer.lookup_object('toolhead').dwell(1.)
         aclient.finish_measurements()
