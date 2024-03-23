@@ -1027,12 +1027,8 @@ class MCU:
             return
         offset, freq = self._clocksync.calibrate_clock(print_time, eventtime)
         self._ffi_lib.steppersync_set_time(self._steppersync, offset, freq)
-        if (self._clocksync.is_active()
-                or self.is_fileoutput()
-                or self._is_timeout):
-            return
-        if self.is_non_critical:
-            self.handle_non_critical_disconnect()
+        if (self._clocksync.is_active() or self.is_fileoutput()
+            or self._is_timeout):
             return
         self._is_timeout = True
         logging.info("Timeout with MCU '%s' (eventtime=%f)",
