@@ -234,11 +234,10 @@ class ADXL345:
         try:
             self.command_helper.read_accelerometer()
             self.connected = True
+            self.printer.lookup_object('extruder').enabled = True
         except Exception as e:
-            logging.info(e)
             self.connected = False
-        logging.info("Accel Connected:")
-        logging.info(self.connected)
+            self.printer.lookup_object('extruder').enabled = False
     def _build_config(self):
         cmdqueue = self.spi.get_command_queue()
         self.query_adxl345_cmd = self.mcu.lookup_command(

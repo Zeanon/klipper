@@ -50,6 +50,7 @@ class Heater:
         is_fileoutput = (self.printer.get_start_args().get('debugoutput')
                          is not None)
         self.can_extrude = self.min_extrude_temp <= 0. or is_fileoutput
+        self.enabled = True
         self.cold_extrude = False
         self.max_power = config.getfloat('max_power', 1., above=0., maxval=1.)
         self.config_smooth_time = config.getfloat('smooth_time', 1., above=0.)
@@ -203,6 +204,8 @@ class Heater:
                 'pid_profile': self.get_control().get_profile()['name']}
     cmd_SET_HEATER_TEMPERATURE_help = "Sets a heater temperature"
     def cmd_SET_HEATER_TEMPERATURE(self, gcmd):
+        if not self.enabled:
+            return
         temp = gcmd.get_float('TARGET', 0.)
         pheaters = self.printer.lookup_object('heaters')
         pheaters.set_temperature(self, temp)
