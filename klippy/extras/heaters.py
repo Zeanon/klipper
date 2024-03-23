@@ -202,6 +202,8 @@ class Heater:
                 'target': target_temp,
                 'power': last_pwm_value,
                 'pid_profile': self.get_control().get_profile()['name']}
+    def set_enabled(self, enabled):
+        self.enabled = enabled
     cmd_SET_HEATER_TEMPERATURE_help = "Sets a heater temperature"
     def cmd_SET_HEATER_TEMPERATURE(self, gcmd):
         if not self.enabled:
