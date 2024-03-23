@@ -1,6 +1,6 @@
 class NonCriticalMcus:
-    def __init__(self, config):
+    def __init__(self):
         self.enabled = True
 
-def load_config(config):
-    return NonCriticalMcus(config)
+def add_printer_objects(config):
+    config.get_printer().add_object('non_critical_mcus', NonCriticalMcus)
