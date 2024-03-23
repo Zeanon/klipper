@@ -152,7 +152,8 @@ class RunoutHelper:
             "enabled": bool(self.sensor_enabled),
             "smart": bool(self.smart),
         }
-        return self.defined_sensor.sensor_get_status(eventtime).update(status)
+        status.update(self.defined_sensor.sensor_get_status(eventtime))
+        return status
     cmd_QUERY_FILAMENT_SENSOR_help = "Query the status of the Filament Sensor"
     def cmd_QUERY_FILAMENT_SENSOR(self, gcmd):
         msg = "Filament Sensor %s: filament %s" %\
