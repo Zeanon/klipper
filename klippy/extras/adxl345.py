@@ -223,10 +223,6 @@ class ADXL345:
         hdr = ('time', 'x_acceleration', 'y_acceleration', 'z_acceleration')
         self.batch_bulk.add_mux_endpoint("adxl345/dump_adxl345", "sensor",
                                          self.name, {'header': hdr})
-        self.printer.register_event_handler("klippy:ready", self.handle_ready)
-    def handle_ready(self):
-        logging.info("Is Ready:")
-        logging.info(self.mcu.is_connected)
     def _build_config(self):
         cmdqueue = self.spi.get_command_queue()
         self.query_adxl345_cmd = self.mcu.lookup_command(
