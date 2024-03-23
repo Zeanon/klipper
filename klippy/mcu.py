@@ -590,6 +590,7 @@ class MCU:
         non_critical_mcus = printer.lookup_object('non_critical_mcus', None)
         if non_critical_mcus is not None and non_critical_mcus.enabled:
             self.is_non_critical = config.getboolean("is_non_critical", False)
+        self.is_connected = False
         self._non_critical_disconnected = False
         # self.last_noncrit_recon_eventtime = None
         self.reconnect_interval = (
@@ -667,6 +668,7 @@ class MCU:
 
     def handle_non_critical_disconnect(self):
         self._non_critical_disconnected = True
+        self.is_connected = False
         self._clocksync.disconnect()
         self._disconnect()
         self._reactor.update_timer(
@@ -775,6 +777,7 @@ class MCU:
                 self._reactor.NOW + self.reconnect_interval,
             )
             return
+        self.is_connected = True
         config_params = self._send_get_config()
         if not config_params['is_config']:
             if self._restart_method == 'rpi_usb':
