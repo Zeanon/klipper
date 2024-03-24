@@ -207,7 +207,6 @@ class ADXL345:
         self.spi = bus.MCU_SPI_from_config(config, 3, default_speed=5000000)
         self.mcu = mcu = self.spi.get_mcu()
         self.oid = oid = mcu.create_oid()
-        self.connected = False
         self.query_adxl345_cmd = None
         mcu.add_config_cmd("config_adxl345 oid=%d spi_oid=%d"
                            % (oid, self.spi.get_oid()))
@@ -226,18 +225,28 @@ class ADXL345:
             self.printer, self._process_batch,
             self._start_measurements, self._finish_measurements, BATCH_UPDATES)
         self.name = config.get_name().split()[-1]
+        self.disabled_heaters = config.getlist('disable_heaters', [])
         hdr = ('time', 'x_acceleration', 'y_acceleration', 'z_acceleration')
         self.batch_bulk.add_mux_endpoint("adxl345/dump_adxl345", "sensor",
                                          self.name, {'header': hdr})
-        self.printer.register_event_handler('klippy:ready', self.handle_ready)
-    def handle_ready(self):
+        self.printer.register_event_handler('klippy:ready', self._handle_ready)
+    def _handle_ready(self):
         try:
             self.command_helper.read_accelerometer()
-            self.connected = True
-            self.printer.lookup_object('extruder').heater.set_enabled(True)
-        except Exception as e:
-            self.connected = False
+            connected = True
             self.printer.lookup_object('extruder').heater.set_enabled(False)
+        except Exception as e:
+            connected = False
+            self.printer.lookup_object('extruder').heater.set_enabled(True)
+        for heater_name in self.disabled_heaters:
+            heater = self.printer.lookup_object(heater_name).heater
+            if hasattr(heater, 'set_enabled'):
+                heater.set_enabled(not connected)
+            else:
+                raise self.printer.config_error(
+                    "'%s' is not a valid heater."
+                    % (heater_name,))
+
     def _build_config(self):
         cmdqueue = self.spi.get_command_queue()
         self.query_adxl345_cmd = self.mcu.lookup_command(
