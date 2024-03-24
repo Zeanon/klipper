@@ -208,7 +208,7 @@ class Heater:
     def cmd_SET_HEATER_TEMPERATURE(self, gcmd):
         temp = gcmd.get_float('TARGET', 0.)
         pheaters = self.printer.lookup_object('heaters')
-        pheaters.set_temperature(self, temp, gcmd)
+        pheaters.set_temperature(self, temp, gcmd=gcmd)
     cmd_SET_SMOOTH_TIME_help = "Set the smooth time for the given heater"
     def cmd_SET_SMOOTH_TIME(self, gcmd):
         save_to_profile = gcmd.get_int('SAVE_TO_PROFILE',
