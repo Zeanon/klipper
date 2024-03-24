@@ -905,6 +905,8 @@ class PrinterHeaters:
             eventtime = reactor.pause(eventtime + 1.)
     def set_temperature(self, heater, temp, wait=False, gcmd=None):
         if not heater.enabled:
+            logging.info("gcmd")
+            logging.info(gcmd)
             if gcmd is not None:
                 gcmd.respond_info("Heater [%s] is disabled due to an adxl"
                                   "being connected." % heater.short_name)
