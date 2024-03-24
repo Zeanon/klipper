@@ -241,7 +241,7 @@ class ADXL345:
         for heater_name in self.disabled_heaters:
             heater = self.printer.lookup_object(heater_name).heater
             if hasattr(heater, 'set_enabled'):
-                heater.set_enabled(not connected)
+                heater.set_enabled(connected)
             else:
                 raise self.printer.config_error(
                     "'%s' is not a valid heater."
