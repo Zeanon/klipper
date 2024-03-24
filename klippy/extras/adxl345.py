@@ -112,10 +112,12 @@ class AccelCommandHelper:
         name_parts = config.get_name().split()
         self.base_name = name_parts[0]
         self.name = name_parts[-1]
+        self.disabled_heaters = config.getlist('disable_heaters', [])
         self.register_commands(self.name)
         if len(name_parts) == 1:
             if self.name == "adxl345" or not config.has_section("adxl345"):
                 self.register_commands(None)
+        self.printer.register_event_handler('klippy:ready', self._handle_ready)
     def register_commands(self, name):
         # Register commands
         gcode = self.printer.lookup_object('gcode')
@@ -131,6 +133,26 @@ class AccelCommandHelper:
         gcode.register_mux_command("ACCELEROMETER_DEBUG_WRITE", "CHIP", name,
                                    self.cmd_ACCELEROMETER_DEBUG_WRITE,
                                    desc=self.cmd_ACCELEROMETER_DEBUG_WRITE_help)
+    def _handle_ready(self):
+        try:
+            self.read_accelerometer()
+            connected = True
+            self.printer.lookup_object('extruder').heater.set_enabled(False)
+        except Exception as e:
+            connected = False
+            self.printer.lookup_object('extruder').heater.set_enabled(True)
+        for heater_name in self.disabled_heaters:
+            heater_object = self.printer.lookup_object(heater_name)
+            if not hasattr(heater_object, 'heater'):
+                raise self.printer.config_error(
+                    "'%s' is not a valid heater."
+                    % (heater_name,))
+            heater = heater_object.heater
+            if not hasattr(heater, 'set_enabled'):
+                raise self.printer.config_error(
+                    "'%s' is not a valid heater."
+                    % (heater_name,))
+            heater.set_enabled(not connected)
     def read_accelerometer(self):
         aclient = self.chip.start_internal_client()
         self.printer.lookup_object('toolhead').dwell(1.)
@@ -225,32 +247,9 @@ class ADXL345:
             self.printer, self._process_batch,
             self._start_measurements, self._finish_measurements, BATCH_UPDATES)
         self.name = config.get_name().split()[-1]
-        self.disabled_heaters = config.getlist('disable_heaters', [])
         hdr = ('time', 'x_acceleration', 'y_acceleration', 'z_acceleration')
         self.batch_bulk.add_mux_endpoint("adxl345/dump_adxl345", "sensor",
                                          self.name, {'header': hdr})
-        self.printer.register_event_handler('klippy:ready', self._handle_ready)
-    def _handle_ready(self):
-        try:
-            self.command_helper.read_accelerometer()
-            connected = True
-            self.printer.lookup_object('extruder').heater.set_enabled(False)
-        except Exception as e:
-            connected = False
-            self.printer.lookup_object('extruder').heater.set_enabled(True)
-        for heater_name in self.disabled_heaters:
-            heater_object = self.printer.lookup_object(heater_name)
-            if not hasattr(heater_object, 'heater'):
-                raise self.printer.config_error(
-                    "'%s' is not a valid heater."
-                    % (heater_name,))
-            heater = heater_object.heater
-            if not hasattr(heater, 'set_enabled'):
-                raise self.printer.config_error(
-                    "'%s' is not a valid heater."
-                    % (heater_name,))
-            heater.set_enabled(not connected)
-
     def _build_config(self):
         cmdqueue = self.spi.get_command_queue()
         self.query_adxl345_cmd = self.mcu.lookup_command(
