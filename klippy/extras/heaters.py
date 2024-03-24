@@ -908,8 +908,9 @@ class PrinterHeaters:
             logging.info("gcmd")
             logging.info(gcmd)
             if gcmd is not None:
-                gcmd.respond_info("Heater [%s] is disabled due to an adxl"
-                                  "being connected." % heater.short_name)
+                gcmd.respond_info("Heater [%s] is disabled due to an "
+                                  "accelerometer being connected."
+                                  % heater.short_name)
             return
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_lookahead_callback((lambda pt: None))

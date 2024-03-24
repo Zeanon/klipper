@@ -249,7 +249,7 @@ class ADXL345:
                 raise self.printer.config_error(
                     "'%s' is not a valid heater."
                     % (heater_name,))
-            heater.set_enabled(connected)
+            heater.set_enabled(not connected)
 
     def _build_config(self):
         cmdqueue = self.spi.get_command_queue()
