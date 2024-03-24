@@ -206,11 +206,9 @@ class Heater:
         self.enabled = enabled
     cmd_SET_HEATER_TEMPERATURE_help = "Sets a heater temperature"
     def cmd_SET_HEATER_TEMPERATURE(self, gcmd):
-        if not self.enabled:
-            return
         temp = gcmd.get_float('TARGET', 0.)
         pheaters = self.printer.lookup_object('heaters')
-        pheaters.set_temperature(self, temp)
+        pheaters.set_temperature(self, temp, gcmd)
     cmd_SET_SMOOTH_TIME_help = "Set the smooth time for the given heater"
     def cmd_SET_SMOOTH_TIME(self, gcmd):
         save_to_profile = gcmd.get_int('SAVE_TO_PROFILE',
@@ -905,7 +903,12 @@ class PrinterHeaters:
             print_time = toolhead.get_last_move_time()
             gcode.respond_raw(self._get_temp(eventtime))
             eventtime = reactor.pause(eventtime + 1.)
-    def set_temperature(self, heater, temp, wait=False):
+    def set_temperature(self, heater, temp, wait=False, gcmd=None):
+        if not heater.enabled:
+            if gcmd is not None:
+                gcmd.respond_info("Heater [%s] is disabled due to an adxl"
+                                  "being connected." % heater.short_name)
+            return
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_lookahead_callback((lambda pt: None))
         heater.set_temp(temp)

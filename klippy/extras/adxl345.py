@@ -239,13 +239,17 @@ class ADXL345:
             connected = False
             self.printer.lookup_object('extruder').heater.set_enabled(True)
         for heater_name in self.disabled_heaters:
-            heater = self.printer.lookup_object(heater_name).heater
-            if hasattr(heater, 'set_enabled'):
-                heater.set_enabled(connected)
-            else:
+            heater_object = self.printer.lookup_object(heater_name)
+            if not hasattr(heater_object, 'heater'):
                 raise self.printer.config_error(
                     "'%s' is not a valid heater."
                     % (heater_name,))
+            heater = heater_object.heater
+            if not hasattr(heater, 'set_enabled'):
+                raise self.printer.config_error(
+                    "'%s' is not a valid heater."
+                    % (heater_name,))
+            heater.set_enabled(not connected)
 
     def _build_config(self):
         cmdqueue = self.spi.get_command_queue()

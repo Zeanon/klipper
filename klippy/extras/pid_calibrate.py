@@ -29,7 +29,7 @@ class PIDCalibrate:
         calibrate = ControlAutoTune(heater, target, tolerance, tune_pid_delta)
         old_control = heater.set_control(calibrate, False)
         try:
-            pheaters.set_temperature(heater, target, True)
+            pheaters.set_temperature(heater, target, True, gcmd)
         except self.printer.command_error as e:
             heater.set_control(old_control, False)
             raise
