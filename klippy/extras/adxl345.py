@@ -119,9 +119,11 @@ class AccelCommandHelper:
                 self.register_commands(None)
         self.printer.register_event_handler('klippy:ready', self._handle_ready)
     def read_accelerometer(self):
-        toolhead = self.printer.lookup_object('toolhead')
         aclient = self.chip.start_internal_client()
         aclient.finish_measurements()
+        values = aclient.get_samples()
+        if not values:
+            raise Exception("No accelerometer measurements found")
 
     def _handle_ready(self):
         try:
