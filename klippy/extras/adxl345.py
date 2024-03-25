@@ -123,6 +123,8 @@ class AccelCommandHelper:
         self.printer.lookup_object('toolhead').dwell(1.)
         aclient.finish_measurements()
         values = aclient.get_samples()
+        if not values:
+            raise Exception
         _, accel_x, accel_y, accel_z = values[-1]
     def _handle_ready(self):
         try:
