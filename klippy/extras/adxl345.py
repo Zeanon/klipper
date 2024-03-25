@@ -118,18 +118,15 @@ class AccelCommandHelper:
             if self.name == "adxl345" or not config.has_section("adxl345"):
                 self.register_commands(None)
         self.printer.register_event_handler('klippy:ready', self._handle_ready)
-    def test_accelerometer(self):
+    def read_accelerometer(self):
         aclient = self.chip.start_internal_client()
         self.printer.lookup_object('toolhead').dwell(1.)
         aclient.finish_measurements()
         values = aclient.get_samples()
-        if not values:
-            raise Exception
         _, accel_x, accel_y, accel_z = values[-1]
     def _handle_ready(self):
-        # noinspection PyBroadException
         try:
-            self.test_accelerometer()
+            self.read_accelerometer()
             connected = True
         except Exception as e:
             connected = False
