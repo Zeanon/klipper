@@ -904,6 +904,12 @@ class PrinterHeaters:
             gcode.respond_raw(self._get_temp(eventtime))
             eventtime = reactor.pause(eventtime + 1.)
     def set_temperature(self, heater, temp, wait=False, gcmd=None):
+        if not heater.enabled:
+            if gcmd is not None:
+                gcmd.respond_info("Heater [%s] is disabled due to an "
+                                  "accelerometer being connected."
+                                  % heater.short_name)
+            return
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_lookahead_callback((lambda pt: None))
         heater.set_temp(temp)
