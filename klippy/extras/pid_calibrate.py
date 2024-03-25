@@ -25,6 +25,11 @@ class PIDCalibrate:
             heater = pheaters.lookup_heater(heater_name)
         except self.printer.config_error as e:
             raise gcmd.error(str(e))
+        if not heater.enabled:
+            gcmd.respond_info("Heater [%s] is disabled due to an "
+                              "accelerometer being connected."
+                              % heater.short_name)
+            return
         self.printer.lookup_object('toolhead').get_last_move_time()
         calibrate = ControlAutoTune(heater, target, tolerance, tune_pid_delta)
         old_control = heater.set_control(calibrate, False)
