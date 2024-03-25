@@ -125,6 +125,7 @@ class AccelCommandHelper:
         values = aclient.get_samples()
         if not values:
             raise Exception
+        _, accel_x, accel_y, accel_z = values[-1]
     def _handle_ready(self):
         try:
             self.read_accelerometer()
