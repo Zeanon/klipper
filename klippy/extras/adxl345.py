@@ -131,7 +131,7 @@ class AccelCommandHelper:
         try:
             self.test_accelerometer()
             connected = True
-        except Exception:
+        except Exception as e:
             connected = False
         for heater_name in self.disabled_heaters:
             heater_object = self.printer.lookup_object(heater_name)
