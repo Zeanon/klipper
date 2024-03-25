@@ -911,7 +911,7 @@ class PrinterHeaters:
                 gcmd.respond_info("Heater [%s] is disabled due to an "
                                   "accelerometer being connected."
                                   % heater.short_name)
-            return
+            temp = 0
         heater.set_temp(temp)
         if wait and temp:
             self._wait_for_temperature(heater)
