@@ -124,8 +124,10 @@ class AccelCommandHelper:
         values = aclient.get_samples()
         if not values:
             raise Exception("No accelerometer measurements found")
-
     def _handle_ready(self):
+        reactor = self.printer.get_reactor()
+        reactor.register_timer(self._init_accel, reactor.NOW)
+    def _init_accel(self, eventtime):
         try:
             self.read_accelerometer()
             connected = True
