@@ -107,6 +107,11 @@ class Heater:
                                         self.pmgr.cmd_PID_PROFILE_help)
         self.printer.register_event_handler("klippy:shutdown",
                                             self._handle_shutdown)
+    def notify_disabled(self, gcmd):
+        if gcmd is not None:
+            gcmd.respond_info("Heater [%s] is disabled due to an "
+                              "accelerometer being connected."
+                              % self.short_name)
     def lookup_control(self, profile, load_clean=False):
         algos = collections.OrderedDict({
             'watermark': ControlBangBang,
@@ -905,10 +910,7 @@ class PrinterHeaters:
             eventtime = reactor.pause(eventtime + 1.)
     def set_temperature(self, heater, temp, wait=False, gcmd=None):
         if not heater.enabled:
-            if gcmd is not None:
-                gcmd.respond_info("Heater [%s] is disabled due to an "
-                                  "accelerometer being connected."
-                                  % heater.short_name)
+            heater.notify_disabled(gcmd)
             return
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_lookahead_callback((lambda pt: None))
