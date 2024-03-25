@@ -107,6 +107,7 @@ class AccelQueryHelper:
 class AccelCommandHelper:
     def __init__(self, config, chip):
         self.printer = config.get_printer()
+        self.reactor = self.printer.get_reactor()
         self.chip = chip
         self.bg_client = None
         name_parts = config.get_name().split()
@@ -125,8 +126,7 @@ class AccelCommandHelper:
         if not values:
             raise Exception("No accelerometer measurements found")
     def _handle_ready(self):
-        reactor = self.printer.get_reactor()
-        reactor.register_timer(self._init_accel, reactor.NOW)
+        self.reactor.register_timer(self._init_accel, self.reactor.NOW)
     def _init_accel(self, eventtime):
         try:
             self.read_accelerometer()
@@ -145,6 +145,7 @@ class AccelCommandHelper:
                     "'%s' is not a valid heater."
                     % (heater_name,))
             heater.set_enabled(not connected)
+        return self.reactor.NEVER
     def register_commands(self, name):
         # Register commands
         gcode = self.printer.lookup_object('gcode')
