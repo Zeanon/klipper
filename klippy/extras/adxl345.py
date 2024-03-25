@@ -130,6 +130,18 @@ class AccelCommandHelper:
             connected = True
         except Exception as e:
             connected = False
+        for heater_name in self.disabled_heaters:
+            heater_object = self.printer.lookup_object(heater_name)
+            if not hasattr(heater_object, 'heater'):
+                raise self.printer.config_error(
+                    "'%s' is not a valid heater."
+                    % (heater_name,))
+            heater = heater_object.heater
+            if not hasattr(heater, 'set_enabled'):
+                raise self.printer.config_error(
+                    "'%s' is not a valid heater."
+                    % (heater_name,))
+            heater.set_enabled(not connected)
     def register_commands(self, name):
         # Register commands
         gcode = self.printer.lookup_object('gcode')
