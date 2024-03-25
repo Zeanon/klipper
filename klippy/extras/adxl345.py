@@ -122,6 +122,9 @@ class AccelCommandHelper:
         aclient = self.chip.start_internal_client()
         self.printer.lookup_object('toolhead').dwell(1.)
         aclient.finish_measurements()
+        values = aclient.get_samples()
+        if not values:
+            raise Exception
     def _handle_ready(self):
         try:
             self.read_accelerometer()
