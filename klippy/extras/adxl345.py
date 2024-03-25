@@ -120,9 +120,7 @@ class AccelCommandHelper:
         self.printer.register_event_handler('klippy:ready', self._handle_ready)
     def read_accelerometer(self):
         toolhead = self.printer.lookup_object('toolhead')
-        toolhead.dwell(10.)
         aclient = self.chip.start_internal_client()
-        toolhead.dwell(1.)
         aclient.finish_measurements()
 
     def _handle_ready(self):
