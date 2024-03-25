@@ -907,11 +907,7 @@ class PrinterHeaters:
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_lookahead_callback((lambda pt: None))
         if not heater.enabled:
-            if gcmd is not None:
-                gcmd.respond_info("Heater [%s] is disabled due to an "
-                                  "accelerometer being connected."
-                                  % heater.short_name)
-            temp = 0
+            return
         heater.set_temp(temp)
         if wait and temp:
             self._wait_for_temperature(heater)
