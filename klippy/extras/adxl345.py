@@ -137,10 +137,8 @@ class AccelCommandHelper:
         try:
             self.read_accelerometer()
             connected = True
-            self.printer.lookup_object('extruder').heater.set_enabled(False)
         except Exception as e:
             connected = False
-            self.printer.lookup_object('extruder').heater.set_enabled(True)
         for heater_name in self.disabled_heaters:
             heater_object = self.printer.lookup_object(heater_name)
             if not hasattr(heater_object, 'heater'):
