@@ -906,8 +906,6 @@ class PrinterHeaters:
     def set_temperature(self, heater, temp, wait=False, gcmd=None):
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_lookahead_callback((lambda pt: None))
-        if not heater.enabled:
-            return
         heater.set_temp(temp)
         if wait and temp:
             self._wait_for_temperature(heater)
