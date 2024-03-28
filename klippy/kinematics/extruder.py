@@ -73,7 +73,7 @@ class PALinearModel:
         return {'pressure_advance': self.pressure_advance}
     def get_msg(self):
         return ('enabled: %s\n'
-                'pressure_advance: %.6f\n'
+                'pressure_advance: %.6f'
                 % ('true' if self.pa_enabled else 'false',
                    self.pressure_advance))
     def get_func(self):
