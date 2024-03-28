@@ -31,7 +31,7 @@ class ExtruderSmoother:
         ffi_main, ffi_lib = chelper.get_ffi()
         n = len(self.a)
         success = True
-        smooth_time = self.smooth_time if self.pa_model.enabled() else 0.0
+        smooth_time = self.smooth_time if self.pa_model.enabled else 0.0
         for axis in self.axes:
             if (
                 not ffi_lib.extruder_set_smoothing_params(
