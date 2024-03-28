@@ -137,7 +137,7 @@ class RingingTest:
         systime = self.printer.get_reactor().monotonic()
         toolhead_info = toolhead.get_status(systime)
         old_max_accel = toolhead_info["max_accel"]
-        old_max_accel_to_decel = toolhead_info["max_accel_to_decel"]
+        old_min_cruise_ratio = toolhead_info["minimum_cruise_ratio"]
         old_max_velocity = toolhead_info["max_velocity"]
 
         # Get tower params with overrides from the GCode command
@@ -503,9 +503,9 @@ class RingingTest:
                 self.progress = z / height
                 prev_z, z = z, next_z
             yield (
-                "SET_VELOCITY_LIMIT ACCEL=%.3f ACCEL_TO_DECEL=%.f"
+                "SET_VELOCITY_LIMIT ACCEL=%.3f MINIMUM_CRUISE_RATIO=%.f"
                 + " VELOCITY=%.3f"
-            ) % (old_max_accel, old_max_accel_to_decel, old_max_velocity)
+            ) % (old_max_accel, old_min_cruise_ratio, old_max_velocity)
 
         yield "M83"
         yield "G90"
