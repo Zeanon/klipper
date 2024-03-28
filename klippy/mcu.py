@@ -313,9 +313,6 @@ class MCU_endstop:
         ffi_main, ffi_lib = chelper.get_ffi()
         self._trdispatch = ffi_main.gc(ffi_lib.trdispatch_alloc(), ffi_lib.free)
         self._trsyncs = [MCU_trsync(mcu, self._trdispatch)]
-        self.danger_options = self._mcu.get_printer().lookup_object(
-            "danger_options"
-        )
 
     def get_mcu(self):
         return self._mcu
@@ -814,15 +811,9 @@ class MCU:
         if clock is not None:
             self._shutdown_clock = self.clock32_to_clock64(clock)
         self._shutdown_msg = msg = params["static_string_id"]
-        if self.danger_options.log_shutdown_info:
-            logging.info(
-                "MCU '%s' %s: %s\n%s\n%s",
-                self._name,
-                params["#name"],
-                self._shutdown_msg,
-                self._clocksync.dump_debug(),
-                self._serial.dump_debug(),
-            )
+        logging.info("MCU '%s' %s: %s\n%s\n%s", self._name, params['#name'],
+                     self._shutdown_msg, self._clocksync.dump_debug(),
+                     self._serial.dump_debug())
         prefix = "MCU '%s' shutdown: " % (self._name,)
         if params["#name"] == "is_shutdown":
             prefix = "Previous MCU '%s' shutdown: " % (self._name,)
