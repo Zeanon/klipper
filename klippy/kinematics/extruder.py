@@ -72,10 +72,10 @@ class PALinearModel:
     def get_status(self, eventtime):
         return {'pressure_advance': self.pressure_advance}
     def get_msg(self):
-        return ('pressure_advance: %.6f\n'
-                'enabled: %s'
-                % (self.pressure_advance,
-                   'true' if self.pa_enabled else 'false'))
+        return ('enabled: %s\n'
+                'pressure_advance: %.6f\n'
+                % ('true' if self.pa_enabled else 'false',
+                   self.pressure_advance))
     def get_func(self):
         ffi_main, ffi_lib = chelper.get_ffi()
         return ffi_lib.pressure_advance_linear_model_func
