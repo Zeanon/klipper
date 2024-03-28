@@ -107,15 +107,47 @@ class AccelQueryHelper:
 class AccelCommandHelper:
     def __init__(self, config, chip):
         self.printer = config.get_printer()
+        self.reactor = self.printer.get_reactor()
         self.chip = chip
         self.bg_client = None
         name_parts = config.get_name().split()
         self.base_name = name_parts[0]
         self.name = name_parts[-1]
         self.register_commands(self.name)
+        self.disabled_heaters = config.getlist("disable_heaters", [])
         if len(name_parts) == 1:
             if self.name == "adxl345" or not config.has_section("adxl345"):
                 self.register_commands(None)
+        self.printer.register_event_handler('klippy:ready', self._handle_ready)
+    def read_accelerometer(self):
+        toolhead = self.printer.lookup_object('toolhead')
+        aclient = self.chip.start_internal_client()
+        toolhead.dwell(1.)
+        aclient.finish_measurements()
+        values = aclient.get_samples()
+        if not values:
+            raise Exception("No accelerometer measurements found")
+    def _handle_ready(self):
+        self.reactor.register_timer(self._init_accel, self.reactor.NOW)
+    def _init_accel(self, eventtime):
+        try:
+            self.read_accelerometer()
+            connected = True
+        except Exception as e:
+            connected = False
+        for heater_name in self.disabled_heaters:
+            heater_object = self.printer.lookup_object(heater_name)
+            if not hasattr(heater_object, 'heater'):
+                raise self.printer.config_error(
+                    "'%s' is not a valid heater."
+                    % (heater_name,))
+            heater = heater_object.heater
+            if not hasattr(heater, 'set_enabled'):
+                raise self.printer.config_error(
+                    "'%s' is not a valid heater."
+                    % (heater_name,))
+            heater.set_enabled(not connected)
+        return self.reactor.NEVER
     def register_commands(self, name):
         # Register commands
         gcode = self.printer.lookup_object('gcode')

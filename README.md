@@ -9,6 +9,7 @@ Implemented https://github.com/Klipper3d/klipper/pull/6290 <br>
 Implemented https://github.com/Klipper3d/klipper/pull/6226 <br>
 Implemented https://github.com/Klipper3d/klipper/pull/6239 <br>
 Implemented https://github.com/Klipper3d/klipper/pull/6224 <br>
+Implemented https://github.com/DangerKlippers/danger-klipper/pull/42 <br>
 You can now call SAVE_CONFIG without an automatic restart (see docs) <br>
 MARK_AS_HOME and MARK_AS_UNHOMED commands (see docs) <br>
 max_set_temp option for heaters (see docs) <br>

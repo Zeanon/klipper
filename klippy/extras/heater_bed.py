@@ -19,7 +19,7 @@ class PrinterHeaterBed:
         # Set Bed Temperature
         temp = gcmd.get_float('S', 0.)
         pheaters = self.printer.lookup_object('heaters')
-        pheaters.set_temperature(self.heater, temp, wait)
+        pheaters.set_temperature(self.heater, temp, wait=wait, gcmd=gcmd)
     def cmd_M190(self, gcmd):
         # Set Bed Temperature and Wait
         self.cmd_M140(gcmd, wait=True)

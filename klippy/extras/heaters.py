@@ -50,6 +50,7 @@ class Heater:
         is_fileoutput = (self.printer.get_start_args().get('debugoutput')
                          is not None)
         self.can_extrude = self.min_extrude_temp <= 0. or is_fileoutput
+        self.enabled = True
         self.cold_extrude = False
         self.max_power = config.getfloat('max_power', 1., above=0., maxval=1.)
         self.config_smooth_time = config.getfloat('smooth_time', 1., above=0.)
@@ -106,6 +107,11 @@ class Heater:
                                         self.pmgr.cmd_PID_PROFILE_help)
         self.printer.register_event_handler("klippy:shutdown",
                                             self._handle_shutdown)
+    def notify_disabled(self, gcmd):
+        if gcmd is not None:
+            gcmd.respond_info("Heater [%s] is disabled due to an "
+                              "accelerometer being connected."
+                              % self.short_name)
     def lookup_control(self, profile, load_clean=False):
         algos = collections.OrderedDict({
             'watermark': ControlBangBang,
@@ -201,11 +207,13 @@ class Heater:
                 'target': target_temp,
                 'power': last_pwm_value,
                 'pid_profile': self.get_control().get_profile()['name']}
+    def set_enabled(self, enabled):
+        self.enabled = enabled
     cmd_SET_HEATER_TEMPERATURE_help = "Sets a heater temperature"
     def cmd_SET_HEATER_TEMPERATURE(self, gcmd):
         temp = gcmd.get_float('TARGET', 0.)
         pheaters = self.printer.lookup_object('heaters')
-        pheaters.set_temperature(self, temp)
+        pheaters.set_temperature(self, temp, gcmd=gcmd)
     cmd_SET_SMOOTH_TIME_help = "Set the smooth time for the given heater"
     def cmd_SET_SMOOTH_TIME(self, gcmd):
         save_to_profile = gcmd.get_int('SAVE_TO_PROFILE',
@@ -900,7 +908,10 @@ class PrinterHeaters:
             print_time = toolhead.get_last_move_time()
             gcode.respond_raw(self._get_temp(eventtime))
             eventtime = reactor.pause(eventtime + 1.)
-    def set_temperature(self, heater, temp, wait=False):
+    def set_temperature(self, heater, temp, wait=False, gcmd=None):
+        if not heater.enabled:
+            heater.notify_disabled(gcmd)
+            return
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_lookahead_callback((lambda pt: None))
         heater.set_temp(temp)

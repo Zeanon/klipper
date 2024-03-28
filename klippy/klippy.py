@@ -6,7 +6,7 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import sys, os, gc, optparse, logging, time, collections, importlib
 import util, reactor, queuelogger, msgproto
-import gcode, configfile, pins, mcu, toolhead, webhooks
+import gcode, configfile, pins, non_critical_mcus, mcu, toolhead, webhooks
 
 message_ready = "Printer is ready"
 
@@ -135,7 +135,7 @@ class Printer:
         if self.bglogger is not None:
             pconfig.log_config(config)
         # Create printer components
-        for m in [pins, mcu]:
+        for m in [pins, non_critical_mcus, mcu]:
             m.add_printer_objects(config)
         for section_config in config.get_prefix_sections(''):
             self.load_object(config, section_config.get_name(), None)

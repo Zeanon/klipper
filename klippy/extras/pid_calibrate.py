@@ -25,11 +25,14 @@ class PIDCalibrate:
             heater = pheaters.lookup_heater(heater_name)
         except self.printer.config_error as e:
             raise gcmd.error(str(e))
+        if not heater.enabled:
+            heater.notify_disabled(gcmd)
+            return
         self.printer.lookup_object('toolhead').get_last_move_time()
         calibrate = ControlAutoTune(heater, target, tolerance, tune_pid_delta)
         old_control = heater.set_control(calibrate, False)
         try:
-            pheaters.set_temperature(heater, target, True)
+            pheaters.set_temperature(heater, target, wait=True, gcmd=gcmd)
         except self.printer.command_error as e:
             heater.set_control(old_control, False)
             raise
