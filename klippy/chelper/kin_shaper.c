@@ -264,7 +264,7 @@ shaper_note_generation_time(struct input_shaper *is)
         post_active = is->sm_x.hst - is->sm_x.t_offs;
         if (post_active < 0.) post_active = 0.;
     }
-   if ((is->sk.active_flags & AF_Y) && is->sp_y.num_pulses) {
+    if ((is->sk.active_flags & AF_Y) && is->sp_y.num_pulses) {
         pre_active = is->sp_y.pulses[is->sp_y.num_pulses-1].t > pre_active
             ? is->sp_y.pulses[is->sp_y.num_pulses-1].t : pre_active;
         post_active = -is->sp_y.pulses[0].t > post_active

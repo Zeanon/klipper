@@ -91,7 +91,6 @@ pa_range_integrate(const struct move *m, int axis, double move_time
     while (likely(start < 0.)) {
         prev = list_prev_entry(prev, node);
         start += prev->move_t;
-        double base = prev->start_pos.x - start_base;
         t0 += prev->move_t;
         smoother_antiderivatives r = left;
         left = likely(start < 0.) ? calc_antiderivatives(sm, t0)
@@ -263,7 +262,7 @@ extruder_set_pressure_advance(struct stepper_kinematics *sk
                               , double time_offset)
 {
     struct extruder_stepper *es = container_of(sk, struct extruder_stepper, sk);
-     es->time_offset = time_offset;
+    es->time_offset = time_offset;
     memset(&es->pa_params, 0, sizeof(es->pa_params));
     extruder_note_generation_time(es);
     if (n_params < 0 || n_params > ARRAY_SIZE(es->pa_params.params))
