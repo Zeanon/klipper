@@ -761,11 +761,7 @@ class MCU:
 
     def reset_to_initial_state(self):
         self._oid_count = 0
-        self._config_cmds = []
-        self._restart_cmds = []
-        self._init_cmds = []
         self._reserved_move_slots = 0
-        self._stepqueues = []
         self._steppersync = None
 
     def _connect(self):
@@ -899,11 +895,11 @@ class MCU:
     def register_config_callback(self, cb):
         self._config_callbacks.append(cb)
     def add_config_cmd(self, cmd, is_init=False, on_restart=False):
-        if is_init:
+        if is_init and cmd not in self._init_cmds:
             self._init_cmds.append(cmd)
-        elif on_restart:
+        elif on_restart and cmd not in self._restart_cmds:
             self._restart_cmds.append(cmd)
-        else:
+        elif cmd not in self._config_cmds:
             self._config_cmds.append(cmd)
     def get_query_slot(self, oid):
         slot = self.seconds_to_clock(oid * .01)
