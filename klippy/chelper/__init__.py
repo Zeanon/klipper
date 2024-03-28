@@ -12,31 +12,60 @@ import cffi
 ######################################################################
 
 GCC_CMD = "gcc"
-COMPILE_ARGS = ("-Wall -g -O2 -shared -fPIC"
-                " -flto -fwhole-program -fno-use-linker-plugin"
-                " -o %s %s")
+COMPILE_ARGS = (
+    "-Wall -g -O3 -shared -fPIC"
+    " -flto -fwhole-program -fno-use-linker-plugin"
+    " -march=native -mcpu=native -mtune=native"
+    " -o %s %s"
+)
 SSE_FLAGS = "-mfpmath=sse -msse2"
+NEON_FLAGS = "-mfpu=neon"
 SOURCE_FILES = [
-    'pyhelper.c', 'serialqueue.c', 'stepcompress.c', 'itersolve.c', 'trapq.c',
-    'pollreactor.c', 'msgblock.c', 'trdispatch.c',
-    'kin_cartesian.c', 'kin_corexy.c', 'kin_corexz.c', 'kin_delta.c',
-    'kin_deltesian.c', 'kin_polar.c', 'kin_rotary_delta.c', 'kin_winch.c',
-    'kin_extruder.c', 'kin_shaper.c', 'kin_idex.c',
+    "pyhelper.c",
+    "serialqueue.c",
+    "stepcompress.c",
+    "stepcompress_hp.c",
+    "itersolve.c",
+    "trapq.c",
+    "pollreactor.c",
+    "msgblock.c",
+    "trdispatch.c",
+    "kin_cartesian.c",
+    "kin_corexy.c",
+    "kin_corexz.c",
+    "kin_delta.c",
+    "kin_deltesian.c",
+    "kin_polar.c",
+    "kin_rotary_delta.c",
+    "kin_winch.c",
+    "kin_extruder.c",
+    "kin_shaper.c",
+    "kin_idex.c",
+    "integrate.c",
 ]
 DEST_LIB = "c_helper.so"
 OTHER_FILES = [
-    'list.h', 'serialqueue.h', 'stepcompress.h', 'itersolve.h', 'pyhelper.h',
-    'trapq.h', 'pollreactor.h', 'msgblock.h'
+    "list.h",
+    "serialqueue.h",
+    "stepcompress.h",
+    "itersolve.h",
+    "pyhelper.h",
+    "trapq.h",
+    "pollreactor.h",
+    "msgblock.h",
+    "kin_shaper.h",
+    "integrate.h",
 ]
 
 defs_stepcompress = """
     struct pull_history_steps {
         uint64_t first_clock, last_clock;
         int64_t start_position;
-        int step_count, interval, add;
+        int step_count, interval, add, add2, shift;
     };
 
     struct stepcompress *stepcompress_alloc(uint32_t oid);
+    struct stepcompress *stepcompress_hp_alloc(uint32_t oid);
     void stepcompress_fill(struct stepcompress *sc, uint32_t max_error
         , int32_t queue_step_msgtag, int32_t set_next_step_dir_msgtag);
     void stepcompress_set_invert_sdir(struct stepcompress *sc
@@ -60,8 +89,7 @@ defs_stepcompress = """
     void steppersync_free(struct steppersync *ss);
     void steppersync_set_time(struct steppersync *ss
         , double time_offset, double mcu_freq);
-    int steppersync_flush(struct steppersync *ss, uint64_t move_clock
-        , uint64_t clear_history_clock);
+    int steppersync_flush(struct steppersync *ss, uint64_t move_clock);
 """
 
 defs_itersolve = """
@@ -95,8 +123,7 @@ defs_trapq = """
         , double start_pos_x, double start_pos_y, double start_pos_z
         , double axes_r_x, double axes_r_y, double axes_r_z
         , double start_v, double cruise_v, double accel);
-    void trapq_finalize_moves(struct trapq *tq, double print_time
-        , double clear_history_time);
+    void trapq_finalize_moves(struct trapq *tq, double print_time);
     void trapq_set_position(struct trapq *tq, double print_time
         , double pos_x, double pos_y, double pos_z);
     int trapq_extract_old(struct trapq *tq, struct pull_move *p, int max
@@ -143,14 +170,29 @@ defs_kin_winch = """
 defs_kin_extruder = """
     struct stepper_kinematics *extruder_stepper_alloc(void);
     void extruder_set_pressure_advance(struct stepper_kinematics *sk
-        , double pressure_advance, double smooth_time);
+        , int n_params, double params[], double time_offset);
+    struct pressure_advance_params;
+    double pressure_advance_linear_model_func(double position
+        , double pa_velocity, struct pressure_advance_params *pa_params);
+    double pressure_advance_tanh_model_func(double position
+        , double pa_velocity, struct pressure_advance_params *pa_params);
+    double pressure_advance_recipr_model_func(double position
+        , double pa_velocity, struct pressure_advance_params *pa_params);
+    void extruder_set_pressure_advance_model_func(struct stepper_kinematics *sk
+        , double (*func)(double, double, struct pressure_advance_params *));
+    int extruder_set_shaper_params(struct stepper_kinematics *sk, char axis
+        , int n, double a[], double t[]);
+    int extruder_set_smoothing_params(struct stepper_kinematics *sk, char axis
+        , int n, double a[], double t_sm, double t_offs);
+    double extruder_get_step_gen_window(struct stepper_kinematics *sk);
 """
 
 defs_kin_shaper = """
-    double input_shaper_get_step_generation_window(
-        struct stepper_kinematics *sk);
+    double input_shaper_get_step_gen_window(struct stepper_kinematics *sk);
     int input_shaper_set_shaper_params(struct stepper_kinematics *sk, char axis
         , int n, double a[], double t[]);
+    int input_shaper_set_smoother_params(struct stepper_kinematics *sk
+        , char axis, int n, double a[], double t_sm);
     int input_shaper_set_sk(struct stepper_kinematics *sk
         , struct stepper_kinematics *orig_sk);
     struct stepper_kinematics * input_shaper_alloc(void);
@@ -218,16 +260,30 @@ defs_std = """
 """
 
 defs_all = [
-    defs_pyhelper, defs_serialqueue, defs_std, defs_stepcompress,
-    defs_itersolve, defs_trapq, defs_trdispatch,
-    defs_kin_cartesian, defs_kin_corexy, defs_kin_corexz, defs_kin_delta,
-    defs_kin_deltesian, defs_kin_polar, defs_kin_rotary_delta, defs_kin_winch,
-    defs_kin_extruder, defs_kin_shaper, defs_kin_idex,
+    defs_pyhelper,
+    defs_serialqueue,
+    defs_std,
+    defs_stepcompress,
+    defs_itersolve,
+    defs_trapq,
+    defs_trdispatch,
+    defs_kin_cartesian,
+    defs_kin_corexy,
+    defs_kin_corexz,
+    defs_kin_delta,
+    defs_kin_deltesian,
+    defs_kin_polar,
+    defs_kin_rotary_delta,
+    defs_kin_winch,
+    defs_kin_extruder,
+    defs_kin_shaper,
+    defs_kin_idex,
 ]
 
 # Update filenames to an absolute path
 def get_abs_files(srcdir, filelist):
     return [os.path.join(srcdir, fname) for fname in filelist]
+
 
 # Return the list of file modification times
 def get_mtimes(filelist):
@@ -240,18 +296,23 @@ def get_mtimes(filelist):
         out.append(t)
     return out
 
+
 # Check if the code needs to be compiled
 def check_build_code(sources, target):
     src_times = get_mtimes(sources)
     obj_times = get_mtimes([target])
     return not obj_times or max(src_times) > min(obj_times)
 
+
 # Check if the current gcc version supports a particular command-line option
 def check_gcc_option(option):
     cmd = "%s %s -S -o /dev/null -xc /dev/null > /dev/null 2>&1" % (
-        GCC_CMD, option)
+        GCC_CMD,
+        option,
+    )
     res = os.system(cmd)
     return res == 0
+
 
 # Check if the current gcc version supports a particular command-line option
 def do_build_code(cmd):
@@ -261,6 +322,7 @@ def do_build_code(cmd):
         logging.error(msg)
         raise Exception(msg)
 
+
 FFI_main = None
 FFI_lib = None
 pyhelper_logging_callback = None
@@ -268,6 +330,7 @@ pyhelper_logging_callback = None
 # Hepler invoked from C errorf() code to log errors
 def logging_callback(msg):
     logging.error(FFI_main.string(msg))
+
 
 # Return the Foreign Function Interface api to the caller
 def get_ffi():
@@ -277,20 +340,23 @@ def get_ffi():
         srcfiles = get_abs_files(srcdir, SOURCE_FILES)
         ofiles = get_abs_files(srcdir, OTHER_FILES)
         destlib = get_abs_files(srcdir, [DEST_LIB])[0]
-        if check_build_code(srcfiles+ofiles+[__file__], destlib):
+        if check_build_code(srcfiles + ofiles + [__file__], destlib):
             if check_gcc_option(SSE_FLAGS):
                 cmd = "%s %s %s" % (GCC_CMD, SSE_FLAGS, COMPILE_ARGS)
+            elif check_gcc_option(NEON_FLAGS):
+                cmd = "%s %s %s" % (GCC_CMD, NEON_FLAGS, COMPILE_ARGS)
             else:
                 cmd = "%s %s" % (GCC_CMD, COMPILE_ARGS)
             logging.info("Building C code module %s", DEST_LIB)
-            do_build_code(cmd % (destlib, ' '.join(srcfiles)))
+            do_build_code(cmd % (destlib, " ".join(srcfiles)))
         FFI_main = cffi.FFI()
         for d in defs_all:
             FFI_main.cdef(d)
         FFI_lib = FFI_main.dlopen(destlib)
         # Setup error logging
-        pyhelper_logging_callback = FFI_main.callback("void func(const char *)",
-                                                      logging_callback)
+        pyhelper_logging_callback = FFI_main.callback(
+            "void func(const char *)", logging_callback
+        )
         FFI_lib.set_python_logging_callback(pyhelper_logging_callback)
     return FFI_main, FFI_lib
 
@@ -300,10 +366,11 @@ def get_ffi():
 ######################################################################
 
 HC_COMPILE_CMD = "gcc -Wall -g -O2 -o %s %s -lusb"
-HC_SOURCE_FILES = ['hub-ctrl.c']
-HC_SOURCE_DIR = '../../lib/hub-ctrl'
+HC_SOURCE_FILES = ["hub-ctrl.c"]
+HC_SOURCE_DIR = "../../lib/hub-ctrl"
 HC_TARGET = "hub-ctrl"
 HC_CMD = "sudo %s/hub-ctrl -h 0 -P 2 -p %d"
+
 
 def run_hub_ctrl(enable_power):
     srcdir = os.path.dirname(os.path.realpath(__file__))
@@ -312,9 +379,9 @@ def run_hub_ctrl(enable_power):
     destlib = get_abs_files(hubdir, [HC_TARGET])[0]
     if check_build_code(srcfiles, destlib):
         logging.info("Building C code module %s", HC_TARGET)
-        do_build_code(HC_COMPILE_CMD % (destlib, ' '.join(srcfiles)))
+        do_build_code(HC_COMPILE_CMD % (destlib, " ".join(srcfiles)))
     os.system(HC_CMD % (hubdir, enable_power))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     get_ffi()
