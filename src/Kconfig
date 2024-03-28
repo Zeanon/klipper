@@ -49,6 +49,8 @@ source "src/simulator/Kconfig"
 # Generic configuration options for serial ports
 config SERIAL
     bool
+config SERIAL_BOOTLOADER_SIDECHANNEL
+    bool
 config SERIAL_BAUD
     depends on SERIAL
     int "Baud rate for serial port" if LOW_LEVEL_OPTIONS
@@ -85,6 +87,14 @@ config USB_SERIAL_NUMBER_CHIPID
     bool "USB serial number from CHIPID" if HAVE_CHIPID
 config USB_SERIAL_NUMBER
     string "USB serial number" if !USB_SERIAL_NUMBER_CHIPID
+endmenu
+
+menu "CAN bus UUID"
+    depends on CANBUS && LOW_LEVEL_OPTIONS
+config CAN_UUID_USE_CHIPID
+    bool "CAN bus UUID Hash from CHIPID" if HAVE_CHIPID
+config CAN_UUID_CUSTOM
+    string "CAN bus UUID Hash" if !CAN_UUID_USE_CHIPID
 endmenu
 
 # Optional features that can be disabled (for devices with small flash sizes)
@@ -150,6 +160,11 @@ config CANBUS_FREQUENCY
 config CANBUS_FILTER
     bool
     default y if CANSERIAL
+config CAN_UUID_USE_CHIPID
+    depends on CANBUS && HAVE_CHIPID
+    default y
+config CAN_UUID_CUSTOM
+    default "abc1234"
 
 # Support setting gpio state at startup
 config INITIAL_PINS
@@ -160,6 +175,12 @@ config INITIAL_PINS
         during the micro-controller startup sequence. By default the
         pins will be set to output high - preface a pin with a '!'
         character to set that pin to output low.
+
+config HIGH_PREC_STEP
+    depends on LOW_LEVEL_OPTIONS && \
+        FLASH_SIZE >= 0x8000 && (!MACH_AVR || FLASH_SIZE >= 0x10000)
+    bool "High-precision stepping support (slow)"
+    default n
 
 # The HAVE_x options allow boards to disable support for some commands
 # if the hardware does not support the feature.
