@@ -28,39 +28,13 @@
 #define CHECK_LINES 1
 #define QUEUE_START_SIZE 1024
 
-struct stepcompress {
-    // Buffer management
-    uint32_t *queue, *queue_end, *queue_pos, *queue_next;
-    // Internal tracking
-    uint32_t max_error;
-    double mcu_time_offset, mcu_freq, last_step_print_time;
-    // Message generation
-    uint64_t last_step_clock;
-    struct list_head msg_queue;
-    uint32_t oid;
-    int32_t queue_step_msgtag, set_next_step_dir_msgtag;
-    int sdir, invert_sdir;
-    // Step+dir+step filter
-    uint64_t next_step_clock;
-    int next_step_dir;
-    // History tracking
-    int64_t last_position;
-    struct list_head history_list;
-};
-
 struct step_move {
     uint32_t interval;
     uint16_t count;
     int16_t add;
 };
 
-struct history_steps {
-    struct list_node node;
-    uint64_t first_clock, last_clock;
-    int64_t start_position;
-    int step_count, interval, add;
-};
-
+#define HISTORY_EXPIRE (30.0)
 
 /****************************************************************
  * Step compression
@@ -241,6 +215,9 @@ check_line(struct stepcompress *sc, struct step_move move)
  * Step compress interface
  ****************************************************************/
 
+int queue_flush(struct stepcompress *sc, uint64_t move_clock);
+int queue_flush_far(struct stepcompress *sc, uint64_t abs_step_clock);
+
 // Allocate a new 'stepcompress' object
 struct stepcompress * __visible
 stepcompress_alloc(uint32_t oid)
@@ -251,6 +228,8 @@ stepcompress_alloc(uint32_t oid)
     list_init(&sc->history_list);
     sc->oid = oid;
     sc->sdir = -1;
+    sc->queue_flush = queue_flush;
+    sc->queue_flush_far = queue_flush_far;
     return sc;
 }
 
@@ -290,19 +269,14 @@ free_history(struct stepcompress *sc, uint64_t end_clock)
     }
 }
 
-// Expire the stepcompress history older than the given clock
-static void
-stepcompress_history_expire(struct stepcompress *sc, uint64_t end_clock)
-{
-    free_history(sc, end_clock);
-}
-
 // Free memory associated with a 'stepcompress' object
 void __visible
 stepcompress_free(struct stepcompress *sc)
 {
     if (!sc)
         return;
+    free(sc->rhs_cache);
+    free(sc->errb_cache);
     free(sc->queue);
     message_queue_free(&sc->msg_queue);
     free_history(sc, UINT64_MAX);
@@ -322,11 +296,14 @@ stepcompress_get_step_dir(struct stepcompress *sc)
 }
 
 // Determine the "print time" of the last_step_clock
-static void
-calc_last_step_print_time(struct stepcompress *sc)
+void
+stepcompress_calc_last_step_print_time(struct stepcompress *sc)
 {
     double lsc = sc->last_step_clock;
     sc->last_step_print_time = sc->mcu_time_offset + (lsc - .5) / sc->mcu_freq;
+
+    if (lsc > sc->mcu_freq * HISTORY_EXPIRE)
+        free_history(sc, lsc - sc->mcu_freq * HISTORY_EXPIRE);
 }
 
 // Set the conversion rate of 'print_time' to mcu clock
@@ -336,7 +313,7 @@ stepcompress_set_time(struct stepcompress *sc
 {
     sc->mcu_time_offset = time_offset;
     sc->mcu_freq = mcu_freq;
-    calc_last_step_print_time(sc);
+    stepcompress_calc_last_step_print_time(sc);
 }
 
 // Maximium clock delta between messages in the queue
@@ -368,13 +345,14 @@ add_move(struct stepcompress *sc, uint64_t first_clock, struct step_move *move)
     hs->start_position = sc->last_position;
     hs->interval = move->interval;
     hs->add = move->add;
+    hs->add2 = hs->shift = 0;
     hs->step_count = sc->sdir ? move->count : -move->count;
     sc->last_position += hs->step_count;
     list_add_head(&hs->node, &sc->history_list);
 }
 
 // Convert previously scheduled steps into commands for the mcu
-static int
+int
 queue_flush(struct stepcompress *sc, uint64_t move_clock)
 {
     if (sc->queue_pos >= sc->queue_next)
@@ -393,17 +371,17 @@ queue_flush(struct stepcompress *sc, uint64_t move_clock)
         }
         sc->queue_pos += move.count;
     }
-    calc_last_step_print_time(sc);
+    stepcompress_calc_last_step_print_time(sc);
     return 0;
 }
 
 // Generate a queue_step for a step far in the future from the last step
-static int
-stepcompress_flush_far(struct stepcompress *sc, uint64_t abs_step_clock)
+int
+queue_flush_far(struct stepcompress *sc, uint64_t abs_step_clock)
 {
     struct step_move move = { abs_step_clock - sc->last_step_clock, 1, 0 };
     add_move(sc, abs_step_clock, &move);
-    calc_last_step_print_time(sc);
+    stepcompress_calc_last_step_print_time(sc);
     return 0;
 }
 
@@ -413,7 +391,7 @@ set_next_step_dir(struct stepcompress *sc, int sdir)
 {
     if (sc->sdir == sdir)
         return 0;
-    int ret = queue_flush(sc, UINT64_MAX);
+    int ret = sc->queue_flush(sc, UINT64_MAX);
     if (ret)
         return ret;
     sc->sdir = sdir;
@@ -432,11 +410,11 @@ queue_append_far(struct stepcompress *sc)
 {
     uint64_t step_clock = sc->next_step_clock;
     sc->next_step_clock = 0;
-    int ret = queue_flush(sc, step_clock - CLOCK_DIFF_MAX + 1);
+    int ret = sc->queue_flush(sc, step_clock - CLOCK_DIFF_MAX + 1);
     if (ret)
         return ret;
     if (step_clock >= sc->last_step_clock + CLOCK_DIFF_MAX)
-        return stepcompress_flush_far(sc, step_clock);
+        return sc->queue_flush_far(sc, step_clock);
     *sc->queue_next++ = step_clock;
     return 0;
 }
@@ -449,7 +427,7 @@ queue_append_extend(struct stepcompress *sc)
         // No point in keeping more than 64K steps in memory
         uint32_t flush = (*(sc->queue_next-65535)
                           - (uint32_t)sc->last_step_clock);
-        int ret = queue_flush(sc, sc->last_step_clock + flush);
+        int ret = sc->queue_flush(sc, sc->last_step_clock + flush);
         if (ret)
             return ret;
     }
@@ -547,7 +525,7 @@ stepcompress_flush(struct stepcompress *sc, uint64_t move_clock)
         if (ret)
             return ret;
     }
-    return queue_flush(sc, move_clock);
+    return sc->queue_flush(sc, move_clock);
 }
 
 // Reset the internal state of the stepcompress object
@@ -559,7 +537,7 @@ stepcompress_reset(struct stepcompress *sc, uint64_t last_step_clock)
         return ret;
     sc->last_step_clock = last_step_clock;
     sc->sdir = -1;
-    calc_last_step_print_time(sc);
+    stepcompress_calc_last_step_print_time(sc);
     return 0;
 }
 
@@ -595,15 +573,33 @@ stepcompress_find_past_position(struct stepcompress *sc, uint64_t clock)
         }
         if (clock >= hs->last_clock)
             return hs->start_position + hs->step_count;
-        int32_t interval = hs->interval, add = hs->add;
-        int32_t ticks = (int32_t)(clock - hs->first_clock) + interval, offset;
-        if (!add) {
-            offset = ticks / interval;
+        int64_t ticks = clock - hs->first_clock;
+        int64_t interval = hs->interval, add = hs->add, add2 = hs->add2;
+        int count = hs->step_count, shift = hs->shift;
+        if (count < 0) count = -count;
+        if (shift <= 0) {
+            int mul = 1 << -shift;
+            interval <<= -shift;
+            add *= mul;
+            add2 *= mul;
         } else {
-            // Solve for "count" using quadratic formula
-            double a = .5 * add, b = interval - .5 * add, c = -ticks;
-            offset = (sqrt(b*b - 4*a*c) - b) / (2. * a);
+            ticks *= 1 << shift;
         }
+        // When clock == hs->first_clock, offset == 1
+        ticks += interval;
+        int left = 0, right = count;
+        while (right - left > 1) {
+            int cnt = (left + right) / 2;
+            int64_t step_clock = cnt * interval + cnt * (cnt-1) / 2 * add +
+                cnt * (cnt-1) * (cnt-2) / 6 * add2;
+            if (step_clock <= ticks) left = cnt;
+            else right = cnt;
+        }
+        int64_t clock_left = left * interval + left * (left-1) / 2 * add +
+            left * (left-1) * (left-2) / 6 * add2;
+        int64_t clock_right = right * interval + right * (right-1) / 2 * add +
+            right * (right-1) * (right-2) / 6 * add2;
+        int offset = ticks - clock_left <= clock_right - ticks ? left : right;
         if (hs->step_count < 0)
             return hs->start_position - offset;
         return hs->start_position + offset;
@@ -621,21 +617,6 @@ stepcompress_queue_msg(struct stepcompress *sc, uint32_t *data, int len)
 
     struct queue_message *qm = message_alloc_and_encode(data, len);
     qm->req_clock = sc->last_step_clock;
-    list_add_tail(&qm->node, &sc->msg_queue);
-    return 0;
-}
-
-// Queue an mcu command that will consume space in the mcu move queue
-int __visible
-stepcompress_queue_mq_msg(struct stepcompress *sc, uint64_t req_clock
-                          , uint32_t *data, int len)
-{
-    int ret = stepcompress_flush(sc, UINT64_MAX);
-    if (ret)
-        return ret;
-
-    struct queue_message *qm = message_alloc_and_encode(data, len);
-    qm->min_clock = qm->req_clock = req_clock;
     list_add_tail(&qm->node, &sc->msg_queue);
     return 0;
 }
@@ -658,6 +639,8 @@ stepcompress_extract_old(struct stepcompress *sc, struct pull_history_steps *p
         p->step_count = hs->step_count;
         p->interval = hs->interval;
         p->add = hs->add;
+        p->add2 = hs->add2;
+        p->shift = hs->shift;
         p++;
         res++;
     }
@@ -733,18 +716,6 @@ steppersync_set_time(struct steppersync *ss, double time_offset
     }
 }
 
-// Expire the stepcompress history before the given clock time
-static void
-steppersync_history_expire(struct steppersync *ss, uint64_t end_clock)
-{
-    int i;
-    for (i = 0; i < ss->sc_num; i++)
-    {
-        struct stepcompress *sc = ss->sc_list[i];
-        stepcompress_history_expire(sc, end_clock);
-    }
-}
-
 // Implement a binary heap algorithm to track when the next available
 // 'struct move' in the mcu will be available
 static void
@@ -772,8 +743,7 @@ heap_replace(struct steppersync *ss, uint64_t req_clock)
 
 // Find and transmit any scheduled steps prior to the given 'move_clock'
 int __visible
-steppersync_flush(struct steppersync *ss, uint64_t move_clock
-                  , uint64_t clear_history_clock)
+steppersync_flush(struct steppersync *ss, uint64_t move_clock)
 {
     // Flush each stepcompress to the specified move_clock
     int i;
@@ -821,7 +791,5 @@ steppersync_flush(struct steppersync *ss, uint64_t move_clock
     // Transmit commands
     if (!list_empty(&msgs))
         serialqueue_send_batch(ss->sq, ss->cq, &msgs);
-
-    steppersync_history_expire(ss, clear_history_clock);
     return 0;
 }
