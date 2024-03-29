@@ -19,6 +19,7 @@ MAX_SHAPER_FREQ = 150.0
 TEST_DAMPING_RATIOS = [0.075, 0.1, 0.15]
 
 AUTOTUNE_SHAPERS = [
+    "zv"
     "smooth_zv",
     "smooth_mzv",
     "smooth_ei",
@@ -510,6 +511,7 @@ class ShaperCalibrate:
     ):
         best_shaper = None
         all_shapers = []
+        shapers = shapers or AUTOTUNE_SHAPERS
         for smoother_cfg in shaper_defs.INPUT_SMOOTHERS:
             if smoother_cfg.name not in AUTOTUNE_SHAPERS:
                 continue
