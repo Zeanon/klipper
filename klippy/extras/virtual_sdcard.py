@@ -342,6 +342,10 @@ class VirtualSD:
         return self.gcode_provider
     def is_cmd_from_sd(self):
         return self.cmd_from_sd
+    def file_path(self):
+        return self.virtualsd_gcode_provider.file_path()
+    def progress(self):
+        return self.virtualsd_gcode_provider.progress()
     # Background work timer
     def work_handler(self, eventtime):
         self.reactor.unregister_timer(self.work_timer)
