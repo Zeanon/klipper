@@ -3,7 +3,8 @@
 # Copyright (C) 2022  Fabrice Gallet <tircown@gmail.com>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import math, logging
+import math
+import logging
 import stepper
 
 # Slow moves once the ratio of tower to XY movement exceeds SLOW_RATIO
@@ -12,27 +13,28 @@ SLOW_RATIO = 3.
 # Minimum angle with the horizontal for the arm to not exceed - in degrees
 MIN_ANGLE = 5.
 
+
 class DeltesianKinematics:
     def __init__(self, toolhead, config):
         self.printer = config.get_printer()
         self.rails = [None] * 3
         stepper_configs = [config.getsection('stepper_' + s)
-                                    for s in ['left', 'right', 'y']]
+                           for s in ['left', 'right', 'y']]
         self.rails[0] = stepper.PrinterRail(
-            stepper_configs[0], need_position_minmax = False)
+            stepper_configs[0], need_position_minmax=False)
         def_pos_es = self.rails[0].get_homing_info().position_endstop
         self.rails[1] = stepper.PrinterRail(
-            stepper_configs[1], need_position_minmax = False,
-            default_position_endstop = def_pos_es)
+            stepper_configs[1], need_position_minmax=False,
+            default_position_endstop=def_pos_es)
         self.rails[2] = stepper.LookupMultiRail(stepper_configs[2])
         arm_x = self.arm_x = [None] * 2
         arm_x[0] = stepper_configs[0].getfloat('arm_x_length', above=0.)
         arm_x[1] = stepper_configs[1].getfloat('arm_x_length', arm_x[0],
-                                                above=0.)
+                                               above=0.)
         arm = [None] * 2
         arm[0] = stepper_configs[0].getfloat('arm_length', above=arm_x[0])
         arm[1] = stepper_configs[1].getfloat('arm_length', arm[0],
-                                              above=arm_x[1])
+                                             above=arm_x[1])
         arm2 = self.arm2 = [a**2 for a in arm]
         self.rails[0].setup_itersolve(
             'deltesian_stepper_alloc', arm2[0], -arm_x[0])
@@ -71,8 +73,8 @@ class DeltesianKinematics:
         min_angle = config.getfloat('min_angle', MIN_ANGLE,
                                     minval=0., maxval=90.)
         cos_angle = math.cos(math.radians(min_angle))
-        x_kin_min = math.ceil( -min(arm_x[0], cos_angle * arm[1] - arm_x[1]))
-        x_kin_max = math.floor( min(arm_x[1], cos_angle * arm[0] - arm_x[0]))
+        x_kin_min = math.ceil(-min(arm_x[0], cos_angle * arm[1] - arm_x[1]))
+        x_kin_max = math.floor(min(arm_x[1], cos_angle * arm[0] - arm_x[0]))
         x_kin_range = min(x_kin_max - x_kin_min, x_kin_max * 2, -x_kin_min * 2)
         print_width = config.getfloat('print_width', None, minval=0.,
                                       maxval=x_kin_range)
@@ -85,7 +87,7 @@ class DeltesianKinematics:
         # Z axis limits
         pmax = [r.get_homing_info().position_endstop for r in self.rails[:2]]
         self._abs_endstop = [p + math.sqrt(a2 - ax**2) for p, a2, ax
-                    in zip( pmax, arm2, arm_x )]
+                             in zip(pmax, arm2, arm_x)]
         self.home_z = self._actuator_to_cartesian(self._abs_endstop)[1]
         z_max = min([self._pillars_z_max(x) for x in self.limits[0]])
         z_min = config.getfloat('minimum_z_position', 0, maxval=z_max)
@@ -96,9 +98,9 @@ class DeltesianKinematics:
         if slow_ratio > 0.:
             sr2 = slow_ratio ** 2
             self.slow_x2 = min([math.sqrt((sr2 * a2) / (sr2 + 1))
-                        - axl for a2, axl in zip(arm2, arm_x)]) ** 2
+                                - axl for a2, axl in zip(arm2, arm_x)]) ** 2
             self.very_slow_x2 = min([math.sqrt((2 * sr2 * a2) / (2 * sr2 + 1))
-                        - axl for a2, axl in zip(arm2, arm_x)]) ** 2
+                                     - axl for a2, axl in zip(arm2, arm_x)]) ** 2
             logging.info("Deltesian kinematics: moves slowed past %.2fmm"
                          " and %.2fmm"
                          % (math.sqrt(self.slow_x2),
@@ -114,10 +116,13 @@ class DeltesianKinematics:
         self.homed_axis = [False] * 3
         self.set_position([0., 0., 0.], ())
         self.supports_dual_carriage = False
+
     def get_rails(self):
         return self.rails
+
     def get_steppers(self):
         return [s for rail in self.rails for s in rail.get_steppers()]
+
     def _actuator_to_cartesian(self, sp):
         arm_x, arm2 = self.arm_x, self.arm2
         dx, dz = sum(arm_x), sp[1] - sp[0]
@@ -129,20 +134,24 @@ class DeltesianKinematics:
         x = xt * dx / pivots + zt * dz / pivots - arm_x[0]
         z = xt * dz / pivots - zt * dx / pivots + sp[0]
         return [x, z]
+
     def _pillars_z_max(self, x):
         arm_x, arm2 = self.arm_x, self.arm2
         dz = (math.sqrt(arm2[0] - (arm_x[0] + x)**2),
               math.sqrt(arm2[1] - (arm_x[1] - x)**2))
         return min([o - z for o, z in zip(self._abs_endstop, dz)])
+
     def calc_position(self, stepper_positions):
         sp = [stepper_positions[rail.get_name()] for rail in self.rails]
         x, z = self._actuator_to_cartesian(sp[:2])
         return [x, sp[2], z]
+
     def set_position(self, newpos, homing_axes):
         for rail in self.rails:
             rail.set_position(newpos)
         for n in homing_axes:
             self.homed_axis[n] = True
+
     def home(self, homing_state):
         homing_axes = homing_state.get_axes()
         home_xz = 0 in homing_axes or 2 in homing_axes
@@ -168,23 +177,32 @@ class DeltesianKinematics:
             else:
                 forcepos[1] += 1.5 * (position_max - hi.position_endstop)
             homing_state.home_rails([self.rails[2]], forcepos, homepos)
+
     def _motor_off(self, print_time):
         self.homed_axis = [False] * 3
+
     def _set_unhomed_x(self, print_time):
         self.homed_axis[0] = False
+
     def _set_unhomed_y(self, print_time):
         self.homed_axis[1] = False
+
     def _set_unhomed_z(self, print_time):
         self.homed_axis[2] = False
+
     def _set_homed_x(self, print_time):
         self.homed_axis[0] = True
+
     def _set_homed_y(self, print_time):
         self.homed_axis[1] = True
+
     def _set_homed_z(self, print_time):
         self.homed_axis[2] = True
+
     def _disable_towers(self, print_time):
         self.homed_axis[0] = False
         self.homed_axis[2] = False
+
     def check_move(self, move):
         limits = list(map(list, self.limits))
         spos, epos = move.start_pos, move.end_pos
@@ -210,9 +228,14 @@ class DeltesianKinematics:
         if move.axes_d[0] and self.slow_x2 and self.very_slow_x2:
             move_x2 = max(spos[0] ** 2, epos[0] ** 2)
             if move_x2 > self.very_slow_x2:
-                move.limit_speed(self.max_velocity *0.25, self.max_accel *0.25)
+                move.limit_speed(
+                    self.max_velocity * 0.25,
+                    self.max_accel * 0.25)
             elif move_x2 > self.slow_x2:
-                move.limit_speed(self.max_velocity *0.50, self.max_accel *0.50)
+                move.limit_speed(
+                    self.max_velocity * 0.50,
+                    self.max_accel * 0.50)
+
     def get_status(self, eventtime):
         axes = [a for a, b in zip("xyz", self.homed_axis) if b]
         return {
@@ -221,6 +244,7 @@ class DeltesianKinematics:
             'axis_minimum': self.axes_min,
             'axis_maximum': self.axes_max,
         }
+
 
 def load_kinematics(toolhead, config):
     return DeltesianKinematics(toolhead, config)

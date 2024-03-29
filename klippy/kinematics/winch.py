@@ -3,7 +3,9 @@
 # Copyright (C) 2018-2021  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import stepper, mathutil
+import stepper
+import mathutil
+
 
 class WinchKinematics:
     def __init__(self, toolhead, config):
@@ -28,24 +30,31 @@ class WinchKinematics:
         self.axes_max = toolhead.Coord(*[max(a) for a in acoords], e=0.)
         self.set_position([0., 0., 0.], ())
         self.supports_dual_carriage = False
+
     def get_rails(self):
         return []
+
     def get_steppers(self):
         return list(self.steppers)
+
     def calc_position(self, stepper_positions):
         # Use only first three steppers to calculate cartesian position
         pos = [stepper_positions[rail.get_name()] for rail in self.steppers[:3]]
-        return mathutil.trilateration(self.anchors[:3], [sp*sp for sp in pos])
+        return mathutil.trilateration(self.anchors[:3], [sp * sp for sp in pos])
+
     def set_position(self, newpos, homing_axes):
         for s in self.steppers:
             s.set_position(newpos)
+
     def home(self, homing_state):
         # XXX - homing not implemented
         homing_state.set_axes([0, 1, 2])
         homing_state.set_homed_position([0., 0., 0.])
+
     def check_move(self, move):
         # XXX - boundary checks and speed limits not implemented
         pass
+
     def get_status(self, eventtime):
         # XXX - homed_checks and rail limits not implemented
         return {
@@ -54,6 +63,7 @@ class WinchKinematics:
             'axis_minimum': self.axes_min,
             'axis_maximum': self.axes_max,
         }
+
 
 def load_kinematics(toolhead, config):
     return WinchKinematics(toolhead, config)

@@ -35,6 +35,7 @@ from math import sqrt, atan2, pi
 
 EPSILON = float_info.epsilon
 
+
 class LimitedCoreXYKinematics(corexy.CoreXYKinematics):
     def __init__(self, toolhead, config):
         corexy.CoreXYKinematics.__init__(self, toolhead, config)
@@ -46,14 +47,15 @@ class LimitedCoreXYKinematics(corexy.CoreXYKinematics):
         self.supports_dual_carriage = False
         config.get_printer().lookup_object('gcode').register_command(
             'SET_KINEMATICS_LIMIT', self.cmd_SET_KINEMATICS_LIMIT)
-    def cmd_SET_KINEMATICS_LIMIT(self,gcmd):
+
+    def cmd_SET_KINEMATICS_LIMIT(self, gcmd):
         self.max_x_accel = gcmd.get_float('X_ACCEL', self.max_x_accel, above=0.)
         self.max_y_accel = gcmd.get_float('Y_ACCEL', self.max_y_accel, above=0.)
         self.max_z_accel = gcmd.get_float('Z_ACCEL', self.max_z_accel, above=0.)
         self.scale_per_axis = bool(gcmd.get_int('SCALE',
-            self.scale_per_axis, minval=0, maxval=1))
+                                                self.scale_per_axis, minval=0, maxval=1))
         msg = "x,y max_accels: %r\n" % [self.max_x_accel,
-               self.max_y_accel, self.max_z_accel]
+                                        self.max_y_accel, self.max_z_accel]
         if self.scale_per_axis:
             msg += ("Per axis accelerations limits "
                     "scale with current acceleration.\n")
@@ -62,18 +64,19 @@ class LimitedCoreXYKinematics(corexy.CoreXYKinematics):
                     "independent of current acceleration.\n")
         msg += ("Minimum XY acceleration of %.0f mm/s^2 "
                 "reached on %.0f degrees diagonals.") % (
-            1/sqrt(self.max_x_accel**(-2) + self.max_y_accel**(-2)),
-            180*atan2(self.max_x_accel, self.max_y_accel) / pi
+            1 / sqrt(self.max_x_accel**(-2) + self.max_y_accel**(-2)),
+            180 * atan2(self.max_x_accel, self.max_y_accel) / pi
         )
         gcmd.respond_info(msg)
+
     def check_move(self, move):
         if not move.is_kinematic_move:
             return
         self._check_endstops(move)
         max_v, max_a = move.toolhead.get_max_velocity()
         move_d = move.move_d
-        x,y,z = move.axes_d[:3]
-        ab_linf = max(abs(x+y), abs(x-y))
+        x, y, z = move.axes_d[:3]
+        ab_linf = max(abs(x + y), abs(x - y))
         if ab_linf > EPSILON:
             max_v *= move_d / ab_linf
             max_x_accel = self.max_x_accel
@@ -82,7 +85,7 @@ class LimitedCoreXYKinematics(corexy.CoreXYKinematics):
             y_o_a = y / max_y_accel
             if self.scale_per_axis:
                 max_a *= move_d / (max(abs(x_o_a + y_o_a),
-                      abs(x_o_a - y_o_a)) * max(max_x_accel, max_y_accel))
+                                       abs(x_o_a - y_o_a)) * max(max_x_accel, max_y_accel))
             else:
                 max_a = move_d / max(abs(x_o_a + y_o_a), abs(x_o_a - y_o_a))
         if z:
@@ -90,6 +93,7 @@ class LimitedCoreXYKinematics(corexy.CoreXYKinematics):
             max_v = min(max_v, self.max_z_velocity * z_ratio)
             max_a = min(max_a, self.max_z_accel * z_ratio)
         move.limit_speed(max_v, max_a)
+
     def get_status(self, eventtime):
         axes = [a for a, (l, h) in zip("xyz", self.limits) if l <= h]
         return {
@@ -100,6 +104,7 @@ class LimitedCoreXYKinematics(corexy.CoreXYKinematics):
             'max_x_accel': self.max_x_accel,
             'max_y_accel': self.max_y_accel,
         }
+
 
 def load_kinematics(toolhead, config):
     return LimitedCoreXYKinematics(toolhead, config)
