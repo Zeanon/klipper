@@ -97,8 +97,8 @@ class ScrewsTiltAdjust:
                     "%s : x=%.1f, y=%.1f, z=%.5f" %
                     (name + ' (base)', coord[0], coord[1], z))
                 sign = "CW" if is_clockwise_thread else "CCW"
-                self.results["screw%d" % (i + 1,)] = {'z': z, 'sign': sign,
-                                                      'adjust': '00:00', 'is_base': True}
+                self.results["screw%d" % (
+                    i + 1,)] = {'z': z, 'sign': sign, 'adjust': '00:00', 'is_base': True}
             else:
                 # Calculate how knob must be adjusted for other positions
                 diff = z_base - z
@@ -119,9 +119,12 @@ class ScrewsTiltAdjust:
                 self.gcode.respond_info(
                     "%s : x=%.1f, y=%.1f, z=%.5f : adjust %s %02d:%02d" %
                     (name, coord[0], coord[1], z, sign, full_turns, minutes))
-                self.results["screw%d" % (i + 1,)] = {'z': z, 'sign': sign,
-                                                      'adjust': "%02d:%02d" % (full_turns, minutes),
-                                                      'is_base': False}
+                self.results["screw%d" % (i + 1,
+                                          )] = {'z': z,
+                                                'sign': sign,
+                                                'adjust': "%02d:%02d" % (full_turns,
+                                                                         minutes),
+                                                'is_base': False}
         if self.max_diff and any((d > self.max_diff) for d in screw_diff):
             self.max_diff_error = True
             raise self.gcode.error(

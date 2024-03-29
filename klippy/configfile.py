@@ -404,7 +404,7 @@ class PrinterConfig:
         svalue = str(value)
         self.autosave.fileconfig.set(section, option, svalue)
         pending = dict(self.status_save_pending)
-        if not section in pending or pending[section] is None:
+        if section not in pending or pending[section] is None:
             pending[section] = {}
         else:
             pending[section] = dict(pending[section])

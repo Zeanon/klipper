@@ -68,8 +68,10 @@ class AHT10:
                 # Check if we're constantly busy. If so, send soft-reset
                 # and issue warning.
                 if is_busy and cycles > AHT10_MAX_BUSY_CYCLES:
-                    logging.warning("aht10: device reported busy after " +
-                                    "%d cycles, resetting device" % AHT10_MAX_BUSY_CYCLES)
+                    logging.warning(
+                        "aht10: device reported busy after " +
+                        "%d cycles, resetting device" %
+                        AHT10_MAX_BUSY_CYCLES)
                     self._reset_device()
                     data = None
                     break

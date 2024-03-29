@@ -226,8 +226,8 @@ class ControlPID:
         if time_diff >= self.min_deriv_time:
             temp_deriv = temp_diff / time_diff
         else:
-            temp_deriv = (self.prev_temp_deriv * (self.min_deriv_time - time_diff)
-                          + temp_diff) / self.min_deriv_time
+            temp_deriv = (self.prev_temp_deriv * (self.min_deriv_time -
+                          time_diff) + temp_diff) / self.min_deriv_time
         # Calculate accumulated temperature "error"
         temp_err = target_temp - temp
         temp_integ = self.prev_temp_integ + temp_err * time_diff

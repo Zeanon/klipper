@@ -27,14 +27,24 @@ ReadRegisters = [
 
 Fields = {}
 Fields["GCONF"] = {
-    "i_scale_analog": 1 << 0, "internal_rsense": 1 << 1, "en_pwm_mode": 1 << 2,
-    "enc_commutation": 1 << 3, "shaft": 1 << 4, "diag0_error": 1 << 5,
-    "diag0_otpw": 1 << 6, "diag0_stall": 1 << 7, "diag1_stall": 1 << 8,
-    "diag1_index": 1 << 9, "diag1_onstate": 1 << 10, "diag1_steps_skipped": 1 << 11,
-    "diag0_int_pushpull": 1 << 12, "diag1_pushpull": 1 << 13,
-    "small_hysteresis": 1 << 14, "stop_enable": 1 << 15, "direct_mode": 1 << 16,
-    "test_mode": 1 << 17
-}
+    "i_scale_analog": 1 << 0,
+    "internal_rsense": 1 << 1,
+    "en_pwm_mode": 1 << 2,
+    "enc_commutation": 1 << 3,
+    "shaft": 1 << 4,
+    "diag0_error": 1 << 5,
+    "diag0_otpw": 1 << 6,
+    "diag0_stall": 1 << 7,
+    "diag1_stall": 1 << 8,
+    "diag1_index": 1 << 9,
+    "diag1_onstate": 1 << 10,
+    "diag1_steps_skipped": 1 << 11,
+    "diag0_int_pushpull": 1 << 12,
+    "diag1_pushpull": 1 << 13,
+    "small_hysteresis": 1 << 14,
+    "stop_enable": 1 << 15,
+    "direct_mode": 1 << 16,
+    "test_mode": 1 << 17}
 Fields["GSTAT"] = {"reset": 1 << 0, "drv_err": 1 << 1, "uv_cp": 1 << 2}
 Fields["IOIN"] = {
     "step": 1 << 0, "dir": 1 << 1, "dcen_cfg4": 1 << 2, "dcin_cfg5": 1 << 3,
@@ -72,11 +82,22 @@ Fields["MSLUTSTART"] = {
 Fields["MSCNT"] = {"mscnt": 0x3ff}
 Fields["MSCURACT"] = {"cur_a": 0x1ff, "cur_b": 0x1ff << 16}
 Fields["CHOPCONF"] = {
-    "toff": 0x0f, "hstrt": 0x07 << 4, "hend": 0x0f << 7, "fd3": 1 << 11,
-    "disfdcc": 1 << 12, "rndtf": 1 << 13, "chm": 1 << 14, "tbl": 0x03 << 15,
-    "vsense": 1 << 17, "vhighfs": 1 << 18, "vhighchm": 1 << 19, "sync": 0x0f << 20,
-    "mres": 0x0f << 24, "intpol": 1 << 28, "dedge": 1 << 29, "diss2g": 1 << 30
-}
+    "toff": 0x0f,
+    "hstrt": 0x07 << 4,
+    "hend": 0x0f << 7,
+    "fd3": 1 << 11,
+    "disfdcc": 1 << 12,
+    "rndtf": 1 << 13,
+    "chm": 1 << 14,
+    "tbl": 0x03 << 15,
+    "vsense": 1 << 17,
+    "vhighfs": 1 << 18,
+    "vhighchm": 1 << 19,
+    "sync": 0x0f << 20,
+    "mres": 0x0f << 24,
+    "intpol": 1 << 28,
+    "dedge": 1 << 29,
+    "diss2g": 1 << 30}
 Fields["COOLCONF"] = {
     "semin": 0x0f, "seup": 0x03 << 5, "semax": 0x0f << 8, "sedn": 0x03 << 13,
     "seimin": 1 << 15, "sgt": 0x7f << 16, "sfilt": 1 << 24

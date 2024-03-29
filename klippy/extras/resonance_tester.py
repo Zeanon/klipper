@@ -252,8 +252,9 @@ class ResonanceTester:
             try:
                 test_point = [float(p.strip()) for p in test_coords]
             except ValueError:
-                raise gcmd.error("Invalid POINT parameter, must be 'x,y,z'"
-                                 " where x, y and z are valid floating point numbers")
+                raise gcmd.error(
+                    "Invalid POINT parameter, must be 'x,y,z'"
+                    " where x, y and z are valid floating point numbers")
 
         accel_chips = self._parse_chips(chips_str) if chips_str else None
 

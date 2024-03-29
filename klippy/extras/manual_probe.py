@@ -161,9 +161,10 @@ class ManualProbeHelper:
                                     desc=self.cmd_ABORT_help)
         self.gcode.register_command('TESTZ', self.cmd_TESTZ,
                                     desc=self.cmd_TESTZ_help)
-        self.gcode.register_command('QUERY_MANUAL_PROBE_RUNNING',
-                                    self.cmd_QUERY_MANUAL_PROBE_RUNNING,
-                                    desc=self.cmd_QUERY_MANUAL_PROBE_RUNNING_help)
+        self.gcode.register_command(
+            'QUERY_MANUAL_PROBE_RUNNING',
+            self.cmd_QUERY_MANUAL_PROBE_RUNNING,
+            desc=self.cmd_QUERY_MANUAL_PROBE_RUNNING_help)
         self.gcode.respond_info(
             "Starting manual Z probe. Use TESTZ to adjust position.\n"
             "Finish with ACCEPT or ABORT command.")

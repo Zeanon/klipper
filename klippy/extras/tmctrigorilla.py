@@ -278,8 +278,8 @@ class TMCTRIGORILLA:
         ms_config = config
         # Setup mcu communication
         self.fields = tmc.FieldHelper(Fields)
-        self.mcu_tmc = MCU_TMC_uart_trigorilla(config,
-                                               Registers, self.fields, 3, TMC_FREQUENCY)
+        self.mcu_tmc = MCU_TMC_uart_trigorilla(
+            config, Registers, self.fields, 3, TMC_FREQUENCY)
         # Setup fields for UART
         self.fields.set_field("pdn_disable", True)
         self.fields.set_field("senddelay", 2)  # Avoid tx errors on shared uart

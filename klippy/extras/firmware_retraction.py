@@ -339,10 +339,10 @@ class FirmwareRetraction:
                                self.cmd_CLEAR_RETRACTION,
                                desc=self.cmd_CLEAR_RETRACTION_help
                                )
-        gcode.register_command('FIRMWARE_RETRACTION_START_PRINT',
-                               self.cmd_FIRMWARE_RETRACTION_START_PRINT,
-                               desc=self.cmd_FIRMWARE_RETRACTION_START_PRINT_help
-                               )
+        gcode.register_command(
+            'FIRMWARE_RETRACTION_START_PRINT',
+            self.cmd_FIRMWARE_RETRACTION_START_PRINT,
+            desc=self.cmd_FIRMWARE_RETRACTION_START_PRINT_help)
         gcode.register_command('FIRMWARE_RETRACTION_END_PRINT',
                                self.cmd_FIRMWARE_RETRACTION_END_PRINT,
                                desc=self.cmd_FIRMWARE_RETRACTION_END_PRINT_help
@@ -539,7 +539,7 @@ class FirmwareRetraction:
     # Register new G1 command handler
     def _unregister_G1(self):
         # Change handler only if G1 command has not been toggled before
-        if self.G1_toggle_state == False:
+        if not self.G1_toggle_state:
             self._toggle_gcode_comms('G1.20140114', 'G1', self._G1_zhop,
                                      'G1 command that accounts '
                                      'for z hop when retracted',
@@ -586,7 +586,7 @@ class FirmwareRetraction:
         # Check if ramp flag set and thus move is a ramp move
         if self.ramp_move:
             self.ramp_move = False                             # Reset ramp flag
-            if not 'Z' in params:
+            if 'Z' not in params:
                 # If the first move after retract does not have a Z parameter,
                 # add parameter to force ramp move
                 if is_relative:
@@ -624,7 +624,7 @@ class FirmwareRetraction:
     # Re-register old G1 command handler
     def _re_register_G1(self):
         # Change handler only if G1 command has been toggled before
-        if self.G1_toggle_state == True:
+        if self.G1_toggle_state:
             self._toggle_gcode_comms('G1', 'G1.20140114', None, 'cmd_G1_help',
                                      self.G1_toggle_state)
             self._toggle_gcode_comms('G0', 'G0.20140114', None, 'cmd_G1_help',

@@ -131,8 +131,8 @@ class HTU21D:
         rdevId = rdevId >> 8
         deviceId_list = list(
             filter(
-                lambda elem: HTU21D_DEVICES[elem]['id'] == rdevId, HTU21D_DEVICES)
-        )
+                lambda elem: HTU21D_DEVICES[elem]['id'] == rdevId,
+                HTU21D_DEVICES))
         if len(deviceId_list) != 0:
             logging.info("htu21d: Found Device Type %s" % deviceId_list[0])
         else:
@@ -160,8 +160,8 @@ class HTU21D:
                 params = self.i2c.i2c_write([HTU21D_COMMANDS['HTU21D_TEMP_NH']])
 
             # Wait
-            self.reactor.pause(self.reactor.monotonic()
-                               + HTU21D_DEVICES[self.deviceId][self.resolution][0])
+            self.reactor.pause(self.reactor.monotonic() +
+                               HTU21D_DEVICES[self.deviceId][self.resolution][0])
 
             params = self.i2c.i2c_read([], 3)
 
@@ -183,8 +183,8 @@ class HTU21D:
                 self.i2c.i2c_write([HTU21D_COMMANDS['HTU21D_HUMID_NH']])
 
             # Wait
-            self.reactor.pause(self.reactor.monotonic()
-                               + HTU21D_DEVICES[self.deviceId][self.resolution][1])
+            self.reactor.pause(self.reactor.monotonic() +
+                               HTU21D_DEVICES[self.deviceId][self.resolution][1])
 
             params = self.i2c.i2c_read([], 3)
 

@@ -39,10 +39,17 @@ class DS18B20:
 
         clock = self._mcu.get_query_slot(self.oid)
         self._report_clock = self._mcu.seconds_to_clock(self.report_time)
-        self._mcu.add_config_cmd("query_ds18b20 oid=%d clock=%u rest_ticks=%u"
-                                 " min_value=%d max_value=%d" % (
-                                     self.oid, clock, self._report_clock,
-                                     self.min_temp * 1000, self.max_temp * 1000), is_init=True)
+        self._mcu.add_config_cmd(
+            "query_ds18b20 oid=%d clock=%u rest_ticks=%u"
+            " min_value=%d max_value=%d" %
+            (self.oid,
+             clock,
+             self._report_clock,
+             self.min_temp *
+             1000,
+             self.max_temp *
+             1000),
+            is_init=True)
 
     def _handle_ds18b20_response(self, params):
         temp = params['value'] / 1000.0

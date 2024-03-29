@@ -91,11 +91,12 @@ class Heater:
             self.pmgr.init_default_profile(),
             True
         )
-        self.gcode.register_mux_command("SET_HEATER_TEMPERATURE",
-                                        "HEATER",
-                                        self.short_name,
-                                        self.cmd_SET_HEATER_TEMPERATURE,
-                                        desc=self.cmd_SET_HEATER_TEMPERATURE_help)
+        self.gcode.register_mux_command(
+            "SET_HEATER_TEMPERATURE",
+            "HEATER",
+            self.short_name,
+            self.cmd_SET_HEATER_TEMPERATURE,
+            desc=self.cmd_SET_HEATER_TEMPERATURE_help)
         self.gcode.register_mux_command("SET_SMOOTH_TIME",
                                         "HEATER",
                                         self.short_name,

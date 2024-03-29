@@ -93,10 +93,14 @@ class HallFilamentWidthSensor:
         # read sensor value
         self.lastFilamentWidthReading2 = round(read_value * 10000)
         # calculate diameter
-        diameter_new = round((self.dia2 - self.dia1) /
-                             (self.rawdia2 - self.rawdia1) *
-                             ((self.lastFilamentWidthReading + self.lastFilamentWidthReading2)
-                              - self.rawdia1) + self.dia1, 2)
+        diameter_new = round((self.dia2 -
+                              self.dia1) /
+                             (self.rawdia2 -
+                              self.rawdia1) *
+                             ((self.lastFilamentWidthReading +
+                               self.lastFilamentWidthReading2) -
+                              self.rawdia1) +
+                             self.dia1, 2)
         self.diameter = (5.0 * self.diameter + diameter_new) / 6
 
     def update_filament_array(self, last_epos):

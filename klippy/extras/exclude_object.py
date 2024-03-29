@@ -64,9 +64,10 @@ class ExcludeObject:
         if self.next_transform:
             tuning_tower = self.printer.lookup_object('tuning_tower')
             if tuning_tower.is_active():
-                logging.error('The Exclude Object move transform was not '
-                              'unregistered because it is not at the head of the '
-                              'transform chain.')
+                logging.error(
+                    'The Exclude Object move transform was not '
+                    'unregistered because it is not at the head of the '
+                    'transform chain.')
                 return
 
             self.gcode_move.set_move_transform(self.next_transform, force=True)

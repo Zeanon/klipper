@@ -26,8 +26,8 @@ from . import probe, z_tilt
 class QuadGantryLevel:
     def __init__(self, config):
         self.printer = config.get_printer()
-        self.retry_helper = z_tilt.RetryHelper(config,
-                                               "Possibly Z motor numbering is wrong")
+        self.retry_helper = z_tilt.RetryHelper(
+            config, "Possibly Z motor numbering is wrong")
         self.max_adjust = config.getfloat("max_adjust", 4, above=0)
         self.horizontal_move_z = config.getfloat("horizontal_move_z", 5.0)
         self.probe_helper = probe.ProbePointsHelper(config, self.probe_finalize)

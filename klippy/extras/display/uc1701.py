@@ -20,8 +20,11 @@ class DisplayBase:
         self.columns = columns
         self.x_offset = x_offset
         self.vram = [bytearray(self.columns) for i in range(8)]
-        self.all_framebuffers = [(self.vram[i], bytearray(b'~' * self.columns), i)
-                                 for i in range(8)]
+        self.all_framebuffers = [
+            (self.vram[i],
+             bytearray(
+                b'~' * self.columns),
+                i) for i in range(8)]
         # Cache fonts and icons in display byte order
         self.font = [self._swizzle_bits(bytearray(c))
                      for c in font8x14.VGA_FONT]
