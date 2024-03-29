@@ -114,6 +114,7 @@ class DeltaKinematics:
         self.axes_min = toolhead.Coord(-max_xy, -max_xy, self.min_z, 0.)
         self.axes_max = toolhead.Coord(max_xy, max_xy, self.max_z, 0.)
         self.set_position([0., 0., 0.], ())
+        self.supports_dual_carriage = False
     def get_rails(self):
         return self.rails
     def get_steppers(self):

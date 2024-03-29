@@ -66,6 +66,7 @@ class LimitedCartKinematics(cartesian.CartKinematics):
             for ax in 'xyz']
         self.xy_hypot_accel = hypot(*self.max_accels[:2])
         self.scale_per_axis = config.getboolean('scale_xy_accel', False)
+        self.supports_dual_carriage = False
         config.get_printer().lookup_object('gcode').register_command(
             'SET_KINEMATICS_LIMIT',
             self.cmd_SET_KINEMATICS_LIMIT,

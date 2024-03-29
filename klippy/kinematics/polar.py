@@ -59,6 +59,7 @@ class PolarKinematics:
         min_z, max_z = self.rails[1].get_range()
         self.axes_min = toolhead.Coord(-max_xy, -max_xy, min_z, 0.)
         self.axes_max = toolhead.Coord(max_xy, max_xy, max_z, 0.)
+        self.supports_dual_carriage = False
     def get_rails(self):
         return self.rails
     def get_steppers(self):

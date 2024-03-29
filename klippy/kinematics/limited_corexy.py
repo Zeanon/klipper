@@ -43,6 +43,7 @@ class LimitedCoreXYKinematics(corexy.CoreXYKinematics):
         self.max_x_accel = config.getfloat('max_x_accel', max_accel, above=0)
         self.max_y_accel = config.getfloat('max_y_accel', max_accel, above=0)
         self.scale_per_axis = config.getboolean('scale_xy_accel', False)
+        self.supports_dual_carriage = False
         config.get_printer().lookup_object('gcode').register_command(
             'SET_KINEMATICS_LIMIT', self.cmd_SET_KINEMATICS_LIMIT)
     def cmd_SET_KINEMATICS_LIMIT(self,gcmd):
