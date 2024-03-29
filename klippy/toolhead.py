@@ -3,7 +3,9 @@
 # Copyright (C) 2016-2024  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import math, logging, importlib
+import math
+import logging
+import importlib
 import chelper
 import kinematics.extruder
 
@@ -316,7 +318,7 @@ class ToolHead:
             raise
         except self.printer.lookup_object("pins").error as e:
             raise
-        except:
+        except BaseException:
             msg = "Error loading kinematics '%s'" % (kin_name,)
             logging.exception(msg)
             raise config.error(msg)
@@ -518,7 +520,7 @@ class ToolHead:
             if self.special_queuing_state == "Priming":
                 self._flush_lookahead()
                 self.check_stall_time = self.print_time
-        except:
+        except BaseException:
             logging.exception("Exception in priming_handler")
             self.printer.invoke_shutdown("Exception in priming_handler")
         return self.reactor.NEVER
@@ -548,7 +550,7 @@ class ToolHead:
                     return eventtime + buffer_time - BGFLUSH_LOW_TIME
                 ftime = est_print_time + BGFLUSH_LOW_TIME + BGFLUSH_BATCH_TIME
                 self._advance_flush_time(min(end_flush, ftime))
-        except:
+        except BaseException:
             logging.exception("Exception in flush_handler")
             self.printer.invoke_shutdown("Exception in flush_handler")
         return self.reactor.NEVER

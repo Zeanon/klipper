@@ -5,7 +5,8 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import collections
 import math
-import chelper, msgproto
+import chelper
+import msgproto
 
 
 class error(Exception):
@@ -316,14 +317,16 @@ class MCU_stepper:
         ret = self._itersolve_generate_steps(sk, flush_time)
         if ret:
             raise error("Internal error in stepcompress")
+
     def is_active_axis(self, axis):
         ffi_main, ffi_lib = chelper.get_ffi()
         a = axis.encode()
         return ffi_lib.itersolve_is_active_axis(self._stepper_kinematics, a)
+
     def get_status(self, eventtime):
         return {
             'mcu_position': self.get_mcu_position(),
-         }
+        }
 
 
 # Helper code to build a stepper object from a config section
