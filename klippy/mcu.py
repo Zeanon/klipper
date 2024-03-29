@@ -7,11 +7,7 @@ import logging
 import math
 import os
 import zlib
-import serialhdl
-import msgproto
-import pins
-import chelper
-import clocksync
+import serialhdl, msgproto, pins, chelper, clocksync
 
 
 class error(Exception):

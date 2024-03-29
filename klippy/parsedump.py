@@ -4,18 +4,14 @@
 # Copyright (C) 2016  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import os
-import sys
-import logging
+import os, sys, logging
 import msgproto
-
 
 def read_dictionary(filename):
     dfile = open(filename, 'rb')
     dictionary = dfile.read()
     dfile.close()
     return dictionary
-
 
 def main():
     dict_filename, data_filename = sys.argv[1:]
@@ -44,7 +40,6 @@ def main():
             msgs = mp.dump(data[:l])
             sys.stdout.write('\n'.join(msgs[1:]) + '\n')
             data = data[l:]
-
 
 if __name__ == '__main__':
     main()

@@ -3,18 +3,8 @@
 # Copyright (C) 2016-2020  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import sys
-import os
-import pty
-import fcntl
-import termios
-import signal
-import logging
-import json
-import time
-import subprocess
-import traceback
-import shlex
+import sys, os, pty, fcntl, termios, signal, logging, json, time
+import subprocess, traceback, shlex
 
 
 ######################################################################
@@ -24,21 +14,14 @@ import shlex
 # Return the SIGINT interrupt handler back to the OS default
 def fix_sigint():
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-
 fix_sigint()
 
 # Set a file-descriptor as non-blocking
-
-
 def set_nonblock(fd):
-    fcntl.fcntl(
-        fd, fcntl.F_SETFL, fcntl.fcntl(
-            fd, fcntl.F_GETFL) | os.O_NONBLOCK)
+    fcntl.fcntl(fd, fcntl.F_SETFL
+                , fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
 
 # Clear HUPCL flag
-
-
 def clear_hupcl(fd):
     attrs = termios.tcgetattr(fd)
     attrs[2] = attrs[2] & ~termios.HUPCL
@@ -48,8 +31,6 @@ def clear_hupcl(fd):
         pass
 
 # Support for creating a pseudo-tty for emulating a serial port
-
-
 def create_pty(ptyname):
     mfd, sfd = pty.openpty()
     try:
@@ -77,36 +58,34 @@ def dump_file_stats(build_dir, filename):
         fsize = os.path.getsize(fname)
         timestr = time.asctime(time.localtime(mtime))
         logging.info("Build file %s(%d): %s", fname, fsize, timestr)
-    except BaseException:
+    except:
         logging.info("No build file %s", fname)
 
 # Try to log information on the last mcu build
-
-
 def dump_mcu_build():
     build_dir = os.path.join(os.path.dirname(__file__), '..')
     # Try to log last mcu config
     dump_file_stats(build_dir, '.config')
     try:
         f = open(os.path.join(build_dir, '.config'), 'r')
-        data = f.read(32 * 1024)
+        data = f.read(32*1024)
         f.close()
         logging.info("========= Last MCU build config =========\n%s"
                      "=======================", data)
-    except BaseException:
+    except:
         pass
     # Try to log last mcu build version
     dump_file_stats(build_dir, 'out/klipper.dict')
     try:
         f = open(os.path.join(build_dir, 'out/klipper.dict'), 'r')
-        data = f.read(32 * 1024)
+        data = f.read(32*1024)
         f.close()
         data = json.loads(data)
         logging.info("Last MCU build version: %s", data.get('version', ''))
         logging.info("Last MCU build tools: %s", data.get('build_versions', ''))
         cparts = ["%s=%s" % (k, v) for k, v in data.get('config', {}).items()]
         logging.info("Last MCU build config: %s", " ".join(cparts))
-    except BaseException:
+    except:
         pass
     dump_file_stats(build_dir, 'out/klipper.elf')
 
@@ -130,7 +109,6 @@ def get_cpu_info():
     model_name = dict(lines).get("model name", "?")
     return "%d core %s" % (core_count, model_name)
 
-
 def get_version_from_file(klippy_src):
     try:
         with open(os.path.join(klippy_src, '.version')) as h:
@@ -138,7 +116,6 @@ def get_version_from_file(klippy_src):
     except IOError:
         pass
     return "?"
-
 
 def _get_repo_info(gitdir):
     repo_info = {"branch": "?", "remote": "?", "url": "?"}
@@ -185,10 +162,9 @@ def _get_repo_info(gitdir):
             logging.debug("Error running git remote get-url: %s", err)
             return repo_info
         repo_info["url"] = str(remote_url.strip().decode())
-    except BaseException:
+    except:
         logging.debug("Error fetching repo info: %s", traceback.format_exc())
     return repo_info
-
 
 def get_git_version(from_file=True):
     git_info = {
@@ -226,7 +202,7 @@ def get_git_version(from_file=True):
             return git_info
         else:
             logging.debug("Error getting git version: %s", err)
-    except BaseException:
+    except:
         logging.debug("Exception on run: %s", traceback.format_exc())
 
     if from_file:
