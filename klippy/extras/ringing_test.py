@@ -3,7 +3,8 @@
 # Copyright (C) 2022  Dmitry Butyugin <dmbutyugin@google.com>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import logging, math
+import logging
+import math
 
 FIRST_LAYER_WIDTH_MULTIPLIER = 1.1
 DEFAULT_SIZE = 100.0

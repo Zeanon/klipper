@@ -3,13 +3,16 @@
 # Copyright (C) 2019-2022  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import logging, ast
+import logging
+import ast
 from .display import display
 
 # Time between each led template update
 RENDER_TIME = 0.500
 
 # Helper code for common LED initialization and control
+
+
 class LEDHelper:
     def __init__(self, config, update_func, led_count=1):
         self.printer = config.get_printer()
@@ -28,6 +31,7 @@ class LEDHelper:
         gcode = self.printer.lookup_object('gcode')
         gcode.register_mux_command("SET_LED", "LED", name, self.cmd_SET_LED,
                                    desc=self.cmd_SET_LED_help)
+
     def check_index(self, index, gcmd, led_count):
         try:
             i = int(index)
@@ -42,6 +46,7 @@ class LEDHelper:
                              "leds in chain(was '%d')"
                              % i)
         return i
+
     def check_step(self, step, min, max, gcmd):
         try:
             i = int(step)
@@ -55,6 +60,7 @@ class LEDHelper:
             raise gcmd.error("Steps can not be bigger than range "
                              "(was '%d')" % i)
         return i
+
     def get_indices(self, gcmd, led_count):
         given_indices = gcmd.get("INDEX", None)
         if given_indices is None:
@@ -91,8 +97,10 @@ class LEDHelper:
                                self.check_step(step, min, max, gcmd)):
                     indices.add(i)
         return indices
+
     def get_led_count(self):
         return self.led_count
+
     def set_color(self, index, color):
         if self.led_state[index - 1] == color:
             return
@@ -100,8 +108,10 @@ class LEDHelper:
         new_led_state[index - 1] = color
         self.led_state = new_led_state
         self.need_transmit = True
+
     def set_active_template(self, template):
         self.active_template = template
+
     def check_transmit(self, print_time):
         if not self.need_transmit:
             return
@@ -111,6 +121,7 @@ class LEDHelper:
         except self.printer.command_error as e:
             logging.exception("led update transmit error")
     cmd_SET_LED_help = "Set the color of an LED"
+
     def cmd_SET_LED(self, gcmd):
         # Parse parameters
         red = gcmd.get_float('RED', 0., minval=0., maxval=1.)
@@ -121,23 +132,28 @@ class LEDHelper:
         sync = gcmd.get_int('SYNC', 1)
         color = (red, green, blue, white)
         # Update and transmit data
+
         def lookahead_bgfunc(print_time):
             for index in self.get_indices(gcmd, self.led_count):
                 self.set_color(index, color)
             if transmit:
                 self.check_transmit(print_time)
         if sync:
-            #Sync LED Update with print time and send
+            # Sync LED Update with print time and send
             toolhead = self.printer.lookup_object('toolhead')
             toolhead.register_lookahead_callback(lookahead_bgfunc)
         else:
-            #Send update now (so as not to wake toolhead and reset idle_timeout)
+            # Send update now (so as not to wake toolhead and reset
+            # idle_timeout)
             lookahead_bgfunc(None)
+
     def get_status(self, eventtime=None):
         return {'color_data': self.led_state,
                 'active_template': self.active_template}
 
 # Main LED tracking code
+
+
 class PrinterLED:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -155,8 +171,10 @@ class PrinterLED:
                                desc=self.cmd_SET_LED_TEMPLATE_help)
         self.printer.register_event_handler('klippy:shutdown',
                                             self._handle_shutdown)
+
     def _handle_shutdown(self):
         self.active_templates = {}
+
     def setup_helper(self, config, update_func, led_count=1):
         led_helper = LEDHelper(config, update_func, led_count)
         name = config.get_name().split()[-1]
@@ -164,15 +182,18 @@ class PrinterLED:
             raise config.error("LED name '%s' is not unique." % (name,))
         self.led_helpers[name] = led_helper
         return led_helper
+
     def lookup_led_helper(self, name, config):
         if name in self.led_helpers:
             return self.led_helpers[name]
         raise config.error("Unknown LED '%s'" % (name,))
+
     def _activate_timer(self):
         if self.render_timer is not None or not self.active_templates:
             return
         reactor = self.printer.get_reactor()
         self.render_timer = reactor.register_timer(self._render, reactor.NOW)
+
     def _activate_template(self,
                            led_helper,
                            index,
@@ -188,6 +209,7 @@ class PrinterLED:
         if key in self.active_templates:
             del self.active_templates[key]
             led_helper.set_active_template(None)
+
     def _render(self, eventtime):
         if not self.active_templates:
             # Nothing to do - unregister timer
@@ -197,6 +219,7 @@ class PrinterLED:
             return reactor.NEVER
         # Setup gcode_macro template context
         context = self.create_template_context(eventtime)
+
         def render(name, **kwargs):
             return self.templates[name].render(context, **kwargs)
         context['render'] = render
@@ -219,12 +242,13 @@ class PrinterLED:
                 rendered[uid] = color = tuple(parts)
             need_transmit[led_helper] = 1
             led_helper.set_color(index, color)
-        context.clear() # Remove circular references for better gc
+        context.clear()  # Remove circular references for better gc
         # Transmit pending changes
         for led_helper in need_transmit.keys():
             led_helper.check_transmit(None)
         return eventtime + RENDER_TIME
     cmd_SET_LED_TEMPLATE_help = "Assign a display_template to an LED"
+
     def cmd_SET_LED_TEMPLATE(self, gcmd):
         led_name = gcmd.get("LED")
         led_helper = self.led_helpers.get(led_name)
@@ -258,10 +282,13 @@ class PrinterLED:
                                     tpl_name)
         self._activate_timer()
 
+
 PIN_MIN_TIME = 0.100
 MAX_SCHEDULE_TIME = 5.0
 
 # Handler for PWM controlled LEDs
+
+
 class PrinterPWMLED:
     def __init__(self, config):
         self.printer = printer = config.get_printer()
@@ -289,6 +316,7 @@ class PrinterPWMLED:
         self.prev_color = color = self.led_helper.get_status()['color_data'][0]
         for idx, mcu_pin in self.pins:
             mcu_pin.setup_start_value(color[idx], 0.)
+
     def update_leds(self, led_state, print_time):
         if print_time is None:
             eventtime = self.printer.get_reactor().monotonic()
@@ -301,11 +329,14 @@ class PrinterPWMLED:
                 mcu_pin.set_pwm(print_time, color[idx])
                 self.last_print_time = print_time
         self.prev_color = color
+
     def get_status(self, eventtime=None):
         return self.led_helper.get_status(eventtime)
 
+
 def load_config(config):
     return PrinterLED(config)
+
 
 def load_config_prefix(config):
     return PrinterPWMLED(config)

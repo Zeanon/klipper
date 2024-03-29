@@ -24,6 +24,7 @@ class DumpStepper:
             mcu_stepper.get_name(),
             api_resp,
         )
+
     def get_step_queue(self, start_clock, end_clock):
         mcu_stepper = self.mcu_stepper
         res = []
@@ -37,6 +38,7 @@ class DumpStepper:
             end_clock = data[count - 1].first_clock
         res.reverse()
         return ([d[i] for d, cnt in res for i in range(cnt - 1, -1, -1)], res)
+
     def log_steps(self, data):
         if not data:
             return
@@ -64,6 +66,7 @@ class DumpStepper:
                 )
             )
         logging.info("\n".join(out))
+
     def _process_batch(self, eventtime):
         data, cdata = self.get_step_queue(self.last_batch_clock, 1 << 63)
         if not data:
@@ -90,6 +93,7 @@ class DumpStepper:
             "last_clock": last_clock,
             "last_step_time": last_time,
         }
+
     def _add_api_client(self, web_request):
         self.api_dump.add_client(web_request)
         hdr = ("interval", "count", "add", "add2", "shift")
@@ -122,6 +126,7 @@ class DumpTrapQ:
         self.batch_bulk.add_mux_endpoint(
             "motion_report/dump_trapq", "name", name, api_resp
         )
+
     def extract_trapq(self, start_time, end_time):
         ffi_main, ffi_lib = chelper.get_ffi()
         res = []
@@ -138,6 +143,7 @@ class DumpTrapQ:
             end_time = data[count - 1].print_time
         res.reverse()
         return ([d[i] for d, cnt in res for i in range(cnt - 1, -1, -1)], res)
+
     def log_trapq(self, data):
         if not data:
             return
@@ -161,6 +167,7 @@ class DumpTrapQ:
                 )
             )
         logging.info("\n".join(out))
+
     def get_trapq_position(self, print_time):
         ffi_main, ffi_lib = chelper.get_ffi()
         data = ffi_main.new("struct pull_move[1]")
@@ -177,6 +184,7 @@ class DumpTrapQ:
         )
         velocity = move.start_v + move.accel * move_time
         return pos, velocity
+
     def _process_batch(self, eventtime):
         qtime = self.last_batch_msg[0] + min(self.last_batch_msg[1], 0.100)
         data, cdata = self.extract_trapq(qtime, NEVER_TIME)
@@ -220,9 +228,11 @@ class PrinterMotionReport:
         # Register handlers
         self.printer.register_event_handler("klippy:connect", self._connect)
         self.printer.register_event_handler("klippy:shutdown", self._shutdown)
+
     def register_stepper(self, config, mcu_stepper):
         ds = DumpStepper(self.printer, mcu_stepper)
         self.steppers[mcu_stepper.get_name()] = ds
+
     def _connect(self):
         # Lookup toolhead trapq
         toolhead = self.printer.lookup_object("toolhead")
@@ -242,6 +252,7 @@ class PrinterMotionReport:
         self.last_status["steppers"] = list(sorted(self.steppers.keys()))
         self.last_status["trapq"] = list(sorted(self.trapqs.keys()))
     # Shutdown handling
+
     def _dump_shutdown(self, eventtime):
         # Log stepper queue_steps on mcu that started shutdown (if any)
         shutdown_time = NEVER_TIME
@@ -275,9 +286,11 @@ class PrinterMotionReport:
                 shutdown_time,
                 pos,
             )
+
     def _shutdown(self):
         self.printer.get_reactor().register_callback(self._dump_shutdown)
     # Status reporting
+
     def get_status(self, eventtime):
         if eventtime < self.next_status_time or not self.trapqs:
             return self.last_status

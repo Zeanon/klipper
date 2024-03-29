@@ -13,6 +13,7 @@ import logging
 QUERY_TIME = .002
 RETRANSMIT_COUNT = 50
 
+
 class MCU_buttons:
     def __init__(self, printer, mcu):
         self.reactor = printer.get_reactor()
@@ -23,6 +24,7 @@ class MCU_buttons:
         self.invert = self.last_button = 0
         self.ack_cmd = None
         self.ack_count = 0
+
     def setup_buttons(self, pins, callback):
         mask = 0
         shift = len(self.pin_list)
@@ -32,6 +34,7 @@ class MCU_buttons:
             mask |= 1 << len(self.pin_list)
             self.pin_list.append((pin_params['pin'], pin_params['pullup']))
         self.callbacks.append((mask, shift, callback))
+
     def build_config(self):
         if not self.pin_list:
             return
@@ -54,6 +57,7 @@ class MCU_buttons:
                 self.invert), is_init=True)
         self.mcu.register_response(self.handle_buttons_state,
                                    "buttons_state", self.oid)
+
     def handle_buttons_state(self, params):
         # Expand the message ack_count from 8-bit
         ack_count = self.ack_count
@@ -90,6 +94,7 @@ ADC_REPORT_TIME = 0.015
 ADC_DEBOUNCE_TIME = 0.025
 ADC_SAMPLE_TIME = 0.001
 ADC_SAMPLE_COUNT = 6
+
 
 class MCU_ADC_buttons:
     def __init__(self, printer, pin, pullup):
@@ -133,7 +138,7 @@ class MCU_ADC_buttons:
 
         # button debounce check & new button pressed
         if ((read_time - self.last_debouncetime) >= ADC_DEBOUNCE_TIME
-            and self.last_button == btn and self.last_pressed != btn):
+                and self.last_button == btn and self.last_pressed != btn):
             # release last_pressed
             if self.last_pressed is not None:
                 self.call_button(self.last_pressed, False)
@@ -158,15 +163,16 @@ class MCU_ADC_buttons:
 # Copyright 2011 Ben Buxton (bb@cactii.net).
 # Licenced under the GNU GPL Version 3.
 class BaseRotaryEncoder:
-    R_START     = 0x0
-    R_DIR_CW    = 0x10
-    R_DIR_CCW   = 0x20
-    R_DIR_MSK   = 0x30
+    R_START = 0x0
+    R_DIR_CW = 0x10
+    R_DIR_CCW = 0x20
+    R_DIR_MSK = 0x30
 
     def __init__(self, cw_callback, ccw_callback):
         self.cw_callback = cw_callback
         self.ccw_callback = ccw_callback
         self.encoder_state = self.R_START
+
     def encoder_callback(self, eventtime, state):
         es = self.ENCODER_STATES[self.encoder_state & 0xf][state & 0x3]
         self.encoder_state = es
@@ -175,13 +181,14 @@ class BaseRotaryEncoder:
         elif es & self.R_DIR_MSK == self.R_DIR_CCW:
             self.ccw_callback(eventtime)
 
+
 class FullStepRotaryEncoder(BaseRotaryEncoder):
-    R_CW_FINAL  = 0x1
-    R_CW_BEGIN  = 0x2
-    R_CW_NEXT   = 0x3
+    R_CW_FINAL = 0x1
+    R_CW_BEGIN = 0x2
+    R_CW_NEXT = 0x3
     R_CCW_BEGIN = 0x4
     R_CCW_FINAL = 0x5
-    R_CCW_NEXT  = 0x6
+    R_CCW_NEXT = 0x6
 
     # Use the full-step state table (emits a code at 00 only)
     ENCODER_STATES = (
@@ -212,12 +219,13 @@ class FullStepRotaryEncoder(BaseRotaryEncoder):
         (R_CCW_NEXT, R_CCW_FINAL, R_CCW_BEGIN, BaseRotaryEncoder.R_START)
     )
 
+
 class HalfStepRotaryEncoder(BaseRotaryEncoder):
     # Use the half-step state table (emits a code at 00 and 11)
-    R_CCW_BEGIN   = 0x1
-    R_CW_BEGIN    = 0x2
-    R_START_M     = 0x3
-    R_CW_BEGIN_M  = 0x4
+    R_CCW_BEGIN = 0x1
+    R_CW_BEGIN = 0x2
+    R_START_M = 0x3
+    R_CW_BEGIN_M = 0x4
     R_CCW_BEGIN_M = 0x5
 
     ENCODER_STATES = (
@@ -229,11 +237,11 @@ class HalfStepRotaryEncoder(BaseRotaryEncoder):
          R_CCW_BEGIN, BaseRotaryEncoder.R_START),
 
         # R_CW_BEGIN
-        (R_START_M | BaseRotaryEncoder.R_DIR_CW,  R_CW_BEGIN,
+        (R_START_M | BaseRotaryEncoder.R_DIR_CW, R_CW_BEGIN,
          BaseRotaryEncoder.R_START, BaseRotaryEncoder.R_START),
 
         # R_START_M (11)
-        (R_START_M, R_CCW_BEGIN_M, R_CW_BEGIN_M,  BaseRotaryEncoder.R_START),
+        (R_START_M, R_CCW_BEGIN_M, R_CW_BEGIN_M, BaseRotaryEncoder.R_START),
 
         # R_CW_BEGIN_M
         (R_START_M, R_START_M, R_CW_BEGIN_M,
@@ -255,17 +263,20 @@ class PrinterButtons:
         self.printer.load_object(config, 'query_adc')
         self.mcu_buttons = {}
         self.adc_buttons = {}
+
     def register_adc_button(self, pin, min_val, max_val, pullup, callback):
         adc_buttons = self.adc_buttons.get(pin)
         if adc_buttons is None:
             self.adc_buttons[pin] = adc_buttons = MCU_ADC_buttons(
                 self.printer, pin, pullup)
         adc_buttons.setup_button(min_val, max_val, callback)
+
     def register_adc_button_push(self, pin, min_val, max_val, pullup, callback):
         def helper(eventtime, state, callback=callback):
             if state:
                 callback(eventtime)
         self.register_adc_button(pin, min_val, max_val, pullup, helper)
+
     def register_buttons(self, pins, callback):
         # Parse pins
         ppins = self.printer.lookup_object('pins')
@@ -281,10 +292,11 @@ class PrinterButtons:
         # Register pins and callback with the appropriate MCU
         mcu_buttons = self.mcu_buttons.get(mcu_name)
         if (mcu_buttons is None
-            or len(mcu_buttons.pin_list) + len(pin_params_list) > 8):
+                or len(mcu_buttons.pin_list) + len(pin_params_list) > 8):
             self.mcu_buttons[mcu_name] = mcu_buttons = MCU_buttons(
                 self.printer, mcu)
         mcu_buttons.setup_buttons(pin_params_list, callback)
+
     def register_rotary_encoder(self, pin1, pin2, cw_callback, ccw_callback,
                                 steps_per_detent):
         if steps_per_detent == 2:
@@ -295,11 +307,13 @@ class PrinterButtons:
             raise self.printer.config_error(
                 "%d steps per detent not supported" % steps_per_detent)
         self.register_buttons([pin1, pin2], re.encoder_callback)
+
     def register_button_push(self, pin, callback):
         def helper(eventtime, state, callback=callback):
             if state:
                 callback(eventtime)
         self.register_buttons([pin], helper)
+
 
 def load_config(config):
     return PrinterButtons(config)

@@ -21,7 +21,7 @@ class MCU_counter:
 
     def build_config(self):
         self._mcu.add_config_cmd("config_counter oid=%d pin=%s pull_up=%d"
-            % (self._oid, self._pin, self._pullup))
+                                 % (self._oid, self._pin, self._pullup))
         clock = self._mcu.get_query_slot(self._oid)
         self._poll_ticks = self._mcu.seconds_to_clock(self._poll_time)
         sample_ticks = self._mcu.seconds_to_clock(self._sample_time)
@@ -50,6 +50,7 @@ class MCU_counter:
 
         if self._callback is not None:
             self._callback(time, count, count_time)
+
 
 class FrequencyCounter:
     def __init__(self, printer, pin, sample_time, poll_time):

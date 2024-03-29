@@ -11,6 +11,7 @@ AMBIENT_TEMP = 25.
 PID_PARAM_BASE = 255.
 PIN_MIN_TIME = 0.100
 
+
 class ControllerTemperatureFan:
     def __init__(self, config):
         self.config = config
@@ -21,20 +22,26 @@ class ControllerTemperatureFan:
                                                               self.fan,
                                                               self)
         self.controller_fan = controller_fan.ControllerFan(config, self.fan)
+
     def set_speed(self, read_time, value):
         self.temperature_fan.set_speed(read_time,
                                        max(value,
                                            self
                                            .controller_fan
                                            .get_speed(read_time)))
+
     def temperature_callback(self, read_time, temp):
         self.temperature_fan.temperature_callback(read_time, temp)
+
     def get_temp(self, eventtime):
         return self.temperature_fan.get_temp(eventtime)
+
     def get_min_speed(self):
         return self.temperature_fan.min_speed
+
     def get_max_speed(self):
         return self.temperature_fan.get_max_speed()
+
     def get_status(self, eventtime):
         return self.temperature_fan.get_status(eventtime)
 

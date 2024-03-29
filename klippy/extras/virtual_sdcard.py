@@ -3,7 +3,9 @@
 # Copyright (C) 2018  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import os, logging, io
+import os
+import logging
+import io
 
 VALID_GCODE_EXTS = ['gcode', 'g', 'gco']
 
@@ -27,6 +29,7 @@ class VirtualSDGCodeProvider:
         for cmd in ['M28', 'M29', 'M30']:
             self.gcode.register_command(cmd, self.cmd_error)
     # Generic methods of GCode provider
+
     def handle_shutdown(self):
         if self.current_file is not None:
             try:
@@ -34,7 +37,7 @@ class VirtualSDGCodeProvider:
                 readcount = self.file_position - readpos
                 self.current_file.seek(readpos)
                 data = self.current_file.read(readcount + 128)
-            except:
+            except BaseException:
                 logging.exception('virtual_sdcard shutdown read')
                 return
             logging.info(
@@ -44,8 +47,10 @@ class VirtualSDGCodeProvider:
                 self.file_position,
                 repr(data[readcount:]),
             )
+
     def get_stats(self, eventtime):
         return True, 'sd_pos=%d' % (self.file_position,)
+
     def get_status(self, eventtime):
         return {
             'file_path': self.file_path(),
@@ -53,21 +58,25 @@ class VirtualSDGCodeProvider:
             'file_position': self.file_position,
             'file_size': self.file_size,
         }
+
     def is_active(self):
         return self.current_file is not None
+
     def get_name(self):
         return self.filename
+
     def reset(self):
         if self.current_file is not None:
             self.current_file.close()
             self.current_file = None
             self.filename = ''
         self.file_position = self.file_size = 0
+
     def get_gcode(self):
         logging.info('Starting SD card print (position %d)', self.file_position)
         try:
             self.current_file.seek(self.file_position)
-        except:
+        except BaseException:
             logging.exception('virtual_sdcard seek')
             return
         partial_input = ''
@@ -77,7 +86,7 @@ class VirtualSDGCodeProvider:
                 # Read more data
                 try:
                     data = self.current_file.read(8192)
-                except:
+                except BaseException:
                     logging.exception('virtual_sdcard read')
                     break
                 if not data:
@@ -104,13 +113,14 @@ class VirtualSDGCodeProvider:
             if self.next_file_position != next_file_position:
                 try:
                     self.current_file.seek(self.file_position)
-                except:
+                except BaseException:
                     logging.exception('virtual_sdcard seek')
                     return
                 lines = []
                 partial_input = ''
         logging.info('Exiting SD card print (position %d)', self.file_position)
     # Virtual SD Card file management
+
     def get_file_list(self, check_subdirs=False):
         if check_subdirs:
             flist = []
@@ -118,11 +128,11 @@ class VirtualSDGCodeProvider:
                 self.sdcard_dirname, followlinks=True
             ):
                 for name in files:
-                    ext = name[name.rfind('.') + 1 :]
+                    ext = name[name.rfind('.') + 1:]
                     if ext not in VALID_GCODE_EXTS:
                         continue
                     full_path = os.path.join(root, name)
-                    r_path = full_path[len(self.sdcard_dirname) + 1 :]
+                    r_path = full_path[len(self.sdcard_dirname) + 1:]
                     size = os.path.getsize(full_path)
                     flist.append((r_path, size))
             return sorted(flist, key=lambda f: f[0].lower())
@@ -136,18 +146,21 @@ class VirtualSDGCodeProvider:
                     if not fname.startswith('.')
                     and os.path.isfile((os.path.join(dname, fname)))
                 ]
-            except:
+            except BaseException:
                 logging.exception('virtual_sdcard get_file_list')
                 raise self.gcode.error('Unable to get file list')
+
     def file_path(self):
         if self.current_file:
             return self.current_file.name
         return None
+
     def progress(self):
         if self.file_size:
             return float(self.file_position) / self.file_size
         else:
             return 0.0
+
     def load_file(self, gcmd, filename, check_subdirs=False):
         files = self.get_file_list(check_subdirs)
         flist = [f[0] for f in files]
@@ -161,7 +174,7 @@ class VirtualSDGCodeProvider:
             f.seek(0, os.SEEK_END)
             fsize = f.tell()
             f.seek(0)
-        except:
+        except BaseException:
             logging.exception('virtual_sdcard file open')
             raise gcmd.error('Unable to open file')
         gcmd.respond_raw('File opened: %s Size: %d' % (filename, fsize))
@@ -170,13 +183,17 @@ class VirtualSDGCodeProvider:
         self.file_position = 0
         self.file_size = fsize
         self.filename = filename
+
     def get_file_position(self):
         return self.next_file_position
+
     def set_file_position(self, pos):
         self.next_file_position = pos
     # G-Code commands
+
     def cmd_error(self, gcmd):
         raise gcmd.error('SD write not supported')
+
     def cmd_M20(self, gcmd):
         # List SD card
         files = self.get_file_list(self.with_subdirs)
@@ -184,15 +201,18 @@ class VirtualSDGCodeProvider:
         for fname, fsize in files:
             gcmd.respond_raw('%s %d' % (fname, fsize))
         gcmd.respond_raw('End file list')
+
     def cmd_M21(self, gcmd):
         # Initialize SD card
         gcmd.respond_raw('SD card ok')
+
     def cmd_M26(self, gcmd):
         # Set SD position
         if not self.is_active():
             gcmd.respond_raw('Not printing from SD card.')
         pos = gcmd.get_int('S', minval=0)
         self.set_file_position(pos)
+
     def cmd_M27(self, gcmd):
         # Report SD print status
         if not self.is_active():
@@ -237,16 +257,20 @@ class VirtualSD:
             self.cmd_SDCARD_PRINT_FILE,
             desc=self.cmd_SDCARD_PRINT_FILE_help,
         )
+
     def handle_shutdown(self):
         if self.work_timer is not None:
             self.must_pause_work = True
             self.gcode_provider.handle_shutdown()
+
     def get_file_list(self, check_subdirs=False):
         return self.virtualsd_gcode_provider.get_file_list(check_subdirs)
+
     def stats(self, eventtime):
         if self.work_timer is None:
             return False, ''
         return self.gcode_provider.get_stats(eventtime)
+
     def get_status(self, eventtime):
         sts = {'is_active': self.is_active()}
         if self.gcode_provider:
@@ -254,13 +278,16 @@ class VirtualSD:
         else:
             sts.update(self.virtualsd_gcode_provider.get_status(eventtime))
         return sts
+
     def is_active(self):
         return self.work_timer is not None
+
     def do_pause(self):
         if self.work_timer is not None:
             self.must_pause_work = True
             while self.work_timer is not None and not self.cmd_from_sd:
                 self.reactor.pause(self.reactor.monotonic() + 0.001)
+
     def do_resume(self):
         if self.work_timer is not None:
             raise self.gcode.error('SD busy')
@@ -268,12 +295,14 @@ class VirtualSD:
         self.work_timer = self.reactor.register_timer(
             self.work_handler, self.reactor.NOW
         )
+
     def do_cancel(self):
         if self.gcode_provider is not None:
             self.do_pause()
             self.gcode_provider.reset()
             self.print_stats.note_cancel()
             self.gcode_provider = None
+
     def _set_gcode_provider(self, gcode_provider):
         if self.gcode_provider is not None:
             raise self.gcode.error(
@@ -283,11 +312,13 @@ class VirtualSD:
         self.print_stats.set_current_file(gcode_provider.get_name())
         self.gcode_lines = gcode_provider.get_gcode()
         self.current_line = ''
+
     def print_with_gcode_provider(self, gcode_provider):
         self._reset_print()
         self._set_gcode_provider(gcode_provider)
         self.do_resume()
     # G-Code commands
+
     def _reset_print(self):
         if self.gcode_provider is not None:
             self.do_pause()
@@ -298,6 +329,7 @@ class VirtualSD:
     cmd_SDCARD_RESET_FILE_help = (
         'Clears a loaded SD File. Stops the print ' 'if necessary'
     )
+
     def cmd_SDCARD_RESET_FILE(self, gcmd):
         if self.cmd_from_sd:
             raise gcmd.error('SDCARD_RESET_FILE cannot be run from the sdcard')
@@ -306,6 +338,7 @@ class VirtualSD:
         'Loads a SD file and starts the print.  May '
         'include files in subdirectories.'
     )
+
     def cmd_SDCARD_PRINT_FILE(self, gcmd):
         if self.work_timer is not None:
             raise gcmd.error('SD busy')
@@ -318,6 +351,7 @@ class VirtualSD:
         )
         self._set_gcode_provider(self.virtualsd_gcode_provider)
         self.do_resume()
+
     def cmd_M23(self, gcmd):
         # Select SD file
         if self.work_timer is not None:
@@ -330,23 +364,31 @@ class VirtualSD:
             gcmd, filename, check_subdirs=True
         )
         self._set_gcode_provider(self.virtualsd_gcode_provider)
+
     def cmd_M24(self, gcmd):
         # Start/resume SD print
         self.do_resume()
+
     def cmd_M25(self, gcmd):
         # Pause SD print
         self.do_pause()
+
     def get_virtual_sdcard_gcode_provider(self):
         return self.virtualsd_gcode_provider
+
     def get_gcode_provider(self):
         return self.gcode_provider
+
     def is_cmd_from_sd(self):
         return self.cmd_from_sd
+
     def file_path(self):
         return self.virtualsd_gcode_provider.file_path()
+
     def progress(self):
         return self.virtualsd_gcode_provider.progress()
     # Background work timer
+
     def work_handler(self, eventtime):
         self.reactor.unregister_timer(self.work_timer)
         self.print_stats.note_start()
@@ -360,7 +402,7 @@ class VirtualSD:
                     error_message = str(e)
                     try:
                         self.gcode.run_script(self.on_error_gcode.render())
-                    except:
+                    except BaseException:
                         logging.exception('virtual_sdcard on_error')
                     break
                 except StopIteration:
@@ -379,10 +421,10 @@ class VirtualSD:
                 error_message = str(e)
                 try:
                     self.gcode.run_script(self.on_error_gcode.render())
-                except:
+                except BaseException:
                     logging.exception('virtual_sdcard on_error')
                 break
-            except:
+            except BaseException:
                 logging.exception('virtual_sdcard dispatch')
                 break
             self.cmd_from_sd = False

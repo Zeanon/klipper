@@ -12,6 +12,7 @@ SERVO_SIGNAL_PERIOD = 0.020
 PIN_MIN_TIME = 0.100
 RENDER_TIME = 0.500
 
+
 class PrinterServo:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -53,8 +54,10 @@ class PrinterServo:
         gcode.register_mux_command("SET_SERVO_TEMPLATE", "SERVO", servo_name,
                                    self.cmd_SET_SERVO_TEMPLATE,
                                    desc=self.cmd_SET_SERVO_TEMPLATE_help)
+
     def get_status(self, eventtime):
         return {'value': self.last_value}
+
     def _set_pwm(self, print_time, value):
         if value == self.last_value:
             return
@@ -62,24 +65,29 @@ class PrinterServo:
         self.mcu_servo.set_pwm(print_time, value)
         self.last_value = value
         self.last_value_time = print_time
+
     def _get_pwm_from_angle(self, angle):
         angle = max(0., min(self.max_angle, angle))
         width = self.min_width + angle * self.angle_to_width
         return width * self.width_to_value
+
     def _get_pwm_from_pulse_width(self, width):
         if width:
             width = max(self.min_width, min(self.max_width, width))
         return width * self.width_to_value
+
     def _activate_timer(self):
         if self.render_timer is not None or self.active_template is None:
             return
         reactor = self.printer.get_reactor()
         self.render_timer = reactor.register_timer(self._render, reactor.NOW)
+
     def _activate_template(self, template, lparams):
         if template is not None:
             self.active_template = (template, lparams)
         else:
             self.active_template = None
+
     def _render(self, eventtime):
         if self.active_template is None:
             # Nothing to do - unregister timer
@@ -89,6 +97,7 @@ class PrinterServo:
             return reactor.NEVER
         # Setup gcode_macro template context
         context = self.create_template_context(eventtime)
+
         def render(name, **kwargs):
             return self.templates[name].render(context, **kwargs)
         context['render'] = render
@@ -108,6 +117,7 @@ class PrinterServo:
             self._set_pwm(eventtime, self._get_pwm_from_pulse_width(width))
         return eventtime + RENDER_TIME
     cmd_SET_SERVO_help = "Set servo angle"
+
     def cmd_SET_SERVO(self, gcmd):
         if self.active_template is not None:
             return
@@ -119,6 +129,7 @@ class PrinterServo:
             angle = gcmd.get_float('ANGLE')
             self._set_pwm(print_time, self._get_pwm_from_angle(angle))
     cmd_SET_SERVO_TEMPLATE_help = "Assign a display_template to a SERVO"
+
     def cmd_SET_SERVO_TEMPLATE(self, gcmd):
         template = None
         lparams = {}
@@ -141,6 +152,7 @@ class PrinterServo:
                     raise gcmd.error("Unable to parse '%s' as a literal" % (v,))
         self._activate_template(template, lparams)
         self._activate_timer()
+
 
 def load_config_prefix(config):
     return PrinterServo(config)

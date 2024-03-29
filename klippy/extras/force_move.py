@@ -3,7 +3,8 @@
 # Copyright (C) 2018-2019  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import math, logging
+import math
+import logging
 import chelper
 
 BUZZ_DISTANCE = 1.
@@ -13,6 +14,8 @@ BUZZ_RADIANS_VELOCITY = BUZZ_RADIANS_DISTANCE / .250
 STALL_TIME = 0.100
 
 # Calculate a move's accel_t, cruise_t, and cruise_v
+
+
 def calc_move_time(dist, speed, accel):
     axis_r = 1.
     if dist < 0.:
@@ -27,6 +30,7 @@ def calc_move_time(dist, speed, accel):
     accel_decel_d = accel_t * speed
     cruise_t = (dist - accel_decel_d) / speed
     return axis_r, accel_t, cruise_t, speed
+
 
 class ForceMove:
     def __init__(self, config):
@@ -52,12 +56,15 @@ class ForceMove:
             gcode.register_command('MARK_AS_HOMED',
                                    self.cmd_MARK_AS_HOMED,
                                    desc=self.cmd_MARK_AS_HOMED_help)
+
     def register_stepper(self, config, mcu_stepper):
         self.steppers[mcu_stepper.get_name()] = mcu_stepper
+
     def lookup_stepper(self, name):
         if name not in self.steppers:
             raise self.printer.config_error("Unknown stepper %s" % (name,))
         return self.steppers[name]
+
     def _force_enable(self, stepper):
         toolhead = self.printer.lookup_object('toolhead')
         print_time = toolhead.get_last_move_time()
@@ -68,6 +75,7 @@ class ForceMove:
             enable.motor_enable(print_time)
             toolhead.dwell(STALL_TIME)
         return was_enable
+
     def _restore_enable(self, stepper, was_enable):
         if not was_enable:
             toolhead = self.printer.lookup_object('toolhead')
@@ -77,6 +85,7 @@ class ForceMove:
             enable = stepper_enable.lookup_enable(stepper.get_name())
             enable.motor_disable(print_time)
             toolhead.dwell(STALL_TIME)
+
     def manual_move(self, stepper, dist, speed, accel=0.):
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.flush_step_generation()
@@ -96,12 +105,14 @@ class ForceMove:
         toolhead.note_mcu_movequeue_activity(print_time)
         toolhead.dwell(accel_t + cruise_t + accel_t)
         toolhead.flush_step_generation()
+
     def _lookup_stepper(self, gcmd):
         name = gcmd.get('STEPPER')
         if name not in self.steppers:
             raise gcmd.error("Unknown stepper %s" % (name,))
         return self.steppers[name]
     cmd_STEPPER_BUZZ_help = "Oscillate a given stepper to help id it"
+
     def cmd_STEPPER_BUZZ(self, gcmd):
         stepper = self._lookup_stepper(gcmd)
         logging.info("Stepper buzz %s", stepper.get_name())
@@ -117,6 +128,7 @@ class ForceMove:
             toolhead.dwell(.450)
         self._restore_enable(stepper, was_enable)
     cmd_FORCE_MOVE_help = "Manually move a stepper; invalidates kinematics"
+
     def cmd_FORCE_MOVE(self, gcmd):
         stepper = self._lookup_stepper(gcmd)
         distance = gcmd.get_float('DISTANCE')
@@ -127,6 +139,7 @@ class ForceMove:
         self._force_enable(stepper)
         self.manual_move(stepper, distance, speed, accel)
     cmd_SET_KINEMATIC_POSITION_help = "Force a low-level kinematic position"
+
     def cmd_SET_KINEMATIC_POSITION(self, gcmd):
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.get_last_move_time()
@@ -150,6 +163,7 @@ class ForceMove:
         logging.info("SET_KINEMATIC_POSITION pos=%.3f,%.3f,%.3f", x, y, z)
         toolhead.set_position([x, y, z, curpos[3]], homing_axes=homing_axes)
     cmd_MARK_AS_HOMED_help = "Manually set a specific axis as homed"
+
     def cmd_MARK_AS_HOMED(self, gcmd):
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.dwell(STALL_TIME)

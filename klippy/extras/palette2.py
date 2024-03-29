@@ -583,7 +583,7 @@ class Palette2:
         self.write_queue.put(COMMAND_HEARTBEAT)
         eventtime = self.reactor.pause(eventtime + 5)
         if self.heartbeat and self.heartbeat < (
-            eventtime - HEARTBEAT_TIMEOUT):
+                eventtime - HEARTBEAT_TIMEOUT):
             logging.error(
                 "P2 has not responded to heartbeat")
             if not self.is_printing or self.is_setup_complete:
@@ -624,7 +624,7 @@ class Palette2:
             idle_time = est_print_time - print_time
             if not lookahead_empty or idle_time < 0.5:
                 return eventtime + \
-                       max(0., min(1., print_time - est_print_time))
+                    max(0., min(1., print_time - est_print_time))
 
             extrude = abs(self.remaining_load_length)
             extrude = min(50, extrude / 2)

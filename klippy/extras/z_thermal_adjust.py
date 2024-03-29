@@ -11,6 +11,7 @@ import threading
 
 KELVIN_TO_CELSIUS = -273.15
 
+
 class ZThermalAdjuster:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -20,7 +21,7 @@ class ZThermalAdjuster:
 
         # Get config parameters, convert to SI units where necessary
         self.temp_coeff = config.getfloat('temp_coeff', minval=-1, maxval=1,
-            default=0)
+                                          default=0)
         self.off_above_z = config.getfloat('z_adjust_off_above', 99999999.)
         self.max_z_adjust_mm = config.getfloat('max_z_adjustment', 99999999.)
 
@@ -100,12 +101,12 @@ class ZThermalAdjuster:
             adjust = -1 * self.temp_coeff * delta_t
 
             # compute sign (+1 or -1) for maximum offset setting
-            sign = 1 - (adjust <= 0)*2
+            sign = 1 - (adjust <= 0) * 2
 
             # Don't apply adjustments smaller than step distance
             if abs(adjust - self.z_adjust_mm) > self.z_step_dist:
-                self.z_adjust_mm = min([self.max_z_adjust_mm*sign,
-                    adjust], key=abs)
+                self.z_adjust_mm = min([self.max_z_adjust_mm * sign,
+                                        adjust], key=abs)
 
         # Apply Z adjustment
         new_z = pos[2] + self.z_adjust_mm
@@ -180,10 +181,11 @@ class ZThermalAdjuster:
                   self.ref_temperature, override,
                   self.smoothed_temp,
                   self.z_adjust_mm)
-        )
+               )
         gcmd.respond_info(msg)
 
     cmd_SET_Z_THERMAL_ADJUST_help = 'Set/query Z Thermal Adjust parameters.'
+
 
 def load_config(config):
     return ZThermalAdjuster(config)

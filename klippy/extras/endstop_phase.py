@@ -3,13 +3,16 @@
 # Copyright (C) 2016-2021  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import math, logging
+import math
+import logging
 import stepper
 
 TRINAMIC_DRIVERS = ["tmc2130", "tmc2208", "tmc2209", "tmc2240", "tmc2660",
-    "tmc5160"]
+                    "tmc5160"]
 
 # Calculate the trigger phase of a stepper motor
+
+
 class PhaseCalc:
     def __init__(self, printer, name, phases=None):
         self.printer = printer
@@ -19,6 +22,7 @@ class PhaseCalc:
         # Statistics tracking for ENDSTOP_PHASE_CALIBRATE
         self.phase_history = self.last_phase = self.last_mcu_position = None
         self.is_primary = self.stats_only = False
+
     def lookup_tmc(self):
         for driver in TRINAMIC_DRIVERS:
             driver_name = "%s %s" % (driver, self.name)
@@ -30,9 +34,11 @@ class PhaseCalc:
                 break
         if self.phases is not None:
             self.phase_history = [0] * self.phases
+
     def convert_phase(self, driver_phase, driver_phases):
         phases = self.phases
         return (int(float(driver_phase) / driver_phases * phases + .5) % phases)
+
     def calc_phase(self, stepper, trig_mcu_pos):
         mcu_phase_offset = 0
         if self.tmc_module is not None:
@@ -49,6 +55,8 @@ class PhaseCalc:
         return phase
 
 # Adjusted endstop trigger positions
+
+
 class EndstopPhase:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -79,7 +87,7 @@ class EndstopPhase:
                                                 above=0.)
         # Determine endstop accuracy
         if self.endstop_accuracy is None:
-            self.endstop_phase_accuracy = self.phases//2 - 1
+            self.endstop_phase_accuracy = self.phases // 2 - 1
         elif self.endstop_phase is not None:
             self.endstop_phase_accuracy = int(
                 math.ceil(self.endstop_accuracy * .5 / self.step_dist))
@@ -91,6 +99,7 @@ class EndstopPhase:
                                " stepper phase adjustment" % (self.name,))
         if self.printer.get_start_args().get('debugoutput') is not None:
             self.endstop_phase_accuracy = self.phases
+
     def align_endstop(self, rail):
         if not self.endstop_align_zero or self.endstop_phase is None:
             return 0.
@@ -102,6 +111,7 @@ class EndstopPhase:
         full_step = microsteps * self.step_dist
         pe = rail.get_homing_info().position_endstop
         return int(pe / full_step + .5) * full_step - pe + phase_offset
+
     def get_homed_offset(self, stepper, trig_mcu_pos):
         phase = self.phase_calc.calc_phase(stepper, trig_mcu_pos)
         if self.endstop_phase is None:
@@ -116,6 +126,7 @@ class EndstopPhase:
                 "Endstop %s incorrect phase (got %d vs %d)" % (
                     self.name, phase, self.endstop_phase))
         return delta * self.step_dist
+
     def handle_home_rails_end(self, homing_state, rails):
         for rail in rails:
             stepper = rail.get_steppers()[0]
@@ -127,6 +138,8 @@ class EndstopPhase:
                 return
 
 # Support for ENDSTOP_PHASE_CALIBRATE command
+
+
 class EndstopPhases:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -138,6 +151,7 @@ class EndstopPhases:
         self.gcode.register_command("ENDSTOP_PHASE_CALIBRATE",
                                     self.cmd_ENDSTOP_PHASE_CALIBRATE,
                                     desc=self.cmd_ENDSTOP_PHASE_CALIBRATE_help)
+
     def update_stepper(self, stepper, trig_mcu_pos, is_primary):
         stepper_name = stepper.get_name()
         phase_calc = self.tracking.get(stepper_name)
@@ -159,6 +173,7 @@ class EndstopPhases:
             phase_calc.is_primary = True
         if phase_calc.stats_only:
             phase_calc.calc_phase(stepper, trig_mcu_pos)
+
     def handle_home_rails_end(self, homing_state, rails):
         for rail in rails:
             is_primary = True
@@ -168,6 +183,7 @@ class EndstopPhases:
                 self.update_stepper(stepper, trig_mcu_pos, is_primary)
                 is_primary = False
     cmd_ENDSTOP_PHASE_CALIBRATE_help = "Calibrate stepper phase"
+
     def cmd_ENDSTOP_PHASE_CALIBRATE(self, gcmd):
         stepper_name = gcmd.get('STEPPER', None)
         if stepper_name is None:
@@ -188,6 +204,7 @@ class EndstopPhases:
         gcmd.respond_info(
             "The SAVE_CONFIG command will update the printer config\n"
             "file with these parameters and restart the printer.")
+
     def generate_stats(self, stepper_name, phase_calc):
         phase_history = phase_calc.phase_history
         wph = phase_history + phase_history
@@ -197,7 +214,7 @@ class EndstopPhases:
         res = []
         for i in range(phases):
             phase = i + half_phases
-            cost = sum([wph[j] * abs(j-phase) for j in range(i, i+phases)])
+            cost = sum([wph[j] * abs(j - phase) for j in range(i, i + phases)])
             res.append((cost, phase))
         res.sort()
         best = res[0][1]
@@ -208,6 +225,7 @@ class EndstopPhases:
         self.gcode.respond_info("%s: trigger_phase=%d/%d (range %d to %d)"
                                 % (stepper_name, best_phase, phases, lo, hi))
         return best_phase, phases
+
     def report_stats(self):
         if not self.tracking:
             self.gcode.respond_info(
@@ -218,15 +236,18 @@ class EndstopPhases:
             if phase_calc is None or not phase_calc.is_primary:
                 continue
             self.generate_stats(stepper_name, phase_calc)
+
     def get_status(self, eventtime):
-        lh = { name: {'phase': pc.last_phase, 'phases': pc.phases,
-                      'mcu_position': pc.last_mcu_position}
-               for name, pc in self.tracking.items()
-               if pc.phase_history is not None }
-        return { 'last_home': lh }
+        lh = {name: {'phase': pc.last_phase, 'phases': pc.phases,
+                     'mcu_position': pc.last_mcu_position}
+              for name, pc in self.tracking.items()
+              if pc.phase_history is not None}
+        return {'last_home': lh}
+
 
 def load_config_prefix(config):
     return EndstopPhase(config)
+
 
 def load_config(config):
     return EndstopPhases(config)

@@ -3,7 +3,10 @@
 # Copyright (C) 2016-2020  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import os, logging, threading, collections
+import os
+import logging
+import threading
+import collections
 
 
 ######################################################################
@@ -24,6 +27,7 @@ PID_PROFILE_OPTIONS = {
     'pid_ki': (float, "%.3f"),
     'pid_kd': (float, "%.3f")
 }
+
 
 class Heater:
     def __init__(self, config, sensor):
@@ -91,27 +95,26 @@ class Heater:
                                         "HEATER",
                                         self.short_name,
                                         self.cmd_SET_HEATER_TEMPERATURE,
-                                        desc=
-                                        self.cmd_SET_HEATER_TEMPERATURE_help)
+                                        desc=self.cmd_SET_HEATER_TEMPERATURE_help)
         self.gcode.register_mux_command("SET_SMOOTH_TIME",
                                         "HEATER",
                                         self.short_name,
                                         self.cmd_SET_SMOOTH_TIME,
-                                        desc=
-                                        self.cmd_SET_SMOOTH_TIME_help)
+                                        desc=self.cmd_SET_SMOOTH_TIME_help)
         self.gcode.register_mux_command("PID_PROFILE",
                                         "HEATER",
                                         self.short_name,
                                         self.pmgr.cmd_PID_PROFILE,
-                                        desc=
-                                        self.pmgr.cmd_PID_PROFILE_help)
+                                        desc=self.pmgr.cmd_PID_PROFILE_help)
         self.printer.register_event_handler("klippy:shutdown",
                                             self._handle_shutdown)
+
     def notify_disabled(self, gcmd):
         if gcmd is not None:
             gcmd.respond_info("Heater [%s] is disabled due to an "
                               "accelerometer being connected."
                               % self.short_name)
+
     def lookup_control(self, profile, load_clean=False):
         algos = collections.OrderedDict({
             'watermark': ControlBangBang,
@@ -121,20 +124,22 @@ class Heater:
         return algos[profile['control']](profile,
                                          self,
                                          load_clean)
+
     def set_pwm(self, read_time, value):
         if self.target_temp <= 0. or self.is_shutdown:
             value = 0.
         if ((read_time < self.next_pwm_time or not self.last_pwm_value)
-            and abs(value - self.last_pwm_value) < 0.05):
+                and abs(value - self.last_pwm_value) < 0.05):
             # No significant change in value - can suppress update
             return
         pwm_time = read_time + self.pwm_delay
         self.next_pwm_time = pwm_time + 0.75 * MAX_HEAT_TIME
         self.last_pwm_value = value
         self.mcu_pwm.set_pwm(pwm_time, value)
-        #logging.debug("%s: pwm=%.3f@%.3f (from %.3f@%.3f [%.3f])",
+        # logging.debug("%s: pwm=%.3f@%.3f (from %.3f@%.3f [%.3f])",
         #              self.name, value, pwm_time,
         #              self.last_temp, self.last_temp_time, self.target_temp)
+
     def temperature_callback(self, read_time, temp):
         with self.lock:
             time_diff = read_time - self.last_temp_time
@@ -146,20 +151,27 @@ class Heater:
             self.smoothed_temp += temp_diff * adj_time
             self.can_extrude = (self.smoothed_temp >= self.min_extrude_temp
                                 or self.cold_extrude)
-        #logging.debug("temp: %.3f %f = %f", read_time, temp)
+        # logging.debug("temp: %.3f %f = %f", read_time, temp)
+
     def _handle_shutdown(self):
         self.is_shutdown = True
     # External commands
+
     def get_name(self):
         return self.name
+
     def get_pwm_delay(self):
         return self.pwm_delay
+
     def get_max_power(self):
         return self.max_power
+
     def get_smooth_time(self):
         return self.smooth_time
+
     def set_inv_smooth_time(self, inv_smooth_time):
         self.inv_smooth_time = inv_smooth_time
+
     def set_temp(self, degrees):
         if degrees and (degrees < self.min_temp or degrees > self.max_set_temp):
             raise self.printer.command_error(
@@ -167,16 +179,19 @@ class Heater:
                 % (degrees, self.min_temp, self.max_set_temp))
         with self.lock:
             self.target_temp = degrees
+
     def get_temp(self, eventtime):
         print_time = self.mcu_pwm.get_mcu().estimated_print_time(eventtime) - 5.
         with self.lock:
             if self.last_temp_time < print_time:
                 return 0., self.target_temp
             return self.smoothed_temp, self.target_temp
+
     def check_busy(self, eventtime):
         with self.lock:
             return self.control.check_busy(
                 eventtime, self.smoothed_temp, self.target_temp)
+
     def set_control(self, control, keep_target=True):
         with self.lock:
             old_control = self.control
@@ -184,12 +199,15 @@ class Heater:
             if not keep_target:
                 self.target_temp = 0.
         return old_control
+
     def get_control(self):
         return self.control
+
     def alter_target(self, target_temp):
         if target_temp:
             target_temp = max(self.min_temp, min(self.max_temp, target_temp))
         self.target_temp = target_temp
+
     def stats(self, eventtime):
         with self.lock:
             target_temp = self.target_temp
@@ -198,6 +216,7 @@ class Heater:
         is_active = target_temp or last_temp > 50.
         return is_active, '%s: target=%.0f temp=%.1f pwm=%.3f' % (
             self.short_name, target_temp, last_temp, last_pwm_value)
+
     def get_status(self, eventtime):
         with self.lock:
             target_temp = self.target_temp
@@ -207,14 +226,17 @@ class Heater:
                 'target': target_temp,
                 'power': last_pwm_value,
                 'pid_profile': self.get_control().get_profile()['name']}
+
     def set_enabled(self, enabled):
         self.enabled = enabled
     cmd_SET_HEATER_TEMPERATURE_help = "Sets a heater temperature"
+
     def cmd_SET_HEATER_TEMPERATURE(self, gcmd):
         temp = gcmd.get_float('TARGET', 0.)
         pheaters = self.printer.lookup_object('heaters')
         pheaters.set_temperature(self, temp, gcmd=gcmd)
     cmd_SET_SMOOTH_TIME_help = "Set the smooth time for the given heater"
+
     def cmd_SET_SMOOTH_TIME(self, gcmd):
         save_to_profile = gcmd.get_int('SAVE_TO_PROFILE',
                                        0,
@@ -228,6 +250,7 @@ class Heater:
         if save_to_profile:
             self.get_control().get_profile()['smooth_time'] = self.smooth_time
             self.pmgr.save_profile()
+
     class ProfileManager:
         def __init__(self, outer_instance):
             self.outer_instance = outer_instance
@@ -241,6 +264,7 @@ class Heater:
             for profile in stored_profs:
                 self._init_profile(profile,
                                    profile.get_name().split(' ', 2)[2])
+
         def _init_profile(self, config_section, name):
             version = config_section.getint('pid_version', 1)
             if version != PID_PROFILE_VERSION:
@@ -284,6 +308,7 @@ class Heater:
             temp_profile['name'] = name
             self.profiles[name] = temp_profile
             return temp_profile
+
         def _check_value_config(self,
                                 key,
                                 config_section,
@@ -305,6 +330,7 @@ class Heater:
                        config_section.get_name())
                 )
             return value
+
         def _compute_section_name(self, profile_name):
             return (self.outer_instance.short_name if profile_name == 'default'
                     else ("pid_profile "
@@ -312,6 +338,7 @@ class Heater:
                           + " "
                           + profile_name)
                     )
+
         def _check_value_gcmd(self,
                               name,
                               default,
@@ -341,9 +368,11 @@ class Heater:
                     % name
                 )
             return value.lower() if type == 'lower' else value
+
         def init_default_profile(self):
             return self._init_profile(self.outer_instance.config,
                                       'default')
+
         def set_values(self, profile_name, gcmd, verbose):
             current_profile = self.outer_instance.get_control().get_profile()
             target = self._check_value_gcmd('TARGET',
@@ -418,6 +447,7 @@ class Heater:
                     % (kp, ki, kd))
             self.outer_instance.gcode.respond_info(msg)
             self.save_profile(profile_name=profile_name, verbose=True)
+
         def get_values(self, profile_name, gcmd, verbose):
             temp_profile = self.outer_instance.get_control().get_profile()
             target = temp_profile['pid_target']
@@ -440,6 +470,7 @@ class Heater:
                 "name: %s"
                 % (target, tolerance, control, smooth_time, kp, ki, kd, name)
             )
+
         def save_profile(self, profile_name=None, gcmd=None, verbose=True):
             temp_profile = self.outer_instance.get_control().get_profile()
             if profile_name is None:
@@ -465,6 +496,7 @@ class Heater:
                     "for the current session.  The SAVE_CONFIG command will\n"
                     "update the printer config file and restart the printer."
                     % (self.outer_instance.short_name, profile_name))
+
         def load_profile(self, profile_name, gcmd, verbose):
             verbose = self._check_value_gcmd('VERBOSE',
                                              'low',
@@ -531,7 +563,7 @@ class Heater:
                 "PID Profile [%s] loaded for heater [%s].\n"
                 % (profile['name'],
                    self.outer_instance.short_name)
-                )
+            )
             if verbose == 'high':
                 smooth_time = (self.outer_instance.get_smooth_time()
                                if profile['smooth_time'] is None
@@ -549,6 +581,7 @@ class Heater:
                            profile['pid_ki'],
                            profile['pid_kd']))
                 self.outer_instance.gcode.respond_info(msg)
+
         def remove_profile(self, profile_name, gcmd, verbose):
             if profile_name in self.profiles:
                 section_name = self._compute_section_name(profile_name)
@@ -567,6 +600,7 @@ class Heater:
                 self.outer_instance.gcode.respond_info(
                     "No profile named [%s] to remove" % profile_name)
         cmd_PID_PROFILE_help = "PID Profile Persistent Storage management"
+
         def cmd_PID_PROFILE(self, gcmd):
             options = collections.OrderedDict({
                 'LOAD': self.load_profile,
@@ -589,7 +623,6 @@ class Heater:
             )
 
 
-
 ######################################################################
 # Bang-bang control algo
 ######################################################################
@@ -603,9 +636,9 @@ class ControlBangBang:
         self.heating = False
 
     def temperature_update(self, read_time, temp, target_temp):
-        if self.heating and temp >= target_temp+self.max_delta:
+        if self.heating and temp >= target_temp + self.max_delta:
             self.heating = False
-        elif not self.heating and temp <= target_temp-self.max_delta:
+        elif not self.heating and temp <= target_temp - self.max_delta:
             self.heating = True
         if self.heating:
             self.heater.set_pwm(read_time, self.heater_max_power)
@@ -613,7 +646,7 @@ class ControlBangBang:
             self.heater.set_pwm(read_time, 0.)
 
     def check_busy(self, eventtime, smoothed_temp, target_temp):
-        return smoothed_temp < target_temp-self.max_delta
+        return smoothed_temp < target_temp - self.max_delta
 
     def update_smooth_time(self):
         return
@@ -631,6 +664,7 @@ class ControlBangBang:
 
 PID_SETTLE_DELTA = 1.
 PID_SETTLE_SLOPE = .1
+
 
 class ControlPID:
     def __init__(self, profile, heater, load_clean=False):
@@ -666,7 +700,7 @@ class ControlPID:
         # and derivative on measurement, to account for derivative kick
         # when the set point changes
         dc = -(temp - self.prev_temp) / self.dt
-        dc = ((self.smooth - 1.) * self.prev_der + dc)/self.smooth
+        dc = ((self.smooth - 1.) * self.prev_der + dc) / self.smooth
         # calculate the output
         o = self.Kp * err + self.Ki * i + self.Kd * dc
         # calculate the saturated output
@@ -674,7 +708,7 @@ class ControlPID:
 
         # update the heater
         self.heater.set_pwm(read_time, so)
-        #update the previous values
+        # update the previous values
         self.prev_temp = temp
         self.prev_der = dc
         if target_temp > 0.:
@@ -684,12 +718,13 @@ class ControlPID:
                 self.int_sum = i
             else:
                 # saturated, so conditionally integrate
-                if (o > 0.)-(o < 0.) != (ic > 0.)-(ic < 0.):
+                if (o > 0.) - (o < 0.) != (ic > 0.) - (ic < 0.):
                     # the signs are opposite so an update is allowed
                     self.int_sum = i
         else:
             self.prev_err = 0.
             self.int_sum = 0.
+
     def check_busy(self, eventtime, smoothed_temp, target_temp):
         temp_diff = target_temp - smoothed_temp
         return (abs(temp_diff) > PID_SETTLE_DELTA
@@ -814,6 +849,7 @@ class PrinterHeaters:
         gcode.register_command("M105", self.cmd_M105, when_not_ready=True)
         gcode.register_command("TEMPERATURE_WAIT", self.cmd_TEMPERATURE_WAIT,
                                desc=self.cmd_TEMPERATURE_WAIT_help)
+
     def load_config(self, config):
         self.have_load_sensors = True
         # Load default temperature sensors
@@ -826,8 +862,10 @@ class PrinterHeaters:
             raise config.config_error("Cannot load config '%s'" % (filename,))
         for c in dconfig.get_prefix_sections(''):
             self.printer.load_object(dconfig, c.get_name())
+
     def add_sensor_factory(self, sensor_type, sensor_factory):
         self.sensor_factories[sensor_type] = sensor_factory
+
     def setup_heater(self, config, gcode_id=None):
         heater_name = config.get_name().split()[-1]
         if heater_name in self.heaters:
@@ -839,13 +877,16 @@ class PrinterHeaters:
         self.register_sensor(config, heater, gcode_id)
         self.available_heaters.append(config.get_name())
         return heater
+
     def get_all_heaters(self):
         return self.available_heaters
+
     def lookup_heater(self, heater_name):
         if heater_name not in self.heaters:
             raise self.printer.config_error(
                 "Unknown heater '%s'" % (heater_name,))
         return self.heaters[heater_name]
+
     def setup_sensor(self, config):
         if not self.have_load_sensors:
             self.load_config(config)
@@ -854,6 +895,7 @@ class PrinterHeaters:
             raise self.printer.config_error(
                 "Unknown temperature sensor '%s'" % (sensor_type,))
         return self.sensor_factories[sensor_type](config)
+
     def register_sensor(self, config, psensor, gcode_id=None):
         self.available_sensors.append(config.get_name())
         if gcode_id is None:
@@ -864,21 +906,27 @@ class PrinterHeaters:
             raise self.printer.config_error(
                 "G-Code sensor id %s already registered" % (gcode_id,))
         self.gcode_id_to_sensor[gcode_id] = psensor
+
     def register_monitor(self, config):
         self.available_monitors.append(config.get_name())
+
     def get_status(self, eventtime):
         return {'available_heaters': self.available_heaters,
                 'available_sensors': self.available_sensors,
                 'available_monitors': self.available_monitors}
+
     def turn_off_all_heaters(self, print_time=0.):
         for heater in self.heaters.values():
             heater.set_temp(0.)
     cmd_TURN_OFF_HEATERS_help = "Turn off all heaters"
+
     def cmd_TURN_OFF_HEATERS(self, gcmd):
         self.turn_off_all_heaters()
     # G-Code M105 temperature reporting
+
     def _handle_ready(self):
         self.has_started = True
+
     def _get_temp(self, eventtime):
         # Tn:XXX /YYY B:XXX /YYY
         out = []
@@ -889,6 +937,7 @@ class PrinterHeaters:
         if not out:
             return "T:0"
         return " ".join(out)
+
     def cmd_M105(self, gcmd):
         # Get Extruder Temperature
         reactor = self.printer.get_reactor()
@@ -896,6 +945,7 @@ class PrinterHeaters:
         did_ack = gcmd.ack(msg)
         if not did_ack:
             gcmd.respond_raw(msg)
+
     def _wait_for_temperature(self, heater):
         # Helper to wait on heater.check_busy() and report M105 temperatures
         if self.printer.get_start_args().get('debugoutput') is not None:
@@ -908,6 +958,7 @@ class PrinterHeaters:
             print_time = toolhead.get_last_move_time()
             gcode.respond_raw(self._get_temp(eventtime))
             eventtime = reactor.pause(eventtime + 1.)
+
     def set_temperature(self, heater, temp, wait=False, gcmd=None):
         if not heater.enabled:
             heater.notify_disabled(gcmd)
@@ -918,6 +969,7 @@ class PrinterHeaters:
         if wait and temp:
             self._wait_for_temperature(heater)
     cmd_TEMPERATURE_WAIT_help = "Wait for a temperature on a sensor"
+
     def cmd_TEMPERATURE_WAIT(self, gcmd):
         sensor_name = gcmd.get('SENSOR')
         if sensor_name not in self.available_sensors:
@@ -943,6 +995,7 @@ class PrinterHeaters:
             print_time = toolhead.get_last_move_time()
             gcmd.respond_raw(self._get_temp(eventtime))
             eventtime = reactor.pause(eventtime + 1.)
+
 
 def load_config(config):
     return PrinterHeaters(config)

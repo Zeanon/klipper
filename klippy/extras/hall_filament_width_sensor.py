@@ -9,17 +9,18 @@ ADC_REPORT_TIME = 0.500
 ADC_SAMPLE_TIME = 0.03
 ADC_SAMPLE_COUNT = 15
 
+
 class HallFilamentWidthSensor:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.reactor = self.printer.get_reactor()
         self.pin1 = config.get('adc1')
         self.pin2 = config.get('adc2')
-        self.dia1=config.getfloat('Cal_dia1', 1.5)
-        self.dia2=config.getfloat('Cal_dia2', 2.0)
-        self.rawdia1=config.getint('Raw_dia1', 9500)
-        self.rawdia2=config.getint('Raw_dia2', 10500)
-        self.MEASUREMENT_INTERVAL_MM=config.getint('measurement_interval',10)
+        self.dia1 = config.getfloat('Cal_dia1', 1.5)
+        self.dia2 = config.getfloat('Cal_dia2', 2.0)
+        self.rawdia1 = config.getint('Raw_dia1', 9500)
+        self.rawdia2 = config.getint('Raw_dia2', 10500)
+        self.MEASUREMENT_INTERVAL_MM = config.getint('measurement_interval', 10)
         self.nominal_filament_dia = config.getfloat(
             'default_nominal_filament_diameter', above=1)
         self.measurement_delay = config.getfloat('measurement_delay', above=0.)
@@ -28,11 +29,11 @@ class HallFilamentWidthSensor:
                              + self.measurement_max_difference)
         self.min_diameter = (self.nominal_filament_dia
                              - self.measurement_max_difference)
-        self.diameter =self.nominal_filament_dia
-        self.is_active =config.getboolean('enable', False)
-        self.runout_dia_min=config.getfloat('min_diameter', 1.0)
-        self.runout_dia_max=config.getfloat('max_diameter', self.max_diameter)
-        self.is_log =config.getboolean('logging', False)
+        self.diameter = self.nominal_filament_dia
+        self.is_active = config.getboolean('enable', False)
+        self.runout_dia_min = config.getfloat('min_diameter', 1.0)
+        self.runout_dia_max = config.getfloat('max_diameter', self.max_diameter)
+        self.is_log = config.getboolean('logging', False)
         # Use the current diameter instead of nominal while the first
         # measurement isn't in place
         self.use_current_dia_while_delay = config.getboolean(
@@ -75,6 +76,7 @@ class HallFilamentWidthSensor:
 
         self.runout_helper = filament_switch_sensor.RunoutHelper(config)
     # Initialization
+
     def handle_ready(self):
         # Load printer objects
         self.toolhead = self.printer.lookup_object('toolhead')
@@ -91,25 +93,25 @@ class HallFilamentWidthSensor:
         # read sensor value
         self.lastFilamentWidthReading2 = round(read_value * 10000)
         # calculate diameter
-        diameter_new = round((self.dia2 - self.dia1)/
-            (self.rawdia2-self.rawdia1)*
-          ((self.lastFilamentWidthReading+self.lastFilamentWidthReading2)
-           -self.rawdia1)+self.dia1,2)
-        self.diameter=(5.0 * self.diameter + diameter_new)/6
+        diameter_new = round((self.dia2 - self.dia1) /
+                             (self.rawdia2 - self.rawdia1) *
+                             ((self.lastFilamentWidthReading + self.lastFilamentWidthReading2)
+                              - self.rawdia1) + self.dia1, 2)
+        self.diameter = (5.0 * self.diameter + diameter_new) / 6
 
     def update_filament_array(self, last_epos):
         # Fill array
         if len(self.filament_array) > 0:
             # Get last reading position in array & calculate next
             # reading position
-          next_reading_position = (self.filament_array[-1][0] +
-          self.MEASUREMENT_INTERVAL_MM)
-          if next_reading_position <= (last_epos + self.measurement_delay):
-            self.filament_array.append([last_epos + self.measurement_delay,
+            next_reading_position = (self.filament_array[-1][0] +
+                                     self.MEASUREMENT_INTERVAL_MM)
+            if next_reading_position <= (last_epos + self.measurement_delay):
+                self.filament_array.append([last_epos + self.measurement_delay,
                                             self.diameter])
-            if self.is_log:
-                 self.gcode.respond_info("Filament width:%.3f" %
-                                         ( self.diameter ))
+                if self.is_log:
+                    self.gcode.respond_info("Filament width:%.3f" %
+                                            (self.diameter))
 
         else:
             # add first item to array
@@ -141,10 +143,10 @@ class HallFilamentWidthSensor:
                         and (self.firstExtruderUpdatePosition
                              == pending_position)):
                         self.filament_width = self.diameter
-                    elif  self.firstExtruderUpdatePosition == pending_position:
+                    elif self.firstExtruderUpdatePosition == pending_position:
                         self.filament_width = self.nominal_filament_dia
                 if ((self.filament_width <= self.max_diameter)
-                    and (self.filament_width >= self.min_diameter)):
+                        and (self.filament_width >= self.min_diameter)):
                     percentage = round(self.nominal_filament_dia**2
                                        / self.filament_width**2 * 100)
                     self.gcode.run_script("M221 S" + str(percentage))
@@ -202,17 +204,19 @@ class HallFilamentWidthSensor:
 
     def cmd_Get_Raw_Values(self, gcmd):
         response = "ADC1="
-        response +=  (" "+str(self.lastFilamentWidthReading))
-        response +=  (" ADC2="+str(self.lastFilamentWidthReading2))
-        response +=  (" RAW="+
-                      str(self.lastFilamentWidthReading
-                      +self.lastFilamentWidthReading2))
+        response += (" " + str(self.lastFilamentWidthReading))
+        response += (" ADC2=" + str(self.lastFilamentWidthReading2))
+        response += (" RAW=" +
+                     str(self.lastFilamentWidthReading
+                         + self.lastFilamentWidthReading2))
         gcmd.respond_info(response)
+
     def get_status(self, eventtime):
         return {'Diameter': self.diameter,
-                'Raw':(self.lastFilamentWidthReading+
-                 self.lastFilamentWidthReading2),
-                'is_active':self.is_active}
+                'Raw': (self.lastFilamentWidthReading +
+                        self.lastFilamentWidthReading2),
+                'is_active': self.is_active}
+
     def cmd_log_enable(self, gcmd):
         self.is_log = True
         gcmd.respond_info("Filament width logging Turned On")
@@ -220,6 +224,7 @@ class HallFilamentWidthSensor:
     def cmd_log_disable(self, gcmd):
         self.is_log = False
         gcmd.respond_info("Filament width logging Turned Off")
+
 
 def load_config(config):
     return HallFilamentWidthSensor(config)

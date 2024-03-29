@@ -7,12 +7,13 @@
 respond_types = {
     'echo': 'echo:',
     'command': '//',
-    'error' : '!!',
+    'error': '!!',
 }
 
 respond_types_no_space = {
     'echo_no_space': 'echo:',
 }
+
 
 class HostResponder:
     def __init__(self, config):
@@ -25,19 +26,21 @@ class HostResponder:
         gcode.register_command('M118', self.cmd_M118, True)
         gcode.register_command('RESPOND', self.cmd_RESPOND, True,
                                desc=self.cmd_RESPOND_help)
+
     def cmd_M118(self, gcmd):
         msg = gcmd.get_raw_command_parameters()
         gcmd.respond_raw("%s %s" % (self.default_prefix, msg))
     cmd_RESPOND_help = ("Echo the message prepended with a prefix")
+
     def cmd_RESPOND(self, gcmd):
         no_space = False
         respond_type = gcmd.get('TYPE', None)
         prefix = self.default_prefix
-        if(respond_type != None):
+        if (respond_type is not None):
             respond_type = respond_type.lower()
-            if(respond_type in respond_types):
+            if (respond_type in respond_types):
                 prefix = respond_types[respond_type]
-            elif(respond_type in respond_types_no_space):
+            elif (respond_type in respond_types_no_space):
                 prefix = respond_types_no_space[respond_type]
                 no_space = True
             else:
@@ -46,10 +49,11 @@ class HostResponder:
                     " of 'echo', 'command', or 'error'" % (respond_type,))
         prefix = gcmd.get('PREFIX', prefix)
         msg = gcmd.get('MSG', '')
-        if(no_space):
+        if (no_space):
             gcmd.respond_raw("%s%s" % (prefix, msg))
         else:
             gcmd.respond_raw("%s %s" % (prefix, msg))
+
 
 def load_config(config):
     return HostResponder(config)

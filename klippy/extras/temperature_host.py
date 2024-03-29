@@ -9,6 +9,7 @@ import logging
 HOST_REPORT_TIME = 1.0
 RPI_PROC_TEMP_FILE = "/sys/class/thermal/thermal_zone0/temp"
 
+
 class Temperature_HOST:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -25,7 +26,7 @@ class Temperature_HOST:
             self._sample_pi_temperature)
         try:
             self.file_handle = open(self.path, "r")
-        except:
+        except BaseException:
             raise config.error("Unable to open temperature file '%s'"
                                % (self.path,))
 
@@ -48,7 +49,7 @@ class Temperature_HOST:
     def _sample_pi_temperature(self, eventtime):
         try:
             self.file_handle.seek(0)
-            self.temp = float(self.file_handle.read())/1000.0
+            self.temp = float(self.file_handle.read()) / 1000.0
         except Exception:
             logging.exception("temperature_host: Error reading data")
             self.temp = 0.0

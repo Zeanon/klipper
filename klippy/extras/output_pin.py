@@ -8,6 +8,7 @@ PIN_MIN_TIME = 0.100
 RESEND_HOST_TIME = 0.300 + PIN_MIN_TIME
 MAX_SCHEDULE_TIME = 5.0
 
+
 class PrinterOutputPin:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -54,8 +55,10 @@ class PrinterOutputPin:
         gcode.register_mux_command("SET_PIN", "PIN", pin_name,
                                    self.cmd_SET_PIN,
                                    desc=self.cmd_SET_PIN_help)
+
     def get_status(self, eventtime):
         return {'value': self.last_value}
+
     def _set_pin(self, print_time, value, is_resend=False):
         if value == self.last_value and not is_resend:
             return
@@ -70,6 +73,7 @@ class PrinterOutputPin:
             self.resend_timer = self.reactor.register_timer(
                 self._resend_current_val, self.reactor.NOW)
     cmd_SET_PIN_help = "Set the value of an output pin"
+
     def cmd_SET_PIN(self, gcmd):
         # Read requested value
         value = gcmd.get_float('VALUE', minval=0., maxval=self.scale)
@@ -95,6 +99,7 @@ class PrinterOutputPin:
             return systime + time_diff
         self._set_pin(print_time + PIN_MIN_TIME, self.last_value, True)
         return systime + self.resend_interval
+
 
 def load_config_prefix(config):
     return PrinterOutputPin(config)

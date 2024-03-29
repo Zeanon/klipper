@@ -11,9 +11,11 @@ class QueryADC:
         gcode = self.printer.lookup_object('gcode')
         gcode.register_command("QUERY_ADC", self.cmd_QUERY_ADC,
                                desc=self.cmd_QUERY_ADC_help)
+
     def register_adc(self, name, mcu_adc):
         self.adc[name] = mcu_adc
     cmd_QUERY_ADC_help = "Report the last value of an analog pin"
+
     def cmd_QUERY_ADC(self, gcmd):
         name = gcmd.get('NAME', None)
         if name not in self.adc:
@@ -30,6 +32,7 @@ class QueryADC:
             r = pullup * v / (1.0 - v)
             msg += "\n resistance %.3f (with %.0f pullup)" % (r, pullup)
         gcmd.respond_info(msg)
+
 
 def load_config(config):
     return QueryADC(config)

@@ -5,6 +5,7 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 import logging
 
+
 class GCodeButton:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -30,6 +31,7 @@ class GCodeButton:
                                         desc=self.cmd_QUERY_BUTTON_help)
 
     cmd_QUERY_BUTTON_help = "Report on the state of a button"
+
     def cmd_QUERY_BUTTON(self, gcmd):
         gcmd.respond_info(self.name + ": " + self.get_status()['state'])
 
@@ -43,13 +45,14 @@ class GCodeButton:
 
         try:
             self.gcode.run_script(template.render())
-        except:
+        except BaseException:
             logging.exception("Script running error")
 
     def get_status(self, eventtime=None):
         if self.last_state:
             return {'state': "PRESSED"}
         return {'state': "RELEASED"}
+
 
 def load_config_prefix(config):
     return GCodeButton(config)

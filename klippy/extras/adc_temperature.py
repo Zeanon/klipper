@@ -3,7 +3,8 @@
 # Copyright (C) 2016-2018  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import logging, bisect
+import logging
+import bisect
 
 
 ######################################################################
@@ -16,6 +17,8 @@ REPORT_TIME = 0.300
 RANGE_CHECK_COUNT = 4
 
 # Interface between ADC and heater temperature callbacks
+
+
 class PrinterADCtoTemperature:
     def __init__(self, config, adc_convert):
         self.adc_convert = adc_convert
@@ -24,13 +27,17 @@ class PrinterADCtoTemperature:
         self.mcu_adc.setup_adc_callback(REPORT_TIME, self.adc_callback)
         query_adc = config.get_printer().load_object(config, 'query_adc')
         query_adc.register_adc(config.get_name(), self.mcu_adc)
+
     def setup_callback(self, temperature_callback):
         self.temperature_callback = temperature_callback
+
     def get_report_time_delta(self):
         return REPORT_TIME
+
     def adc_callback(self, read_time, read_value):
         temp = self.adc_convert.calc_temp(read_value)
         self.temperature_callback(read_time + SAMPLE_COUNT * SAMPLE_TIME, temp)
+
     def setup_minmax(self, min_temp, max_temp):
         adc_range = [self.adc_convert.calc_adc(t) for t in [min_temp, max_temp]]
         self.mcu_adc.setup_minmax(SAMPLE_TIME, SAMPLE_COUNT,
@@ -67,10 +74,12 @@ class LinearInterpolate:
             raise ValueError("need at least two samples")
         self.keys.append(9999999999999.)
         self.slopes.append(self.slopes[-1])
+
     def interpolate(self, key):
         pos = bisect.bisect(self.keys, key)
         gain, offset = self.slopes[pos]
         return key * gain + offset
+
     def reverse_interpolate(self, value):
         values = [key * gain + offset for key, (gain, offset) in zip(
             self.keys, self.slopes)]
@@ -108,6 +117,8 @@ class LinearVoltage:
         self.calc_adc = li.reverse_interpolate
 
 # Custom defined sensors from the config file
+
+
 class CustomLinearVoltage:
     def __init__(self, config):
         self.name = " ".join(config.get_name().split()[1:])
@@ -118,6 +129,7 @@ class CustomLinearVoltage:
                 break
             v = config.getfloat("voltage%d" % (i,))
             self.params.append((t, v))
+
     def create(self, config):
         lv = LinearVoltage(config, self.params)
         return PrinterADCtoTemperature(config, lv)
@@ -136,17 +148,21 @@ class LinearResistance:
         except ValueError as e:
             raise config.error("adc_temperature %s in heater %s" % (
                 str(e), config.get_name()))
+
     def calc_temp(self, adc):
         # Calculate temperature from adc
         adc = max(.00001, min(.99999, adc))
         r = self.pullup * adc / (1.0 - adc)
         return self.li.interpolate(r)
+
     def calc_adc(self, temp):
         # Calculate adc reading from a temperature
         r = self.li.reverse_interpolate(temp)
         return r / (self.pullup + r)
 
 # Custom defined sensors from the config file
+
+
 class CustomLinearResistance:
     def __init__(self, config):
         self.name = " ".join(config.get_name().split()[1:])
@@ -157,6 +173,7 @@ class CustomLinearResistance:
                 break
             r = config.getfloat("resistance%d" % (i,))
             self.samples.append((t, r))
+
     def create(self, config):
         lr = LinearResistance(config, self.samples)
         return PrinterADCtoTemperature(config, lr)
@@ -261,14 +278,18 @@ AD8497 = [
     (1360, 6.671), (1380, 6.754)
 ]
 
+
 def calc_pt100(base=100.):
     # Calc PT100/PT1000 resistances using Callendar-Van Dusen formula
     A, B = (3.9083e-3, -5.775e-7)
-    return [(float(t), base * (1. + A*t + B*t*t)) for t in range(0, 500, 10)]
+    return [(float(t), base * (1. + A * t + B * t * t))
+            for t in range(0, 500, 10)]
+
 
 def calc_ina826_pt100():
     # Standard circuit is 4400ohm pullup with 10x gain to 5V
     return [(t, 10. * 5. * r / (4400. + r)) for t, r in calc_pt100()]
+
 
 DefaultVoltageSensors = [
     ("AD595", AD595), ("AD597", AD597), ("AD8494", AD8494), ("AD8495", AD8495),
@@ -279,6 +300,7 @@ DefaultVoltageSensors = [
 DefaultResistanceSensors = [
     ("PT1000", calc_pt100(1000.))
 ]
+
 
 def load_config(config):
     # Register default sensors
@@ -292,6 +314,7 @@ def load_config(config):
                 PrinterADCtoTemperature(config,
                                         LinearResistance(config, params)))
         pheaters.add_sensor_factory(sensor_type, func)
+
 
 def load_config_prefix(config):
     if config.get("resistance1", None) is None:

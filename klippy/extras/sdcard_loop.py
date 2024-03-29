@@ -30,18 +30,22 @@ class SDCardLoop:
         )
         self.loop_stack = []
     cmd_SDCARD_LOOP_BEGIN_help = 'Begins a looped section in the SD file.'
+
     def cmd_SDCARD_LOOP_BEGIN(self, gcmd):
         count = gcmd.get_int('COUNT', minval=0)
         if not self.loop_begin(count):
             raise gcmd.error('Only permitted in SD file.')
     cmd_SDCARD_LOOP_END_help = 'Ends a looped section in the SD file.'
+
     def cmd_SDCARD_LOOP_END(self, gcmd):
         if not self.loop_end():
             raise gcmd.error('Only permitted in SD file.')
     cmd_SDCARD_LOOP_DESIST_help = 'Stops iterating the current loop stack.'
+
     def cmd_SDCARD_LOOP_DESIST(self, gcmd):
         if not self.loop_desist():
             raise gcmd.error('Only permitted outside of a SD file.')
+
     def loop_begin(self, count):
         if (
             not self.sdcard.is_cmd_from_sd()
@@ -53,6 +57,7 @@ class SDCardLoop:
             (count, self.sdcard_gcode_provider.get_file_position())
         )
         return True
+
     def loop_end(self):
         if (
             not self.sdcard.is_cmd_from_sd()
@@ -77,6 +82,7 @@ class SDCardLoop:
             # Decrement the count by 1, and add the position back to the stack
             self.loop_stack.append((count - 1, position))
         return True
+
     def loop_desist(self):
         if (
             self.sdcard.is_cmd_from_sd()

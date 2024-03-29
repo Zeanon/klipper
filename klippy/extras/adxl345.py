@@ -3,7 +3,11 @@
 # Copyright (C) 2020-2023  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import logging, time, collections, multiprocessing, os
+import logging
+import time
+import collections
+import multiprocessing
+import os
 from . import bus, bulk_sensor
 
 # ADXL345 registers
@@ -24,13 +28,15 @@ ADXL345_DEV_ID = 0xe5
 SET_FIFO_CTL = 0x90
 
 FREEFALL_ACCEL = 9.80665 * 1000.
-SCALE_XY = 0.003774 * FREEFALL_ACCEL # 1 / 265 (at 3.3V) mg/LSB
-SCALE_Z  = 0.003906 * FREEFALL_ACCEL # 1 / 256 (at 3.3V) mg/LSB
+SCALE_XY = 0.003774 * FREEFALL_ACCEL  # 1 / 265 (at 3.3V) mg/LSB
+SCALE_Z = 0.003906 * FREEFALL_ACCEL  # 1 / 256 (at 3.3V) mg/LSB
 
 Accel_Measurement = collections.namedtuple(
     'Accel_Measurement', ('time', 'accel_x', 'accel_y', 'accel_z'))
 
 # Helper class to obtain measurements
+
+
 class AccelQueryHelper:
     def __init__(self, printer):
         self.printer = printer
@@ -39,11 +45,13 @@ class AccelQueryHelper:
         self.request_start_time = self.request_end_time = print_time
         self.msgs = []
         self.samples = []
+
     def finish_measurements(self):
         toolhead = self.printer.lookup_object('toolhead')
         self.request_end_time = toolhead.get_last_move_time()
         toolhead.wait_moves()
         self.is_finished = True
+
     def handle_batch(self, msg):
         if self.is_finished:
             return False
@@ -52,6 +60,7 @@ class AccelQueryHelper:
             return False
         self.msgs.append(msg)
         return True
+
     def has_valid_samples(self):
         for msg in self.msgs:
             data = msg['data']
@@ -69,6 +78,7 @@ class AccelQueryHelper:
             # is at least 1 second, so this possibility is negligible.
             return True
         return False
+
     def get_samples(self):
         if not self.msgs:
             return self.samples
@@ -85,12 +95,13 @@ class AccelQueryHelper:
                 count += 1
         del samples[count:]
         return self.samples
+
     def write_to_file(self, filename):
         def write_impl():
             try:
                 # Try to re-nice writing process
                 os.nice(20)
-            except:
+            except BaseException:
                 pass
             f = open(filename, "w")
             f.write("#time,accel_x,accel_y,accel_z\n")
@@ -104,6 +115,8 @@ class AccelQueryHelper:
         write_proc.start()
 
 # Helper class for G-Code commands
+
+
 class AccelCommandHelper:
     def __init__(self, config, chip):
         self.printer = config.get_printer()
@@ -119,6 +132,7 @@ class AccelCommandHelper:
             if self.name == "adxl345" or not config.has_section("adxl345"):
                 self.register_commands(None)
         self.printer.register_event_handler('klippy:ready', self._handle_ready)
+
     def read_accelerometer(self):
         toolhead = self.printer.lookup_object('toolhead')
         aclient = self.chip.start_internal_client()
@@ -127,8 +141,10 @@ class AccelCommandHelper:
         values = aclient.get_samples()
         if not values:
             raise Exception("No accelerometer measurements found")
+
     def _handle_ready(self):
         self.reactor.register_timer(self._init_accel, self.reactor.NOW)
+
     def _init_accel(self, eventtime):
         try:
             self.read_accelerometer()
@@ -148,6 +164,7 @@ class AccelCommandHelper:
                     % (heater_name,))
             heater.set_enabled(not connected)
         return self.reactor.NEVER
+
     def register_commands(self, name):
         # Register commands
         gcode = self.printer.lookup_object('gcode')
@@ -164,6 +181,7 @@ class AccelCommandHelper:
                                    self.cmd_ACCELEROMETER_DEBUG_WRITE,
                                    desc=self.cmd_ACCELEROMETER_DEBUG_WRITE_help)
     cmd_ACCELEROMETER_MEASURE_help = "Start/stop accelerometer"
+
     def cmd_ACCELEROMETER_MEASURE(self, gcmd):
         if self.bg_client is None:
             # Start measurements
@@ -186,6 +204,7 @@ class AccelCommandHelper:
         gcmd.respond_info("Writing raw accelerometer data to %s file"
                           % (filename,))
     cmd_ACCELEROMETER_QUERY_help = "Query accelerometer for the current values"
+
     def cmd_ACCELEROMETER_QUERY(self, gcmd):
         aclient = self.chip.start_internal_client()
         self.printer.lookup_object('toolhead').dwell(1.)
@@ -197,24 +216,29 @@ class AccelCommandHelper:
         gcmd.respond_info("accelerometer values (x, y, z): %.6f, %.6f, %.6f"
                           % (accel_x, accel_y, accel_z))
     cmd_ACCELEROMETER_DEBUG_READ_help = "Query register (for debugging)"
+
     def cmd_ACCELEROMETER_DEBUG_READ(self, gcmd):
         reg = gcmd.get("REG", minval=0, maxval=126, parser=lambda x: int(x, 0))
         val = self.chip.read_reg(reg)
         gcmd.respond_info("Accelerometer REG[0x%x] = 0x%x" % (reg, val))
     cmd_ACCELEROMETER_DEBUG_WRITE_help = "Set register (for debugging)"
+
     def cmd_ACCELEROMETER_DEBUG_WRITE(self, gcmd):
         reg = gcmd.get("REG", minval=0, maxval=126, parser=lambda x: int(x, 0))
         val = gcmd.get("VAL", minval=0, maxval=255, parser=lambda x: int(x, 0))
         self.chip.set_reg(reg, val)
 
 # Helper to read the axes_map parameter from the config
+
+
 def read_axes_map(config):
     am = {'x': (0, SCALE_XY), 'y': (1, SCALE_XY), 'z': (2, SCALE_Z),
           '-x': (0, -SCALE_XY), '-y': (1, -SCALE_XY), '-z': (2, -SCALE_Z)}
-    axes_map = config.getlist('axes_map', ('x','y','z'), count=3)
+    axes_map = config.getlist('axes_map', ('x', 'y', 'z'), count=3)
     if any([a not in am for a in axes_map]):
         raise config.error("Invalid axes_map parameter")
     return [am[a.strip()] for a in axes_map]
+
 
 BYTES_PER_SAMPLE = 5
 SAMPLES_PER_BLOCK = bulk_sensor.MAX_BULK_MSG_SIZE // BYTES_PER_SAMPLE
@@ -222,6 +246,8 @@ SAMPLES_PER_BLOCK = bulk_sensor.MAX_BULK_MSG_SIZE // BYTES_PER_SAMPLE
 BATCH_UPDATES = 0.100
 
 # Printer class that controls ADXL345 chip
+
+
 class ADXL345:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -255,30 +281,35 @@ class ADXL345:
         hdr = ('time', 'x_acceleration', 'y_acceleration', 'z_acceleration')
         self.batch_bulk.add_mux_endpoint("adxl345/dump_adxl345", "sensor",
                                          self.name, {'header': hdr})
+
     def _build_config(self):
         cmdqueue = self.spi.get_command_queue()
         self.query_adxl345_cmd = self.mcu.lookup_command(
             "query_adxl345 oid=%c rest_ticks=%u", cq=cmdqueue)
         self.clock_updater.setup_query_command(
             self.mcu, "query_adxl345_status oid=%c", oid=self.oid, cq=cmdqueue)
+
     def read_reg(self, reg):
         params = self.spi.spi_transfer([reg | REG_MOD_READ, 0x00])
         response = bytearray(params['response'])
         return response[1]
+
     def set_reg(self, reg, val, minclock=0):
         self.spi.spi_send([reg, val & 0xFF], minclock=minclock)
         stored_val = self.read_reg(reg)
         if stored_val != val:
             raise self.printer.command_error(
-                    "Failed to set ADXL345 register [0x%x] to 0x%x: got 0x%x. "
-                    "This is generally indicative of connection problems "
-                    "(e.g. faulty wiring) or a faulty adxl345 chip." % (
-                        reg, val, stored_val))
+                "Failed to set ADXL345 register [0x%x] to 0x%x: got 0x%x. "
+                "This is generally indicative of connection problems "
+                "(e.g. faulty wiring) or a faulty adxl345 chip." % (
+                    reg, val, stored_val))
+
     def start_internal_client(self):
         aqh = AccelQueryHelper(self.printer)
         self.batch_bulk.add_client(aqh.handle_batch)
         return aqh
     # Measurement decoding
+
     def _extract_samples(self, raw_samples):
         # Load variables to optimize inner loop below
         (x_pos, x_scale), (y_pos, y_scale), (z_pos, z_scale) = self.axes_map
@@ -294,7 +325,7 @@ class ADXL345:
             d = bytearray(params['data'])
             msg_cdiff = seq * SAMPLES_PER_BLOCK - chip_base
             for i in range(len(d) // BYTES_PER_SAMPLE):
-                d_xyz = d[i*BYTES_PER_SAMPLE:(i+1)*BYTES_PER_SAMPLE]
+                d_xyz = d[i * BYTES_PER_SAMPLE:(i + 1) * BYTES_PER_SAMPLE]
                 xlow, ylow, zlow, xzhigh, yzhigh = d_xyz
                 if yzhigh & 0x80:
                     self.last_error_count += 1
@@ -314,6 +345,7 @@ class ADXL345:
         del samples[count:]
         return samples
     # Start, stop, and process message batches
+
     def _start_measurements(self):
         # In case of miswiring, testing ADXL345 device ID prevents treating
         # noise or wrong signal as a correctly initialized device
@@ -339,12 +371,14 @@ class ADXL345:
         # Initialize clock tracking
         self.clock_updater.note_start()
         self.last_error_count = 0
+
     def _finish_measurements(self):
         # Halt bulk reading
         self.set_reg(REG_POWER_CTL, 0x00)
         self.query_adxl345_cmd.send_wait_ack([self.oid, 0])
         self.bulk_queue.clear_samples()
         logging.info("ADXL345 finished '%s' measurements", self.name)
+
     def _process_batch(self, eventtime):
         self.clock_updater.update_clock()
         raw_samples = self.bulk_queue.pull_samples()
@@ -356,8 +390,10 @@ class ADXL345:
         return {'data': samples, 'errors': self.last_error_count,
                 'overflows': self.clock_updater.get_last_overflows()}
 
+
 def load_config(config):
     return ADXL345(config)
+
 
 def load_config_prefix(config):
     return ADXL345(config)

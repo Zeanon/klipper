@@ -5,6 +5,7 @@
 # This file may be distributed under the terms of the GNU GPLv3 license.
 DRIVER_REPORT_TIME = 1.0
 
+
 class PrinterTemperatureDriver:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -54,8 +55,8 @@ class PrinterTemperatureDriver:
             mcu.estimated_print_time(measured_time),
             self.temp)
 
-
         return measured_time + DRIVER_REPORT_TIME
+
 
 def load_config(config):
     pheaters = config.get_printer().load_object(config, "heaters")

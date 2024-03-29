@@ -9,6 +9,7 @@ from . import pulse_counter
 FAN_MIN_TIME = 0.100
 SAFETY_CHECK_INIT_TIME = 3.
 
+
 class Fan:
     def __init__(self, config, default_shutdown_speed=0.):
         self.printer = config.get_printer()
@@ -80,9 +81,11 @@ class Fan:
         reactor = self.printer.get_reactor()
         if self.min_rpm > 0:
             reactor.register_timer(
-                self.fan_check, reactor.monotonic()+SAFETY_CHECK_INIT_TIME)
+                self.fan_check, reactor.monotonic() + SAFETY_CHECK_INIT_TIME)
+
     def get_mcu(self):
         return self.mcu_fan.get_mcu()
+
     def set_speed(self, print_time, value, force=False):
         self.speed = value
         if value == self.last_fan_value and not force:
@@ -109,10 +112,12 @@ class Fan:
         self.mcu_fan.set_pwm(print_time, pwm_value)
         self.last_fan_time = print_time
         self.last_fan_value = value
+
     def set_speed_from_command(self, value):
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_lookahead_callback((lambda pt:
                                               self.set_speed(pt, value)))
+
     def _handle_request_restart(self, print_time):
         self.set_speed(print_time, 0.)
 
@@ -137,6 +142,7 @@ class Fan:
             self.num_err = 0
         return eventtime + 1.5
     cmd_SET_FAN_help = "Change settings for a fan"
+
     def cmd_SET_FAN(self, gcmd):
         self.min_power = gcmd.get_float("MIN_POWER",
                                         self.min_power,
@@ -152,6 +158,7 @@ class Fan:
         curtime = self.printer.get_reactor().monotonic()
         print_time = self.get_mcu().estimated_print_time(curtime)
         self.set_speed(print_time, self.speed, force=True)
+
 
 class FanTachometer:
     def __init__(self, config):
@@ -174,6 +181,7 @@ class FanTachometer:
             rpm = None
         return {'rpm': rpm}
 
+
 class PrinterFan:
     def __init__(self, config):
         self.fan = Fan(config)
@@ -181,15 +189,19 @@ class PrinterFan:
         gcode = config.get_printer().lookup_object('gcode')
         gcode.register_command("M106", self.cmd_M106)
         gcode.register_command("M107", self.cmd_M107)
+
     def get_status(self, eventtime):
         return self.fan.get_status(eventtime)
+
     def cmd_M106(self, gcmd):
         # Set fan speed
         value = gcmd.get_float('S', 255., minval=0.) / 255.
         self.fan.set_speed_from_command(value)
+
     def cmd_M107(self, gcmd):
         # Turn fan off
         self.fan.set_speed_from_command(0.)
+
 
 def load_config(config):
     return PrinterFan(config)

@@ -3,17 +3,21 @@
 # Copyright (C) 2016-2019  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import math, logging
+import math
+import logging
 from . import adc_temperature
 
 KELVIN_TO_CELSIUS = -273.15
 
 # Analog voltage to temperature converter for thermistors
+
+
 class Thermistor:
     def __init__(self, pullup, inline_resistor):
         self.pullup = pullup
         self.inline_resistor = inline_resistor
         self.c1 = self.c2 = self.c3 = 0.
+
     def setup_coefficients(self, t1, r1, t2, r2, t3, r3, name=""):
         # Calculate Steinhart-Hart coefficents from temp measurements.
         # Arrange samples as 3 linear equations and solve for c1, c2, and c3.
@@ -39,6 +43,7 @@ class Thermistor:
             return
         self.c2 = (inv_t12 - self.c3 * ln3_r12) / ln_r12
         self.c1 = inv_t1 - self.c2 * ln_r1 - self.c3 * ln3_r1
+
     def setup_coefficients_beta(self, t1, r1, beta):
         # Calculate equivalent Steinhart-Hart coefficents from beta
         inv_t1 = 1. / (t1 - KELVIN_TO_CELSIUS)
@@ -46,13 +51,15 @@ class Thermistor:
         self.c3 = 0.
         self.c2 = 1. / beta
         self.c1 = inv_t1 - self.c2 * ln_r1
+
     def calc_temp(self, adc):
         # Calculate temperature from adc
         adc = max(.00001, min(.99999, adc))
         r = self.pullup * adc / (1.0 - adc)
         ln_r = math.log(r - self.inline_resistor)
         inv_t = self.c1 + self.c2 * ln_r + self.c3 * ln_r**3
-        return 1.0/inv_t + KELVIN_TO_CELSIUS
+        return 1.0 / inv_t + KELVIN_TO_CELSIUS
+
     def calc_adc(self, temp):
         # Calculate adc reading from a temperature
         if temp <= KELVIN_TO_CELSIUS:
@@ -62,13 +69,15 @@ class Thermistor:
             # Solve for ln_r using Cardano's formula
             y = (self.c1 - inv_t) / (2. * self.c3)
             x = math.sqrt((self.c2 / (3. * self.c3))**3 + y**2)
-            ln_r = math.pow(x - y, 1./3.) - math.pow(x + y, 1./3.)
+            ln_r = math.pow(x - y, 1. / 3.) - math.pow(x + y, 1. / 3.)
         else:
             ln_r = (inv_t - self.c1) / self.c2
         r = math.exp(ln_r) + self.inline_resistor
         return r / (self.pullup + r)
 
 # Create an ADC converter with a thermistor
+
+
 def PrinterThermistor(config, params):
     pullup = config.getfloat('pullup_resistor', 4700., above=0.)
     inline_resistor = config.getfloat('inline_resistor', 0., minval=0.)
@@ -83,6 +92,8 @@ def PrinterThermistor(config, params):
     return adc_temperature.PrinterADCtoTemperature(config, thermistor)
 
 # Custom defined thermistors from the config file
+
+
 class CustomThermistor:
     def __init__(self, config):
         self.name = " ".join(config.get_name().split()[1:])
@@ -99,8 +110,10 @@ class CustomThermistor:
         (t1, r1), (t2, r2), (t3, r3) = sorted([(t1, r1), (t2, r2), (t3, r3)])
         self.params = {'t1': t1, 'r1': r1, 't2': t2, 'r2': r2,
                        't3': t3, 'r3': r3}
+
     def create(self, config):
         return PrinterThermistor(config, self.params)
+
 
 def load_config_prefix(config):
     thermistor = CustomThermistor(config)

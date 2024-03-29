@@ -90,7 +90,7 @@ class AxisTwistCompensation:
             sample_count = len(loaded_compensations)
             interval_dist = ((self.calibrate_end_x - self.calibrate_start_x)
                              / (sample_count - 1))
-            indexes = [self.calibrate_start_x + i*interval_dist
+            indexes = [self.calibrate_start_x + i * interval_dist
                        for i in range(0, sample_count)]
 
             # Calculate the mean of x and y values
@@ -131,12 +131,14 @@ class AxisTwistCompensation:
     cmd_AXIS_TWIST_COMPENSATION_CLEAR_help = (
         "Clears the active axis twist compensation"
     )
+
     def cmd_AXIS_TWIST_COMPENSATION_CLEAR(self, gcmd):
         self.clear_compensations()
 
     cmd_AXIS_TWIST_COMPENSATION_LOAD_help = (
         "Reloads the twist compensation values from the config"
     )
+
     def cmd_AXIS_TWIST_COMPENSATION_LOAD(self, gcmd):
         self.loaded_compensations = self.z_compensations
 
@@ -199,6 +201,7 @@ class Calibrater:
     Measure z probe offset at n points along the x axis,
     and calculate x twist compensation
     """
+
     def cmd_AXIS_TWIST_COMPENSATION_CALIBRATE(self, gcmd):
         verify_no_compensation(self.printer)
         self.gcode.register_command('ABORT',
@@ -206,8 +209,7 @@ class Calibrater:
                                     desc=self.cmd_ABORT_help)
         self.gcode.register_command('QUERY_TWIST_COMPENSATION_RUNNING',
                                     self.cmd_QUERY_TWIST_COMPENSATION_RUNNING,
-                                    desc=
-                                    self
+                                    desc=self
                                     .cmd_QUERY_TWIST_COMPENSATION_RUNNING_help)
         self.start_gcode.run_gcode_from_command()
 
@@ -351,6 +353,7 @@ class Calibrater:
         return callback
 
     cmd_CONTINUE_help = "Continue to the next probing point"
+
     def cmd_CONTINUE(self, gcmd):
         self.gcode.register_command('CONTINUE',
                                     None)
@@ -358,11 +361,13 @@ class Calibrater:
 
     cmd_QUERY_TWIST_COMPENSATION_RUNNING_help = """Query if we are running a
                                                    twist compensation"""
+
     def cmd_QUERY_TWIST_COMPENSATION_RUNNING(self, gcmd):
         gcmd.respond_info("Twist Compensation running")
         return
 
     cmd_ABORT_help = "Abort the running probe calibration"
+
     def cmd_ABORT(self, gcmd=None):
         self.gcmd.respond_info(
             "AXIS_TWIST_COMPENSATION_CALIBRATE: Probe cancelled, "

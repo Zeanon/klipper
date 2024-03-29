@@ -8,6 +8,7 @@ from . import filament_motion_sensor
 
 CHECK_RUNOUT_TIMEOUT = .250
 
+
 class RunoutHelper:
     def __init__(self, config, defined_sensor, runout_distance=0):
         self.name = config.get_name().split()[-1]
@@ -53,10 +54,13 @@ class RunoutHelper:
             "SET_FILAMENT_SENSOR", "SENSOR", self.name,
             self.cmd_SET_FILAMENT_SENSOR,
             desc=self.cmd_SET_FILAMENT_SENSOR_help)
+
     def _handle_ready(self):
         self.min_event_systime = self.reactor.monotonic() + 2.
+
     def _handle_printing(self, print_time):
         self.note_filament_present(self.filament_present, True)
+
     def _runout_event_handler(self, eventtime):
         if self.immediate_runout_gcode is not None:
             self._exec_gcode("", self.immediate_runout_gcode)
@@ -70,6 +74,7 @@ class RunoutHelper:
                     self._pause_after_distance, self.reactor.NOW)
         else:
             self._execute_runout(eventtime)
+
     def _execute_runout(self, eventtime):
         pause_prefix = ""
         if self.runout_pause:
@@ -79,17 +84,19 @@ class RunoutHelper:
             self.printer.get_reactor().pause(eventtime + self.pause_delay)
         self._exec_gcode(pause_prefix, self.runout_gcode)
         self.reset_runout_distance_info()
+
     def reset_runout_distance_info(self):
         self.runout_elapsed = 0.
         if self.runout_distance_timer is not None:
             self.reactor.unregister_timer(self.runout_distance_timer)
             self.runout_distance_timer = None
+
     def _pause_after_distance(self, eventtime):
         runout_elapsed = max(0.,
-                           self.defined_sensor
-                           .get_extruder_pos(eventtime)
-                           - self.runout_position
-                           )
+                             self.defined_sensor
+                             .get_extruder_pos(eventtime)
+                             - self.runout_position
+                             )
         if (runout_elapsed
                 < self.runout_distance):
             self.runout_elapsed = runout_elapsed
@@ -97,14 +104,17 @@ class RunoutHelper:
         else:
             self._execute_runout(eventtime)
             return self.reactor.NEVER
+
     def _insert_event_handler(self, eventtime):
         self._exec_gcode("", self.insert_gcode)
+
     def _exec_gcode(self, prefix, template):
         try:
             self.gcode.run_script(prefix + template.render() + "\nM400")
         except Exception:
             logging.exception("Script running error")
         self.min_event_systime = self.reactor.monotonic() + self.event_delay
+
     def note_filament_present(self, is_filament_present, force=False):
         if is_filament_present == self.filament_present and not force:
             return
@@ -146,6 +156,7 @@ class RunoutHelper:
                 "Filament Sensor %s: runout event detected, Time %.2f" %
                 (self.name, eventtime))
             self.reactor.register_callback(self._runout_event_handler)
+
     def get_status(self, eventtime):
         status = {
             "filament_detected": bool(self.filament_present),
@@ -155,12 +166,14 @@ class RunoutHelper:
         status.update(self.defined_sensor.sensor_get_status(eventtime))
         return status
     cmd_QUERY_FILAMENT_SENSOR_help = "Query the status of the Filament Sensor"
+
     def cmd_QUERY_FILAMENT_SENSOR(self, gcmd):
         msg = "Filament Sensor %s: filament %s" %\
               (self.name,
                "detected" if self.filament_present else "not detected")
         gcmd.respond_info(msg)
     cmd_SET_FILAMENT_SENSOR_help = "Sets the filament sensor on/off"
+
     def cmd_SET_FILAMENT_SENSOR(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
         reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
@@ -200,47 +213,57 @@ class SwitchSensor:
         self.get_status = self.runout_helper.get_status
         self.printer.register_event_handler('klippy:ready',
                                             self._handle_ready)
+
     def _handle_ready(self):
         self.estimated_print_time = (
-                self.printer.lookup_object('mcu').estimated_print_time)
+            self.printer.lookup_object('mcu').estimated_print_time)
+
     def _button_handler(self, eventtime, state):
         self.runout_helper.note_filament_present(state)
+
     def get_extruder_pos(self, eventtime=None):
         if eventtime is None:
             eventtime = self.reactor.monotonic()
         print_time = self.estimated_print_time(eventtime)
         extruder = self.printer.lookup_object('toolhead').get_extruder()
         return extruder.find_past_position(print_time)
+
     def get_sensor_status(self):
         return ("Filament Sensor %s: %s\n"
                 "Runout Distance: %.2f"
                 % (self.runout_helper.name,
                    'enabled' if self.runout_helper.sensor_enabled
                    else 'disabled', self.runout_helper.runout_distance))
+
     def sensor_get_status(self, eventtime):
         return {
             "runout_distance": float(self.runout_helper.runout_distance),
             "runout_elapsed": float(self.runout_helper.runout_elapsed)
         }
+
     def get_info(self, gcmd):
         runout_distance = gcmd.get_float('RUNOUT_DISTANCE', None, minval=0.)
         if runout_distance is None:
             gcmd.respond_info(self.get_sensor_status())
             return 1
         return 0
+
     def enable(self, enable):
         if enable != self.runout_helper.sensor_enabled:
             return 1
         return 0
+
     def set_filament_sensor(self, gcmd):
         runout_distance = gcmd.get_float('RUNOUT_DISTANCE', None, minval=0.)
         if runout_distance is not None:
             self.runout_helper.runout_distance = runout_distance
         return 0
+
     def reset(self):
         self.runout_helper.reset_runout_distance_info()
         self.runout_helper.note_filament_present(
             self.runout_helper.filament_present, True)
+
 
 def load_config_prefix(config):
     return SwitchSensor(config)

@@ -7,6 +7,7 @@ from . import fan
 
 PIN_MIN_TIME = 0.100
 
+
 class ControllerFan:
     def __init__(self, config, defined_fan=None):
         self.name = config.get_name().split()[1]
@@ -37,6 +38,7 @@ class ControllerFan:
             "SET_CONTROLLER_FAN", "CONTROLLER_FAN", self.name,
             self.cmd_SET_CONTROLLER_FAN,
             desc=self.cmd_SET_CONTROLLER_FAN_help)
+
     def handle_connect(self):
         # Heater lookup
         pheaters = self.printer.lookup_object('heaters')
@@ -56,11 +58,17 @@ class ControllerFan:
                 "One or more of these steppers are unknown: "
                 "%s (valid steppers are: %s)"
                 % (self.stepper_names, ", ".join(all_steppers)))
+
     def handle_ready(self):
         reactor = self.printer.get_reactor()
-        reactor.register_timer(self.callback, reactor.monotonic()+PIN_MIN_TIME)
+        reactor.register_timer(
+            self.callback,
+            reactor.monotonic() +
+            PIN_MIN_TIME)
+
     def get_status(self, eventtime):
         return self.fan.get_status(eventtime)
+
     def get_speed(self, eventtime):
         speed = self.idle_speed
         active = False
@@ -79,6 +87,7 @@ class ControllerFan:
             else:
                 self.last_on += 1
         return speed
+
     def callback(self, eventtime):
         speed = self.get_speed(eventtime)
         if self.enabled and speed != self.last_speed:
@@ -88,12 +97,14 @@ class ControllerFan:
             self.fan.set_speed(print_time + PIN_MIN_TIME, speed)
         return eventtime + 1.
     cmd_SET_CONTROLLER_FAN_help = "Enable or Disable a controller_fan"
+
     def cmd_SET_CONTROLLER_FAN(self, gcmd):
         self.enabled = gcmd.get_int('ENABLE', self.enabled, minval=0, maxval=1)
         if not self.enabled:
             curtime = self.printer.get_reactor().monotonic()
             print_time = self.fan.get_mcu().estimated_print_time(curtime)
             self.fan.set_speed(print_time + PIN_MIN_TIME, 0.0)
+
 
 def load_config_prefix(config):
     return ControllerFan(config)

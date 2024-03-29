@@ -7,8 +7,10 @@ import chelper
 
 MAX_SCHEDULE_TIME = 5.0
 
+
 class error(Exception):
     pass
+
 
 class MCU_queued_pwm:
     def __init__(self, pin_params):
@@ -33,21 +35,27 @@ class MCU_queued_pwm:
         self._toolhead = None
         printer = self._mcu.get_printer()
         printer.register_event_handler("klippy:connect", self._handle_connect)
+
     def _handle_connect(self):
         self._toolhead = self._mcu.get_printer().lookup_object("toolhead")
+
     def get_mcu(self):
         return self._mcu
+
     def setup_max_duration(self, max_duration):
         self._max_duration = max_duration
+
     def setup_cycle_time(self, cycle_time, hardware_pwm=False):
         self._cycle_time = cycle_time
         self._hardware_pwm = hardware_pwm
+
     def setup_start_value(self, start_value, shutdown_value):
         if self._invert:
             start_value = 1. - start_value
             shutdown_value = 1. - shutdown_value
         self._start_value = max(0., min(1., start_value))
         self._shutdown_value = max(0., min(1., shutdown_value))
+
     def _build_config(self):
         config_error = self._mcu.get_printer().config_error
         if self._max_duration and self._start_value != self._shutdown_value:
@@ -58,10 +66,10 @@ class MCU_queued_pwm:
         printtime = self._mcu.estimated_print_time(curtime)
         self._last_clock = self._mcu.print_time_to_clock(printtime + 0.200)
         cycle_ticks = self._mcu.seconds_to_clock(self._cycle_time)
-        if cycle_ticks >= 1<<31:
+        if cycle_ticks >= 1 << 31:
             raise config_error("PWM pin cycle time too large")
         self._duration_ticks = self._mcu.seconds_to_clock(self._max_duration)
-        if self._duration_ticks >= 1<<31:
+        if self._duration_ticks >= 1 << 31:
             raise config_error("PWM pin max duration too large")
         if self._duration_ticks:
             self._mcu.register_flush_callback(self._flush_notification)
@@ -103,6 +111,7 @@ class MCU_queued_pwm:
         self._set_cmd_tag = self._mcu.lookup_command(
             "queue_digital_out oid=%c clock=%u on_ticks=%u",
             cq=cmd_queue).get_command_tag()
+
     def _send_update(self, clock, val):
         self._last_clock = clock = max(self._last_clock, clock)
         self._last_value = val
@@ -118,17 +127,20 @@ class MCU_queued_pwm:
             wakeclock += self._duration_ticks
         wake_print_time = self._mcu.clock_to_print_time(wakeclock)
         self._toolhead.note_mcu_movequeue_activity(wake_print_time)
+
     def set_pwm(self, print_time, value):
         clock = self._mcu.print_time_to_clock(print_time)
         if self._invert:
             value = 1. - value
         v = int(max(0., min(1., value)) * self._pwm_max + 0.5)
         self._send_update(clock, v)
+
     def _flush_notification(self, print_time, clock):
         if self._last_value != self._default_value:
             while clock >= self._last_clock + self._duration_ticks:
                 self._send_update(self._last_clock + self._duration_ticks,
                                   self._last_value)
+
 
 class PrinterOutputPin:
     def __init__(self, config):
@@ -160,8 +172,10 @@ class PrinterOutputPin:
         gcode.register_mux_command("SET_PIN", "PIN", pin_name,
                                    self.cmd_SET_PIN,
                                    desc=self.cmd_SET_PIN_help)
+
     def get_status(self, eventtime):
         return {'value': self.last_value}
+
     def _set_pin(self, print_time, value):
         if value == self.last_value:
             return
@@ -170,6 +184,7 @@ class PrinterOutputPin:
         self.last_value = value
         self.last_print_time = print_time
     cmd_SET_PIN_help = "Set the value of an output pin"
+
     def cmd_SET_PIN(self, gcmd):
         # Read requested value
         value = gcmd.get_float('VALUE', minval=0., maxval=self.scale)
@@ -178,6 +193,7 @@ class PrinterOutputPin:
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.register_lookahead_callback(
             lambda print_time: self._set_pin(print_time, value))
+
 
 def load_config_prefix(config):
     return PrinterOutputPin(config)

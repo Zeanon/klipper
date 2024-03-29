@@ -2,6 +2,7 @@ import logging
 
 DISABLE_STALL_TIME = 0.100
 
+
 class Unhome:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -10,6 +11,7 @@ class Unhome:
         gcode.register_command("MARK_AS_UNHOMED",
                                self.cmd_MARK_AS_UNHOMED,
                                desc=self.cmd_MARK_AS_UNHOMED_help)
+
     def unhome_axes(self, axes):
         toolhead = self.printer.lookup_object('toolhead')
         toolhead.dwell(DISABLE_STALL_TIME)
@@ -21,6 +23,7 @@ class Unhome:
         if axes:
             logging.info("UNHOME axes: %s" % axes)
         toolhead.dwell(DISABLE_STALL_TIME)
+
     def cmd_D28(self, gcmd):
         axes = []
         for axis in ['X', 'Y', 'Z']:
@@ -30,6 +33,7 @@ class Unhome:
             axes = ['X', 'Y', 'Z']
         self.unhome_axes(axes)
     cmd_MARK_AS_UNHOMED_help = "Manually set a specific axis as unhomed"
+
     def cmd_MARK_AS_UNHOMED(self, gcmd):
         axes_str = gcmd.get('AXES', None)
         if axes_str is None:

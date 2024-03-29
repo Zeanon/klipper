@@ -11,6 +11,7 @@ MAX_RETRIES = 30
 MAX_RETRY_TOLERANCE = 1.0
 MAX_DEVIATION = 50.0
 
+
 class ZAdjustHelper:
     def __init__(self, config, z_count):
         self.printer = config.get_printer()
@@ -19,6 +20,7 @@ class ZAdjustHelper:
         self.z_steppers = []
         self.printer.register_event_handler("klippy:connect",
                                             self.handle_connect)
+
     def handle_connect(self):
         kin = self.printer.lookup_object('toolhead').get_kinematics()
         z_steppers = [s for s in kin.get_steppers() if s.is_active_axis('z')]
@@ -30,6 +32,7 @@ class ZAdjustHelper:
             raise self.printer.config_error(
                 "%s requires multiple z steppers" % (self.name,))
         self.z_steppers = z_steppers
+
     def adjust_steppers(self, adjustments, speed):
         toolhead = self.printer.lookup_object('toolhead')
         gcode = self.printer.lookup_object('gcode')
@@ -48,16 +51,16 @@ class ZAdjustHelper:
         positions.sort(key=(lambda k: k[0]))
         first_stepper_offset, first_stepper = positions[0]
         z_low = curpos[2] - first_stepper_offset
-        for i in range(len(positions)-1):
+        for i in range(len(positions) - 1):
             stepper_offset, stepper = positions[i]
-            next_stepper_offset, next_stepper = positions[i+1]
+            next_stepper_offset, next_stepper = positions[i + 1]
             toolhead.flush_step_generation()
             stepper.set_trapq(toolhead.get_trapq())
             curpos[2] = z_low + next_stepper_offset
             try:
                 toolhead.move(curpos, speed)
                 toolhead.set_position(curpos)
-            except:
+            except BaseException:
                 logging.exception("ZAdjustHelper adjust_steppers")
                 toolhead.flush_step_generation()
                 for s in self.z_steppers:
@@ -70,25 +73,31 @@ class ZAdjustHelper:
         curpos[2] += first_stepper_offset
         toolhead.set_position(curpos)
 
+
 class ZAdjustStatus:
     def __init__(self, printer):
         self.applied = False
         printer.register_event_handler("stepper_enable:motor_off",
-                                        self._motor_off)
+                                       self._motor_off)
         printer.register_event_handler("stepper_enable:disable_z",
-                                        self._motor_off)
+                                       self._motor_off)
         printer.register_event_handler("unhome:mark_as_unhomed_z",
-                                        self._motor_off)
+                                       self._motor_off)
+
     def check_retry_result(self, retry_result):
         if retry_result == "done":
             self.applied = True
         return retry_result
+
     def reset(self):
         self.applied = False
+
     def get_status(self, eventtime):
         return {'applied': self.applied}
+
     def _motor_off(self, print_time):
         self.reset()
+
 
 class RetryHelper:
     def __init__(self, config, error_msg_extra=""):
@@ -109,6 +118,7 @@ class RetryHelper:
                             maxval=MAX_DEVIATION))
         self.value_label = "Probed points range"
         self.error_msg_extra = error_msg_extra
+
     def start(self, gcmd):
         self.max_retries = gcmd.get_int('RETRIES',
                                         self.default_max_retries,
@@ -127,6 +137,7 @@ class RetryHelper:
         self.current_retry = 0
         self.previous = None
         self.increasing = 0
+
     def check_increase(self, error):
         if self.previous and error > self.previous + 0.0000001:
             self.increasing += 1
@@ -134,10 +145,11 @@ class RetryHelper:
             self.increasing -= 1
         self.previous = error
         return self.increasing > 1
+
     def check_retry(self, z_positions):
         if self.max_retries == 0:
             return
-        error = round(max(z_positions) - min(z_positions),6)
+        error = round(max(z_positions) - min(z_positions), 6)
         self.gcode.respond_info(
             "Retries: %d/%d %s: %0.6f tolerance: %0.6f" % (
                 self.current_retry, self.max_retries, self.value_label,
@@ -156,6 +168,7 @@ class RetryHelper:
             raise self.gcode.error("Too many retries")
         return "retry"
 
+
 class ZTilt:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -171,20 +184,24 @@ class ZTilt:
         gcode.register_command('Z_TILT_ADJUST', self.cmd_Z_TILT_ADJUST,
                                desc=self.cmd_Z_TILT_ADJUST_help)
     cmd_Z_TILT_ADJUST_help = "Adjust the Z tilt"
+
     def cmd_Z_TILT_ADJUST(self, gcmd):
         self.z_status.reset()
         self.retry_helper.start(gcmd)
         self.probe_helper.start_probe(gcmd)
+
     def probe_finalize(self, offsets, positions):
         # Setup for coordinate descent analysis
         z_offset = offsets[2]
         logging.info("Calculating bed tilt with: %s", positions)
-        params = { 'x_adjust': 0., 'y_adjust': 0., 'z_adjust': z_offset }
+        params = {'x_adjust': 0., 'y_adjust': 0., 'z_adjust': z_offset}
         # Perform coordinate descent
+
         def adjusted_height(pos, params):
             x, y, z = pos
-            return (z - x*params['x_adjust'] - y*params['y_adjust']
+            return (z - x * params['x_adjust'] - y * params['y_adjust']
                     - params['z_adjust'])
+
         def errorfunc(params):
             total_error = 0.
             for pos in positions:
@@ -199,13 +216,15 @@ class ZTilt:
         y_adjust = new_params['y_adjust']
         z_adjust = (new_params['z_adjust'] - z_offset
                     - x_adjust * offsets[0] - y_adjust * offsets[1])
-        adjustments = [x*x_adjust + y*y_adjust + z_adjust
+        adjustments = [x * x_adjust + y * y_adjust + z_adjust
                        for x, y in self.z_positions]
         self.z_helper.adjust_steppers(adjustments, speed)
         return self.z_status.check_retry_result(
             self.retry_helper.check_retry([p[2] for p in positions]))
+
     def get_status(self, eventtime):
-            return self.z_status.get_status(eventtime)
+        return self.z_status.get_status(eventtime)
+
 
 def load_config(config):
     return ZTilt(config)

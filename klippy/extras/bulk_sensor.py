@@ -3,7 +3,8 @@
 # Copyright (C) 2020-2023  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import logging, threading
+import logging
+import threading
 
 # This "bulk sensor" module facilitates the processing of sensor chip
 # measurements that do not require the host to respond with low
@@ -20,6 +21,8 @@ import logging, threading
 BATCH_INTERVAL = 0.500
 
 # Helper to process accumulated messages in periodic batches
+
+
 class BatchBulkHelper:
     def __init__(self, printer, batch_cb, start_cb=None, stop_cb=None,
                  batch_interval=BATCH_INTERVAL):
@@ -37,6 +40,7 @@ class BatchBulkHelper:
         self.client_cbs = []
         self.webhooks_start_resp = {}
     # Periodic batch processing
+
     def _start(self):
         if self.is_started:
             return
@@ -52,6 +56,7 @@ class BatchBulkHelper:
         systime = reactor.monotonic()
         waketime = systime + self.batch_interval
         self.batch_timer = reactor.register_timer(self._proc_batch, waketime)
+
     def _stop(self):
         del self.client_cbs[:]
         self.printer.get_reactor().unregister_timer(self.batch_timer)
@@ -67,6 +72,7 @@ class BatchBulkHelper:
         if self.client_cbs:
             # New client started while in process of stopping
             self._start()
+
     def _proc_batch(self, eventtime):
         try:
             msg = self.batch_cb(eventtime)
@@ -86,24 +92,30 @@ class BatchBulkHelper:
                     return self.printer.get_reactor().NEVER
         return eventtime + self.batch_interval
     # Client registration
+
     def add_client(self, client_cb):
         self.client_cbs.append(client_cb)
         self._start()
     # Webhooks registration
+
     def _add_api_client(self, web_request):
         whbatch = BatchWebhooksClient(web_request)
         self.add_client(whbatch.handle_batch)
         web_request.send(self.webhooks_start_resp)
+
     def add_mux_endpoint(self, path, key, value, webhooks_start_resp):
         self.webhooks_start_resp = webhooks_start_resp
         wh = self.printer.lookup_object('webhooks')
         wh.register_mux_endpoint(path, key, value, self._add_api_client)
 
 # A webhooks wrapper for use by BatchBulkHelper
+
+
 class BatchWebhooksClient:
     def __init__(self, web_request):
         self.cconn = web_request.get_client_connection()
         self.template = web_request.get_dict('response_template', {})
+
     def handle_batch(self, msg):
         if self.cconn.is_closed():
             return False
@@ -113,6 +125,8 @@ class BatchWebhooksClient:
         return True
 
 # Helper class to store incoming messages in a queue
+
+
 class BulkDataQueue:
     def __init__(self, mcu, msg_name="sensor_bulk_data", oid=None):
         # Measurement storage (accessed from background thread)
@@ -120,14 +134,17 @@ class BulkDataQueue:
         self.raw_samples = []
         # Register callback with mcu
         mcu.register_response(self._handle_data, msg_name, oid)
+
     def _handle_data(self, params):
         with self.lock:
             self.raw_samples.append(params)
+
     def pull_samples(self):
         with self.lock:
             raw_samples = self.raw_samples
             self.raw_samples = []
         return raw_samples
+
     def clear_samples(self):
         self.pull_samples()
 
@@ -152,18 +169,20 @@ class BulkDataQueue:
 
 # Helper class for chip clock synchronization via linear regression
 class ClockSyncRegression:
-    def __init__(self, mcu, chip_clock_smooth, decay = 1. / 20.):
+    def __init__(self, mcu, chip_clock_smooth, decay=1. / 20.):
         self.mcu = mcu
         self.chip_clock_smooth = chip_clock_smooth
         self.decay = decay
         self.last_chip_clock = self.last_exp_mcu_clock = 0.
         self.mcu_clock_avg = self.mcu_clock_variance = 0.
         self.chip_clock_avg = self.chip_clock_covariance = 0.
+
     def reset(self, mcu_clock, chip_clock):
         self.mcu_clock_avg = self.last_mcu_clock = mcu_clock
         self.chip_clock_avg = chip_clock
         self.mcu_clock_variance = self.chip_clock_covariance = 0.
         self.last_chip_clock = self.last_exp_mcu_clock = 0.
+
     def update(self, mcu_clock, chip_clock):
         # Update linear regression
         decay = self.decay
@@ -174,11 +193,14 @@ class ClockSyncRegression:
         diff_chip_clock = chip_clock - self.chip_clock_avg
         self.chip_clock_avg += decay * diff_chip_clock
         self.chip_clock_covariance = (1. - decay) * (
-            self.chip_clock_covariance + diff_mcu_clock*diff_chip_clock*decay)
+            self.chip_clock_covariance + diff_mcu_clock * diff_chip_clock * decay)
+
     def set_last_chip_clock(self, chip_clock):
         base_mcu, base_chip, inv_cfreq = self.get_clock_translation()
         self.last_chip_clock = chip_clock
-        self.last_exp_mcu_clock = base_mcu + (chip_clock-base_chip) * inv_cfreq
+        self.last_exp_mcu_clock = base_mcu + \
+            (chip_clock - base_chip) * inv_cfreq
+
     def get_clock_translation(self):
         inv_chip_freq = self.mcu_clock_variance / self.chip_clock_covariance
         if not self.last_chip_clock:
@@ -191,6 +213,7 @@ class ClockSyncRegression:
         mdiff = s_mcu_clock - self.last_exp_mcu_clock
         s_inv_chip_freq = mdiff / self.chip_clock_smooth
         return self.last_exp_mcu_clock, self.last_chip_clock, s_inv_chip_freq
+
     def get_time_translation(self):
         base_mcu, base_chip, inv_cfreq = self.get_clock_translation()
         clock_to_print_time = self.mcu.clock_to_print_time
@@ -198,9 +221,12 @@ class ClockSyncRegression:
         inv_freq = clock_to_print_time(base_mcu + inv_cfreq) - base_time
         return base_time, base_chip, inv_freq
 
+
 MAX_BULK_MSG_SIZE = 52
 
 # Handle common periodic chip status query responses
+
+
 class ChipClockUpdater:
     def __init__(self, clock_sync, bytes_per_sample):
         self.clock_sync = clock_sync
@@ -209,6 +235,7 @@ class ChipClockUpdater:
         self.last_sequence = self.max_query_duration = 0
         self.last_overflows = 0
         self.mcu = self.oid = self.query_status_cmd = None
+
     def setup_query_command(self, mcu, msgformat, oid, cq):
         self.mcu = mcu
         self.oid = oid
@@ -216,12 +243,16 @@ class ChipClockUpdater:
             msgformat, "sensor_bulk_status oid=%c clock=%u query_ticks=%u"
             " next_sequence=%hu buffered=%u possible_overflows=%hu",
             oid=oid, cq=cq)
+
     def get_last_sequence(self):
         return self.last_sequence
+
     def get_last_overflows(self):
         return self.last_overflows
+
     def clear_duration_filter(self):
         self.max_query_duration = 1 << 31
+
     def note_start(self):
         self.last_sequence = 0
         self.last_overflows = 0
@@ -229,6 +260,7 @@ class ChipClockUpdater:
         self.clear_duration_filter()
         self.update_clock(is_reset=True)
         self.clear_duration_filter()
+
     def update_clock(self, is_reset=False):
         params = self.query_status_cmd.send([self.oid])
         mcu_clock = self.mcu.clock32_to_clock64(params['clock'])

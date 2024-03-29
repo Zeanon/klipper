@@ -37,5 +37,6 @@ class SamdSERCOM:
                 "set_sercom_pin bus=%s sercom_pin_type=rx pin=%s" % (
                     self.sercom, rx_pin_params['pin']))
 
+
 def load_config_prefix(config):
     return SamdSERCOM(config)

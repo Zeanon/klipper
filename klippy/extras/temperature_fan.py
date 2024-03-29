@@ -12,6 +12,7 @@ MAX_FAN_TIME = 5.0
 AMBIENT_TEMP = 25.
 PID_PARAM_BASE = 255.
 
+
 class TemperatureFan:
     def __init__(self, config, defined_fan=None, super_fan=None):
         self.name = config.get_name().split()[1]
@@ -76,15 +77,20 @@ class TemperatureFan:
         self.next_speed_time = speed_time + 0.75 * MAX_FAN_TIME
         self.last_speed_value = value
         self.fan.set_speed(speed_time, value)
+
     def temperature_callback(self, read_time, temp):
         self.last_temp = temp
         self.control.temperature_callback(read_time, temp)
+
     def get_temp(self, eventtime):
         return self.last_temp, self.target_temp
+
     def get_min_speed(self):
         return self.min_speed
+
     def get_max_speed(self):
         return self.max_speed
+
     def get_status(self, eventtime):
         status = self.fan.get_status(eventtime)
         status["temperature"] = round(self.last_temp, 2)
@@ -92,6 +98,7 @@ class TemperatureFan:
         return status
     cmd_SET_TEMPERATURE_FAN_TARGET_help = \
         "Sets a temperature fan target and fan speed limits"
+
     def cmd_SET_TEMPERATURE_FAN_TARGET(self, gcmd):
         target = gcmd.get_float('TARGET', None)
         if target is not None and self.control.get_type() == 'curve':
@@ -106,6 +113,7 @@ class TemperatureFan:
         self.set_max_speed(max_speed)
         self.set_temp(self.target_temp_conf if target is None else target)
     cmd_SET_TEMPERATURE_FAN_help = "Enable or Disable a heater_fan"
+
     def cmd_SET_TEMPERATURE_FAN(self, gcmd):
         target = gcmd.get_float('TARGET', None)
         min_speed = gcmd.get_float('MIN_SPEED', self.min_speed)
@@ -150,6 +158,7 @@ class TemperatureFan:
 # Bang-bang control algo
 ######################################################################
 
+
 class ControlBangBang:
     def __init__(self, temperature_fan, config, controlled_fan=None):
         self.temperature_fan = temperature_fan
@@ -158,6 +167,7 @@ class ControlBangBang:
                                else controlled_fan)
         self.max_delta = config.getfloat('max_delta', 2.0, above=0.)
         self.heating = False
+
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         temp_diff = target_temp - temp
@@ -174,6 +184,7 @@ class ControlBangBang:
         else:
             self.controlled_fan.set_speed(read_time,
                                           self.temperature_fan.get_max_speed())
+
     def get_type(self):
         return 'watermark'
 
@@ -184,6 +195,7 @@ class ControlBangBang:
 
 PID_SETTLE_DELTA = 1.
 PID_SETTLE_SLOPE = .1
+
 
 class ControlPID:
     def __init__(self, temperature_fan, config, controlled_fan=None):
@@ -202,6 +214,7 @@ class ControlPID:
         self.prev_temp_time = 0.
         self.prev_temp_deriv = 0.
         self.prev_temp_integ = 0.
+
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         time_diff = read_time - self.prev_temp_time
@@ -213,14 +226,14 @@ class ControlPID:
         if time_diff >= self.min_deriv_time:
             temp_deriv = temp_diff / time_diff
         else:
-            temp_deriv = (self.prev_temp_deriv * (self.min_deriv_time-time_diff)
+            temp_deriv = (self.prev_temp_deriv * (self.min_deriv_time - time_diff)
                           + temp_diff) / self.min_deriv_time
         # Calculate accumulated temperature "error"
         temp_err = target_temp - temp
         temp_integ = self.prev_temp_integ + temp_err * time_diff
         temp_integ = max(0., min(self.temp_integ_max, temp_integ))
         # Calculate output
-        co = self.Kp*temp_err + self.Ki*temp_integ - self.Kd*temp_deriv
+        co = self.Kp * temp_err + self.Ki * temp_integ - self.Kd * temp_deriv
         bounded_co = max(0., min(self.temperature_fan.get_max_speed(), co))
         self.controlled_fan.set_speed(
             read_time, max(self.temperature_fan.get_min_speed(),
@@ -231,6 +244,7 @@ class ControlPID:
         self.prev_temp_deriv = temp_deriv
         if co == bounded_co:
             self.prev_temp_integ = temp_integ
+
     def get_type(self):
         return 'pid'
 
@@ -291,6 +305,7 @@ class ControlCurve:
         for i in range(self.smooth_readings):
             self.stored_temps.append(0.)
         self.last_temp = 0.
+
     def temperature_callback(self, read_time, temp):
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         temp = self.smooth_temps(temp)
@@ -311,24 +326,27 @@ class ControlCurve:
         self.controlled_fan.set_speed(read_time, self.interpolate(below,
                                                                   above,
                                                                   temp))
+
     def interpolate(self, below, above, temp):
         return (((below[1] * (above[0] - temp))
                  + (above[1] * (temp - below[0])))
                 / (above[0] - below[0]))
+
     def smooth_temps(self, current_temp):
         if (self.last_temp - self.cooling_hysteresis
                 <=
                 current_temp
                 <=
                 self.last_temp + self.heating_hysteresis):
-                temp = self.last_temp
+            temp = self.last_temp
         else:
             temp = current_temp
         self.last_temp = temp
         for i in range(1, len(self.stored_temps)):
-            self.stored_temps[i] = self.stored_temps[i-1]
+            self.stored_temps[i] = self.stored_temps[i - 1]
         self.stored_temps[0] = temp
         return statistics.median(self.stored_temps)
+
     def get_type(self):
         return 'curve'
 

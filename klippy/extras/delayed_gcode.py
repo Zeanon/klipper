@@ -6,6 +6,7 @@
 
 import logging
 
+
 class DelayedGcode:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -22,12 +23,14 @@ class DelayedGcode:
             "UPDATE_DELAYED_GCODE", "ID", self.name,
             self.cmd_UPDATE_DELAYED_GCODE,
             desc=self.cmd_UPDATE_DELAYED_GCODE_help)
+
     def _handle_ready(self):
         waketime = self.reactor.NEVER
         if self.duration:
             waketime = self.reactor.monotonic() + self.duration
         self.timer_handler = self.reactor.register_timer(
             self._gcode_timer_event, waketime)
+
     def _gcode_timer_event(self, eventtime):
         self.inside_timer = True
         try:
@@ -40,6 +43,7 @@ class DelayedGcode:
         self.inside_timer = self.repeat = False
         return nextwake
     cmd_UPDATE_DELAYED_GCODE_help = "Update the duration of a delayed_gcode"
+
     def cmd_UPDATE_DELAYED_GCODE(self, gcmd):
         self.duration = gcmd.get_float('DURATION', minval=0.)
         if self.inside_timer:
@@ -49,6 +53,7 @@ class DelayedGcode:
             if self.duration:
                 waketime = self.reactor.monotonic() + self.duration
             self.reactor.update_timer(self.timer_handler, waketime)
+
 
 def load_config_prefix(config):
     return DelayedGcode(config)

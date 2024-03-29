@@ -6,7 +6,7 @@
 
 class PrintStats:
     def __init__(self, config):
-        printer = self.printer = config.get_printer() # Added printer attribute
+        printer = self.printer = config.get_printer()  # Added printer attribute
         self.gcode_move = printer.load_object(config, 'gcode_move')
         self.reactor = printer.get_reactor()
         self.reset()
@@ -15,15 +15,18 @@ class PrintStats:
         self.gcode.register_command(
             "SET_PRINT_STATS_INFO", self.cmd_SET_PRINT_STATS_INFO,
             desc=self.cmd_SET_PRINT_STATS_INFO_help)
+
     def _update_filament_usage(self, eventtime):
         gc_status = self.gcode_move.get_status(eventtime)
         cur_epos = gc_status['position'].e
         self.filament_used += (cur_epos - self.last_epos) \
             / gc_status['extrude_factor']
         self.last_epos = cur_epos
+
     def set_current_file(self, filename):
         self.reset()
         self.filename = filename
+
     def note_start(self):
         curtime = self.reactor.monotonic()
         if self.print_start_time is None:
@@ -39,6 +42,7 @@ class PrintStats:
         self.state = "printing"
         self.printer.send_event("print_stats:start_printing")
         self.error_message = ""
+
     def note_pause(self):
         if self.last_pause_time is None:
             curtime = self.reactor.monotonic()
@@ -48,15 +52,19 @@ class PrintStats:
         if self.state != "error":
             self.state = "paused"
             self.printer.send_event("print_stats:paused_printing")
+
     def note_complete(self):
         self._note_finish("complete")
         self.printer.send_event("print_stats:complete_printing")
+
     def note_error(self, message):
         self._note_finish("error", message)
+
     def note_cancel(self):
         self._note_finish("cancelled")
         self.printer.send_event("print_stats:cancelled_printing")
-    def _note_finish(self, state, error_message = ""):
+
+    def _note_finish(self, state, error_message=""):
         if self.print_start_time is None:
             return
         self.state = state
@@ -70,10 +78,11 @@ class PrintStats:
         self.print_start_time = None
     cmd_SET_PRINT_STATS_INFO_help = "Pass slicer info like layer act and " \
                                     "total to klipper"
+
     def cmd_SET_PRINT_STATS_INFO(self, gcmd):
-        total_layer = gcmd.get_int("TOTAL_LAYER", self.info_total_layer, \
+        total_layer = gcmd.get_int("TOTAL_LAYER", self.info_total_layer,
                                    minval=0)
-        current_layer = gcmd.get_int("CURRENT_LAYER", self.info_current_layer, \
+        current_layer = gcmd.get_int("CURRENT_LAYER", self.info_current_layer,
                                      minval=0)
         if total_layer == 0:
             self.info_total_layer = None
@@ -86,6 +95,7 @@ class PrintStats:
                 current_layer is not None and \
                 current_layer != self.info_current_layer:
             self.info_current_layer = min(current_layer, self.info_total_layer)
+
     def reset(self):
         self.filename = self.error_message = ""
         self.state = "standby"
@@ -95,6 +105,7 @@ class PrintStats:
         self.init_duration = 0.
         self.info_total_layer = None
         self.info_current_layer = None
+
     def get_status(self, eventtime):
         time_paused = self.prev_pause_duration
         if self.print_start_time is not None:
@@ -119,6 +130,7 @@ class PrintStats:
             'info': {'total_layer': self.info_total_layer,
                      'current_layer': self.info_current_layer}
         }
+
 
 def load_config(config):
     return PrintStats(config)

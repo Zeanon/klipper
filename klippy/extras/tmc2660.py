@@ -4,7 +4,8 @@
 # Copyright (C) 2019-2021  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import math, logging
+import math
+import logging
 from . import bus, tmc, tmc2130
 
 Registers = {
@@ -12,7 +13,7 @@ Registers = {
     "CHOPCONF": 0x8, "DRVCTRL": 0x0
 }
 
-ReadRegisters = [ "READRSP@RDSEL0", "READRSP@RDSEL1", "READRSP@RDSEL2" ]
+ReadRegisters = ["READRSP@RDSEL0", "READRSP@RDSEL1", "READRSP@RDSEL2"]
 
 Fields = {}
 
@@ -33,7 +34,7 @@ Fields["CHOPCONF"] = {
 }
 
 Fields["SMARTEN"] = {
-    "semin" : 0x0f,
+    "semin": 0x0f,
     "seup": 0x03 << 5,
     "semax": 0x0f << 8,
     "sedn": 0x03 << 13,
@@ -112,6 +113,7 @@ FieldFormatters.update({
 
 MAX_CURRENT = 2.400
 
+
 class TMC2660CurrentHelper:
     def __init__(self, config, mcu_tmc):
         self.printer = config.get_printer()
@@ -158,7 +160,7 @@ class TMC2660CurrentHelper:
         return vsense, irun
 
     def _handle_printing(self, print_time):
-        print_time -= 0.100 # Schedule slightly before deadline
+        print_time -= 0.100  # Schedule slightly before deadline
         self.printer.get_reactor().register_callback(
             (lambda ev: self._update_current(self.current, print_time)))
 
@@ -196,8 +198,10 @@ class MCU_TMC2660_SPI:
         self.spi = bus.MCU_SPI_from_config(config, 0, default_speed=4000000)
         self.name_to_reg = name_to_reg
         self.fields = fields
+
     def get_fields(self):
         return self.fields
+
     def get_register(self, reg_name):
         new_rdsel = ReadRegisters.index(reg_name)
         reg = self.name_to_reg["DRVCONF"]
@@ -213,6 +217,7 @@ class MCU_TMC2660_SPI:
             params = self.spi.spi_transfer(msg)
         pr = bytearray(params['response'])
         return (pr[0] << 16) | (pr[1] << 8) | pr[2]
+
     def set_register(self, reg_name, val, print_time=None):
         minclock = 0
         if print_time is not None:
@@ -221,8 +226,10 @@ class MCU_TMC2660_SPI:
         msg = [((val >> 16) | reg) & 0xff, (val >> 8) & 0xff, val & 0xff]
         with self.mutex:
             self.spi.spi_send(msg, minclock)
+
     def get_tmc_frequency(self):
         return None
+
     def get_mcu(self):
         return self.spi.get_mcu()
 
@@ -235,7 +242,7 @@ class TMC2660:
     def __init__(self, config):
         # Setup mcu communication
         self.fields = tmc.FieldHelper(Fields, SignedFields, FieldFormatters)
-        self.fields.set_field("sdoff", 0) # Access DRVCTRL in step/dir mode
+        self.fields.set_field("sdoff", 0)  # Access DRVCTRL in step/dir mode
         self.mcu_tmc = MCU_TMC2660_SPI(config, Registers, self.fields)
         # Register commands
         current_helper = TMC2660CurrentHelper(config, self.mcu_tmc)
@@ -257,7 +264,7 @@ class TMC2660:
         set_config_field(config, "toff", 4)
         if not self.fields.get_field("chm"):
             if (self.fields.get_field("hstrt") +
-                self.fields.get_field("hend")) > 15:
+                    self.fields.get_field("hend")) > 15:
                 raise config.error("driver_HEND + driver_HSTRT must be <= 15")
         # SMARTEN
         set_config_field(config, "seimin", 0)
@@ -275,6 +282,7 @@ class TMC2660:
         set_config_field(config, "slpl", 0)
         set_config_field(config, "diss2g", 0)
         set_config_field(config, "ts2g", 3)
+
 
 def load_config_prefix(config):
     return TMC2660(config)

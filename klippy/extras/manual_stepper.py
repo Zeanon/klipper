@@ -3,8 +3,10 @@
 # Copyright (C) 2019-2021  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import stepper, chelper
+import stepper
+import chelper
 from . import force_move
+
 
 class ManualStepper:
     def __init__(self, config):
@@ -34,6 +36,7 @@ class ManualStepper:
         gcode.register_mux_command('MANUAL_STEPPER', "STEPPER",
                                    stepper_name, self.cmd_MANUAL_STEPPER,
                                    desc=self.cmd_MANUAL_STEPPER_help)
+
     def sync_print_time(self):
         toolhead = self.printer.lookup_object('toolhead')
         print_time = toolhead.get_last_move_time()
@@ -41,6 +44,7 @@ class ManualStepper:
             toolhead.dwell(self.next_cmd_time - print_time)
         else:
             self.next_cmd_time = print_time
+
     def do_enable(self, enable):
         self.sync_print_time()
         stepper_enable = self.printer.lookup_object('stepper_enable')
@@ -53,8 +57,10 @@ class ManualStepper:
                 se = stepper_enable.lookup_enable(s.get_name())
                 se.motor_disable(self.next_cmd_time)
         self.sync_print_time()
+
     def do_set_position(self, setpos):
         self.rail.set_position([setpos, 0., 0.])
+
     def do_move(self, movepos, speed, accel, sync=True):
         self.sync_print_time()
         cp = self.rail.get_commanded_position()
@@ -73,6 +79,7 @@ class ManualStepper:
         toolhead.note_mcu_movequeue_activity(self.next_cmd_time)
         if sync:
             self.sync_print_time()
+
     def do_homing_move(self, movepos, speed, accel, triggered, check_trigger):
         if not self.can_home:
             raise self.printer.command_error(
@@ -84,6 +91,7 @@ class ManualStepper:
         phoming.manual_home(self, endstops, pos, speed,
                             triggered, check_trigger)
     cmd_MANUAL_STEPPER_help = "Command a manually configured stepper"
+
     def cmd_MANUAL_STEPPER(self, gcmd):
         enable = gcmd.get_int('ENABLE', None)
         if enable is not None:
@@ -105,25 +113,35 @@ class ManualStepper:
         elif gcmd.get_int('SYNC', 0):
             self.sync_print_time()
     # Toolhead wrappers to support homing
+
     def flush_step_generation(self):
         self.sync_print_time()
+
     def get_position(self):
         return [self.rail.get_commanded_position(), 0., 0., 0.]
+
     def set_position(self, newpos, homing_axes=()):
         self.do_set_position(newpos[0])
+
     def get_last_move_time(self):
         self.sync_print_time()
         return self.next_cmd_time
+
     def dwell(self, delay):
         self.next_cmd_time += max(0., delay)
+
     def drip_move(self, newpos, speed, drip_completion):
         self.do_move(newpos[0], speed, self.homing_accel)
+
     def get_kinematics(self):
         return self
+
     def get_steppers(self):
         return self.steppers
+
     def calc_position(self, stepper_positions):
         return [stepper_positions[self.rail.get_name()], 0., 0.]
+
 
 def load_config_prefix(config):
     return ManualStepper(config)

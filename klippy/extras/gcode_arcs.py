@@ -75,13 +75,13 @@ class ArcSupport:
             raise gcmd.error("G2/G3 does not support R moves")
 
         # determine the plane coordinates and the helical axis
-        asPlanar = [ gcmd.get_float(a, 0.) for i,a in enumerate('IJ') ]
+        asPlanar = [gcmd.get_float(a, 0.) for i, a in enumerate('IJ')]
         axes = (X_AXIS, Y_AXIS, Z_AXIS)
         if self.plane == ARC_PLANE_X_Z:
-            asPlanar = [ gcmd.get_float(a, 0.) for i,a in enumerate('IK') ]
+            asPlanar = [gcmd.get_float(a, 0.) for i, a in enumerate('IK')]
             axes = (X_AXIS, Z_AXIS, Y_AXIS)
         elif self.plane == ARC_PLANE_Y_Z:
-            asPlanar = [ gcmd.get_float(a, 0.) for i,a in enumerate('JK') ]
+            asPlanar = [gcmd.get_float(a, 0.) for i, a in enumerate('JK')]
             axes = (Y_AXIS, Z_AXIS, X_AXIS)
 
         if not (asPlanar[0] or asPlanar[1]):
@@ -141,7 +141,7 @@ class ArcSupport:
 
         if (angular_travel == 0.
             and currentPos[alpha_axis] == targetPos[alpha_axis]
-            and currentPos[beta_axis] == targetPos[beta_axis]):
+                and currentPos[beta_axis] == targetPos[beta_axis]):
             # Make a circle if the angular rotation is 0 and the
             # target is current position
             angular_travel = 2. * math.pi
@@ -176,6 +176,7 @@ class ArcSupport:
 
         coords.append(targetPos)
         return coords
+
 
 def load_config(config):
     return ArcSupport(config)

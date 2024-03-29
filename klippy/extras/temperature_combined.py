@@ -30,7 +30,7 @@ class PrinterSensorCombined:
         self.printer.add_object("temperature_combined " + self.name, self)
         # time-controlled sensor update
         self.temperature_update_timer = self.reactor.register_timer(
-                self._temperature_update_event)
+            self._temperature_update_event)
         self.printer.register_event_handler('klippy:connect',
                                             self._handle_connect)
         self.printer.register_event_handler('klippy:ready',
@@ -43,12 +43,12 @@ class PrinterSensorCombined:
             # get_status has a 'temperature' value
             if (hasattr(sensor, 'get_status') and
                     'temperature' in sensor.get_status(
-                            self.reactor.monotonic())):
+                    self.reactor.monotonic())):
                 self.sensors.append(sensor)
             else:
                 raise self.printer.config_error(
-                        "'%s' does not report a temperature."
-                        % (sensor_name,))
+                    "'%s' does not report a temperature."
+                    % (sensor_name,))
 
     def _handle_ready(self):
         # Start temperature update timer

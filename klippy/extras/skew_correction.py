@@ -11,10 +11,12 @@
 
 import math
 
+
 def calc_skew_factor(ac, bd, ad):
-    side = math.sqrt(2*ac*ac + 2*bd*bd - 4*ad*ad) / 2.
-    return math.tan(math.pi/2 - math.acos(
-        (ac*ac - side*side - ad*ad) / (2*side*ad)))
+    side = math.sqrt(2 * ac * ac + 2 * bd * bd - 4 * ad * ad) / 2.
+    return math.tan(math.pi / 2 - math.acos(
+        (ac * ac - side * side - ad * ad) / (2 * side * ad)))
+
 
 class PrinterSkew:
     def __init__(self, config):
@@ -39,9 +41,11 @@ class PrinterSkew:
                                desc=self.cmd_SET_SKEW_help)
         gcode.register_command('SKEW_PROFILE', self.cmd_SKEW_PROFILE,
                                desc=self.cmd_SKEW_PROFILE_help)
+
     def _handle_connect(self):
         gcode_move = self.printer.lookup_object('gcode_move')
         self.next_transform = gcode_move.set_move_transform(self, force=True)
+
     def _load_storage(self, config):
         stored_profs = config.get_prefix_sections(self.name)
         # Remove primary skew_correction section, as it is not a stored profile
@@ -54,21 +58,26 @@ class PrinterSkew:
                 'xz_skew': profile.getfloat("xz_skew"),
                 'yz_skew': profile.getfloat("yz_skew"),
             }
+
     def calc_skew(self, pos):
         skewed_x = pos[0] - pos[1] * self.xy_factor \
             - pos[2] * (self.xz_factor - (self.xy_factor * self.yz_factor))
         skewed_y = pos[1] - pos[2] * self.yz_factor
         return [skewed_x, skewed_y, pos[2], pos[3]]
+
     def calc_unskew(self, pos):
         skewed_x = pos[0] + pos[1] * self.xy_factor \
             + pos[2] * self.xz_factor
         skewed_y = pos[1] + pos[2] * self.yz_factor
         return [skewed_x, skewed_y, pos[2], pos[3]]
+
     def get_position(self):
         return self.calc_unskew(self.next_transform.get_position())
+
     def move(self, newpos, speed):
         corrected_pos = self.calc_skew(newpos)
         self.next_transform.move(corrected_pos, speed)
+
     def _update_skew(self, xy_factor, xz_factor, yz_factor):
         self.xy_factor = xy_factor
         self.xz_factor = xz_factor
@@ -76,6 +85,7 @@ class PrinterSkew:
         gcode_move = self.printer.lookup_object('gcode_move')
         gcode_move.reset_last_position()
     cmd_GET_CURRENT_SKEW_help = "Report current printer skew"
+
     def cmd_GET_CURRENT_SKEW(self, gcmd):
         out = "Current Printer Skew:"
         planes = ["XY", "XZ", "YZ"]
@@ -86,6 +96,7 @@ class PrinterSkew:
                 fac, math.degrees(fac))
         gcmd.respond_info(out)
     cmd_CALC_MEASURED_SKEW_help = "Calculate skew from measured print"
+
     def cmd_CALC_MEASURED_SKEW(self, gcmd):
         ac = gcmd.get_float("AC", above=0.)
         bd = gcmd.get_float("BD", above=0.)
@@ -94,6 +105,7 @@ class PrinterSkew:
         gcmd.respond_info("Calculated Skew: %.6f radians, %.2f degrees"
                           % (factor, math.degrees(factor)))
     cmd_SET_SKEW_help = "Set skew based on lengths of measured object"
+
     def cmd_SET_SKEW(self, gcmd):
         if gcmd.get_int("CLEAR", 0):
             self._update_skew(0., 0., 0.)
@@ -114,6 +126,7 @@ class PrinterSkew:
                 factor = plane.lower() + '_factor'
                 setattr(self, factor, calc_skew_factor(*lengths))
     cmd_SKEW_PROFILE_help = "Profile management for skew_correction"
+
     def cmd_SKEW_PROFILE(self, gcmd):
         if gcmd.get('LOAD', None) is not None:
             name = gcmd.get('LOAD')

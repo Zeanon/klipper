@@ -7,7 +7,7 @@
 import logging
 from . import bus, adxl345, bulk_sensor
 
-MPU9250_ADDR =      0x68
+MPU9250_ADDR = 0x68
 
 MPU_DEV_IDS = {
     0x74: "mpu-9515",
@@ -15,35 +15,35 @@ MPU_DEV_IDS = {
     0x71: "mpu-9250",
     0x70: "mpu-6500",
     0x68: "mpu-6050",
-    #everything above are normal MPU IDs
+    # everything above are normal MPU IDs
     0x75: "mpu-unknown (DEFECTIVE! USE WITH CAUTION!)",
     0x69: "mpu-unknown (DEFECTIVE! USE WITH CAUTION!)",
-    }
+}
 
 # MPU9250 registers
-REG_DEVID =         0x75
-REG_FIFO_EN =       0x23
-REG_SMPLRT_DIV =    0x19
-REG_CONFIG =        0x1A
-REG_ACCEL_CONFIG =  0x1C
+REG_DEVID = 0x75
+REG_FIFO_EN = 0x23
+REG_SMPLRT_DIV = 0x19
+REG_CONFIG = 0x1A
+REG_ACCEL_CONFIG = 0x1C
 REG_ACCEL_CONFIG2 = 0x1D
-REG_USER_CTRL =     0x6A
-REG_PWR_MGMT_1 =    0x6B
-REG_PWR_MGMT_2 =    0x6C
-REG_INT_STATUS =    0x3A
+REG_USER_CTRL = 0x6A
+REG_PWR_MGMT_1 = 0x6B
+REG_PWR_MGMT_2 = 0x6C
+REG_INT_STATUS = 0x3A
 
-SAMPLE_RATE_DIVS = { 4000:0x00 }
+SAMPLE_RATE_DIVS = {4000: 0x00}
 
-SET_CONFIG =        0x01 # FIFO mode 'stream' style
-SET_ACCEL_CONFIG =  0x10 # 8g full scale
-SET_ACCEL_CONFIG2 = 0x08 # 1046Hz BW, 0.503ms delay 4kHz sample rate
-SET_PWR_MGMT_1_WAKE =     0x00
-SET_PWR_MGMT_1_SLEEP=     0x40
+SET_CONFIG = 0x01  # FIFO mode 'stream' style
+SET_ACCEL_CONFIG = 0x10  # 8g full scale
+SET_ACCEL_CONFIG2 = 0x08  # 1046Hz BW, 0.503ms delay 4kHz sample rate
+SET_PWR_MGMT_1_WAKE = 0x00
+SET_PWR_MGMT_1_SLEEP = 0x40
 SET_PWR_MGMT_2_ACCEL_ON = 0x07
-SET_PWR_MGMT_2_OFF  =     0x3F
+SET_PWR_MGMT_2_OFF = 0x3F
 SET_USER_FIFO_RESET = 0x04
-SET_USER_FIFO_EN    = 0x40
-SET_ENABLE_FIFO  = 0x08
+SET_USER_FIFO_EN = 0x40
+SET_ENABLE_FIFO = 0x08
 SET_DISABLE_FIFO = 0x00
 
 FREEFALL_ACCEL = 9.80665 * 1000.
@@ -58,6 +58,8 @@ SAMPLES_PER_BLOCK = bulk_sensor.MAX_BULK_MSG_SIZE // BYTES_PER_SAMPLE
 BATCH_UPDATES = 0.100
 
 # Printer class that controls MPU9250 chip
+
+
 class MPU9250:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -89,26 +91,31 @@ class MPU9250:
         hdr = ('time', 'x_acceleration', 'y_acceleration', 'z_acceleration')
         self.batch_bulk.add_mux_endpoint("mpu9250/dump_mpu9250", "sensor",
                                          self.name, {'header': hdr})
+
     def _build_config(self):
         cmdqueue = self.i2c.get_command_queue()
         self.mcu.add_config_cmd("config_mpu9250 oid=%d i2c_oid=%d"
-                           % (self.oid, self.i2c.get_oid()))
+                                % (self.oid, self.i2c.get_oid()))
         self.mcu.add_config_cmd("query_mpu9250 oid=%d rest_ticks=0"
-                           % (self.oid,), on_restart=True)
+                                % (self.oid,), on_restart=True)
         self.query_mpu9250_cmd = self.mcu.lookup_command(
             "query_mpu9250 oid=%c rest_ticks=%u", cq=cmdqueue)
         self.clock_updater.setup_query_command(
             self.mcu, "query_mpu9250_status oid=%c", oid=self.oid, cq=cmdqueue)
+
     def read_reg(self, reg):
         params = self.i2c.i2c_read([reg], 1)
         return bytearray(params['response'])[0]
+
     def set_reg(self, reg, val, minclock=0):
         self.i2c.i2c_write([reg, val & 0xFF], minclock=minclock)
+
     def start_internal_client(self):
         aqh = adxl345.AccelQueryHelper(self.printer)
         self.batch_bulk.add_client(aqh.handle_batch)
         return aqh
     # Measurement decoding
+
     def _extract_samples(self, raw_samples):
         # Load variables to optimize inner loop below
         (x_pos, x_scale), (y_pos, y_scale), (z_pos, z_scale) = self.axes_map
@@ -125,7 +132,7 @@ class MPU9250:
             msg_cdiff = seq * SAMPLES_PER_BLOCK - chip_base
 
             for i in range(len(d) // BYTES_PER_SAMPLE):
-                d_xyz = d[i*BYTES_PER_SAMPLE:(i+1)*BYTES_PER_SAMPLE]
+                d_xyz = d[i * BYTES_PER_SAMPLE:(i + 1) * BYTES_PER_SAMPLE]
                 xhigh, xlow, yhigh, ylow, zhigh, zlow = d_xyz
                 # Merge and perform twos-complement
                 rx = ((xhigh << 8) | xlow) - ((xhigh & 0x80) << 9)
@@ -143,6 +150,7 @@ class MPU9250:
         del samples[count:]
         return samples
     # Start, stop, and process message batches
+
     def _start_measurements(self):
         # In case of miswiring, testing MPU9250 device ID prevents treating
         # noise or wrong signal as a correctly initialized device
@@ -154,12 +162,12 @@ class MPU9250:
                 "(e.g. faulty wiring) or a faulty chip."
                 % (dev_id))
         else:
-            logging.info("Found %s with id %x"% (MPU_DEV_IDS[dev_id], dev_id))
+            logging.info("Found %s with id %x" % (MPU_DEV_IDS[dev_id], dev_id))
         # Setup chip in requested query rate
         self.set_reg(REG_PWR_MGMT_1, SET_PWR_MGMT_1_WAKE)
         self.set_reg(REG_PWR_MGMT_2, SET_PWR_MGMT_2_ACCEL_ON)
         # Add 20ms pause for accelerometer chip wake up
-        self.read_reg(REG_DEVID) # Dummy read to ensure queues flushed
+        self.read_reg(REG_DEVID)  # Dummy read to ensure queues flushed
         systime = self.printer.get_reactor().monotonic()
         next_time = self.mcu.estimated_print_time(systime) + 0.020
         self.set_reg(REG_SMPLRT_DIV, SAMPLE_RATE_DIVS[self.data_rate],
@@ -171,7 +179,7 @@ class MPU9250:
         self.set_reg(REG_FIFO_EN, SET_DISABLE_FIFO)
         self.set_reg(REG_USER_CTRL, SET_USER_FIFO_RESET)
         self.set_reg(REG_USER_CTRL, SET_USER_FIFO_EN)
-        self.read_reg(REG_INT_STATUS) # clear FIFO overflow flag
+        self.read_reg(REG_INT_STATUS)  # clear FIFO overflow flag
 
         # Start bulk reading
         self.bulk_queue.clear_samples()
@@ -182,6 +190,7 @@ class MPU9250:
         # Initialize clock tracking
         self.clock_updater.note_start()
         self.last_error_count = 0
+
     def _finish_measurements(self):
         # Halt bulk reading
         self.set_reg(REG_FIFO_EN, SET_DISABLE_FIFO)
@@ -190,6 +199,7 @@ class MPU9250:
         logging.info("MPU9250 finished '%s' measurements", self.name)
         self.set_reg(REG_PWR_MGMT_1, SET_PWR_MGMT_1_SLEEP)
         self.set_reg(REG_PWR_MGMT_2, SET_PWR_MGMT_2_OFF)
+
     def _process_batch(self, eventtime):
         self.clock_updater.update_clock()
         raw_samples = self.bulk_queue.pull_samples()
@@ -201,8 +211,10 @@ class MPU9250:
         return {'data': samples, 'errors': self.last_error_count,
                 'overflows': self.clock_updater.get_last_overflows()}
 
+
 def load_config(config):
     return MPU9250(config)
+
 
 def load_config_prefix(config):
     return MPU9250(config)

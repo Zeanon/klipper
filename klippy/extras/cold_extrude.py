@@ -9,11 +9,14 @@ class ColdExtrude:
         gcode.register_command("COLD_EXTRUDE",
                                self.cmd_COLD_EXTRUDE,
                                desc=self.cmd_COLD_EXTRUDE_help)
+
     def cmd_M302(self, gcmd):
         self.set_cold_extrude(gcmd, 'T', 'P', 'S')
     cmd_COLD_EXTRUDE_help = "Control cold extrusions"
+
     def cmd_COLD_EXTRUDE(self, gcmd):
         self.set_cold_extrude(gcmd, 'EXTRUDER', 'ENABLE', 'MIN_EXTRUDE_TEMP')
+
     def set_cold_extrude(self,
                          gcmd,
                          index_name,

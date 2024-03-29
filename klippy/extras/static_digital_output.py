@@ -15,5 +15,6 @@ class PrinterStaticDigitalOut:
             mcu.add_config_cmd("set_digital_out pin=%s value=%d"
                                % (pin_params['pin'], not pin_params['invert']))
 
+
 def load_config_prefix(config):
     return PrinterStaticDigitalOut(config)

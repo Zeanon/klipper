@@ -20,7 +20,7 @@ REG_LIS2DW_OUT_YL_ADDR = 0x2A
 REG_LIS2DW_OUT_YH_ADDR = 0x2B
 REG_LIS2DW_OUT_ZL_ADDR = 0x2C
 REG_LIS2DW_OUT_ZH_ADDR = 0x2D
-REG_LIS2DW_FIFO_CTRL   = 0x2E
+REG_LIS2DW_FIFO_CTRL = 0x2E
 REG_LIS2DW_FIFO_SAMPLES = 0x2F
 REG_MOD_READ = 0x80
 # REG_MOD_MULTI = 0x40
@@ -36,6 +36,8 @@ SAMPLES_PER_BLOCK = bulk_sensor.MAX_BULK_MSG_SIZE // BYTES_PER_SAMPLE
 BATCH_UPDATES = 0.100
 
 # Printer class that controls LIS2DW chip
+
+
 class LIS2DW:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -74,24 +76,28 @@ class LIS2DW:
             "query_lis2dw oid=%c rest_ticks=%u", cq=cmdqueue)
         self.clock_updater.setup_query_command(
             self.mcu, "query_lis2dw_status oid=%c", oid=self.oid, cq=cmdqueue)
+
     def read_reg(self, reg):
         params = self.spi.spi_transfer([reg | REG_MOD_READ, 0x00])
         response = bytearray(params['response'])
         return response[1]
+
     def set_reg(self, reg, val, minclock=0):
         self.spi.spi_send([reg, val & 0xFF], minclock=minclock)
         stored_val = self.read_reg(reg)
         if stored_val != val:
             raise self.printer.command_error(
-                    "Failed to set LIS2DW register [0x%x] to 0x%x: got 0x%x. "
-                    "This is generally indicative of connection problems "
-                    "(e.g. faulty wiring) or a faulty lis2dw chip." % (
-                        reg, val, stored_val))
+                "Failed to set LIS2DW register [0x%x] to 0x%x: got 0x%x. "
+                "This is generally indicative of connection problems "
+                "(e.g. faulty wiring) or a faulty lis2dw chip." % (
+                    reg, val, stored_val))
+
     def start_internal_client(self):
         aqh = adxl345.AccelQueryHelper(self.printer)
         self.batch_bulk.add_client(aqh.handle_batch)
         return aqh
     # Measurement decoding
+
     def _extract_samples(self, raw_samples):
         # Load variables to optimize inner loop below
         (x_pos, x_scale), (y_pos, y_scale), (z_pos, z_scale) = self.axes_map
@@ -108,7 +114,7 @@ class LIS2DW:
             msg_cdiff = seq * SAMPLES_PER_BLOCK - chip_base
 
             for i in range(len(d) // BYTES_PER_SAMPLE):
-                d_xyz = d[i*BYTES_PER_SAMPLE:(i+1)*BYTES_PER_SAMPLE]
+                d_xyz = d[i * BYTES_PER_SAMPLE:(i + 1) * BYTES_PER_SAMPLE]
                 xlow, xhigh, ylow, yhigh, zlow, zhigh = d_xyz
                 # Merge and perform twos-complement
 
@@ -129,6 +135,7 @@ class LIS2DW:
         del samples[count:]
         return samples
     # Start, stop, and process message batches
+
     def _start_measurements(self):
         # In case of miswiring, testing LIS2DW device ID prevents treating
         # noise or wrong signal as a correctly initialized device
@@ -159,6 +166,7 @@ class LIS2DW:
         # Initialize clock tracking
         self.clock_updater.note_start()
         self.last_error_count = 0
+
     def _finish_measurements(self):
         # Halt bulk reading
         self.set_reg(REG_LIS2DW_FIFO_CTRL, 0x00)
@@ -166,6 +174,7 @@ class LIS2DW:
         self.bulk_queue.clear_samples()
         logging.info("LIS2DW finished '%s' measurements", self.name)
         self.set_reg(REG_LIS2DW_FIFO_CTRL, 0x00)
+
     def _process_batch(self, eventtime):
         self.clock_updater.update_clock()
         raw_samples = self.bulk_queue.pull_samples()
@@ -177,8 +186,10 @@ class LIS2DW:
         return {'data': samples, 'errors': self.last_error_count,
                 'overflows': self.clock_updater.get_last_overflows()}
 
+
 def load_config(config):
     return LIS2DW(config)
+
 
 def load_config_prefix(config):
     return LIS2DW(config)

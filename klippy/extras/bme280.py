@@ -100,6 +100,7 @@ def get_signed_short_msb(bits):
     val = get_unsigned_short_msb(bits)
     return get_twos_complement(val, 16)
 
+
 class BME280:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -401,7 +402,8 @@ class BME280:
             self.reactor.pause(self.reactor.monotonic() + .01)
             data = self.read_register('REG_MSB', 3)
             pressure_raw = \
-                ((data[0] << 16)|(data[1] << 8)|data[2]) >> (8 - self.os_pres)
+                ((data[0] << 16) | (data[1] << 8)
+                 | data[2]) >> (8 - self.os_pres)
         except Exception:
             logging.exception("BMP180: Error reading pressure")
             self.temp = self.pressure = .0
@@ -417,13 +419,12 @@ class BME280:
         self._callback(self.mcu.estimated_print_time(measured_time), self.temp)
         return measured_time + REPORT_TIME
 
-
     def _compensate_temp(self, raw_temp):
         dig = self.dig
         var1 = ((raw_temp / 16384. - (dig['T1'] / 1024.)) * dig['T2'])
         var2 = (
-                ((raw_temp / 131072.) - (dig['T1'] / 8192.)) *
-                ((raw_temp / 131072.) - (dig['T1'] / 8192.)) * dig['T3'])
+            ((raw_temp / 131072.) - (dig['T1'] / 8192.)) *
+            ((raw_temp / 131072.) - (dig['T1'] / 8192.)) * dig['T3'])
         self.t_fine = var1 + var2
         return self.t_fine / 5120.0
 
@@ -462,7 +463,7 @@ class BME280:
             var1 = dig['P9'] * pressure * pressure / 2147483648.
             var2 = pressure * dig['P8'] / 32768.
             var3 = (pressure / 256.) * (pressure / 256.) * (pressure / 256.) * (
-                    dig['P10'] / 131072.)
+                dig['P10'] / 131072.)
             return pressure + (var1 + var2 + var3 + (dig['P7'] * 128.)) / 16.
 
     def _compensate_humidity_bme280(self, raw_humidity):
@@ -470,7 +471,7 @@ class BME280:
         t_fine = self.t_fine
         humidity = t_fine - 76800.
         h1 = (
-                raw_humidity - (
+            raw_humidity - (
                 dig['H4'] * 64. + dig['H5'] / 16384. * humidity))
         h2 = (dig['H2'] / 65536. * (1. + dig['H6'] / 67108864. * humidity *
                                     (1. + dig['H3'] / 67108864. * humidity)))
@@ -483,7 +484,7 @@ class BME280:
         temp_comp = self.temp
 
         var1 = raw_humidity - (
-                (dig['H1'] * 16.) + ((dig['H3'] / 2.) * temp_comp))
+            (dig['H1'] * 16.) + ((dig['H3'] / 2.) * temp_comp))
         var2 = var1 * ((dig['H2'] / 262144.) *
                        (1. + ((dig['H4'] / 16384.) * temp_comp) +
                         ((dig['H5'] / 1048576.) * temp_comp * temp_comp)))
@@ -495,9 +496,9 @@ class BME280:
     def _compensate_gas(self, gas_raw, gas_range):
         gas_switching_error = self.read_register('RANGE_SWITCHING_ERROR', 1)[0]
         var1 = (1340. + 5. * gas_switching_error) * \
-               BME680_GAS_CONSTANTS[gas_range][0]
+            BME680_GAS_CONSTANTS[gas_range][0]
         gas = var1 * BME680_GAS_CONSTANTS[gas_range][1] / (
-                gas_raw - 512. + var1)
+            gas_raw - 512. + var1)
         return gas
 
     def _calculate_gas_heater_resistance(self, target_temp):
@@ -533,7 +534,7 @@ class BME280:
         x2 = dig['MC'] * 2048 / (x1 + dig['MD'])
         b5 = x1 + x2
         self.t_fine = b5
-        return (b5 + 8)/16./10.
+        return (b5 + 8) / 16. / 10.
 
     def _compensate_pressure_bmp180(self, raw_pressure):
         dig = self.dig

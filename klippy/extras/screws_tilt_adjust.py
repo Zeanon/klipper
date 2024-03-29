@@ -7,6 +7,7 @@
 import math
 from . import probe
 
+
 class ScrewsTiltAdjust:
     def __init__(self, config):
         self.config = config
@@ -61,23 +62,23 @@ class ScrewsTiltAdjust:
 
     def get_status(self, eventtime):
         return {'error': self.max_diff_error,
-            'max_deviation': self.max_diff,
-            'results': self.results}
+                'max_deviation': self.max_diff,
+                'results': self.results}
 
     def probe_finalize(self, offsets, positions):
         self.results = {}
         self.max_diff_error = False
         # Factors used for CW-M3, CCW-M3, CW-M4, CCW-M4, CW-M5, CCW-M5, CW-M6
-        #and CCW-M6
+        # and CCW-M6
         threads_factor = {0: 0.5, 1: 0.5, 2: 0.7, 3: 0.7, 4: 0.8, 5: 0.8,
-        6: 1.0, 7: 1.0}
+                          6: 1.0, 7: 1.0}
         is_clockwise_thread = (self.thread & 1) == 0
         screw_diff = []
         # Process the read Z values
         if self.direction is not None:
             # Lowest or highest screw is the base position used for comparison
             use_max = ((is_clockwise_thread and self.direction == 'CW')
-                    or (not is_clockwise_thread and self.direction == 'CCW'))
+                       or (not is_clockwise_thread and self.direction == 'CCW'))
             min_or_max = max if use_max else min
             i_base, z_base = min_or_max(
                 enumerate([pos[2] for pos in positions]), key=lambda v: v[1])
@@ -97,7 +98,7 @@ class ScrewsTiltAdjust:
                     (name + ' (base)', coord[0], coord[1], z))
                 sign = "CW" if is_clockwise_thread else "CCW"
                 self.results["screw%d" % (i + 1,)] = {'z': z, 'sign': sign,
-                    'adjust': '00:00', 'is_base': True}
+                                                      'adjust': '00:00', 'is_base': True}
             else:
                 # Calculate how knob must be adjusted for other positions
                 diff = z_base - z
@@ -119,13 +120,14 @@ class ScrewsTiltAdjust:
                     "%s : x=%.1f, y=%.1f, z=%.5f : adjust %s %02d:%02d" %
                     (name, coord[0], coord[1], z, sign, full_turns, minutes))
                 self.results["screw%d" % (i + 1,)] = {'z': z, 'sign': sign,
-                    'adjust':"%02d:%02d" % (full_turns, minutes),
-                    'is_base': False}
+                                                      'adjust': "%02d:%02d" % (full_turns, minutes),
+                                                      'is_base': False}
         if self.max_diff and any((d > self.max_diff) for d in screw_diff):
             self.max_diff_error = True
             raise self.gcode.error(
-                "bed level exceeds configured limits ({}mm)! " \
+                "bed level exceeds configured limits ({}mm)! "
                 "Adjust screws and restart print.".format(self.max_diff))
+
 
 def load_config(config):
     return ScrewsTiltAdjust(config)

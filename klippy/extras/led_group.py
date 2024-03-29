@@ -29,18 +29,19 @@ class PrinterLEDGroup:
                 for led in led_indices:
                     if led:
                         if '-' in led:
-                            start, stop = map(int,led.split('-'))
+                            start, stop = map(int, led.split('-'))
                             if (start > led_count or stop > led_count or
                                     start < 1 or stop < 1):
                                 raise self.printer.config_error(
                                     "LED index out of range for '%s' in '%s'"
-                                    % (parms[0],parms[1],))
+                                    % (parms[0], parms[1],))
                             if stop == start:
-                                led_list = [start-1]
+                                led_list = [start - 1]
                             elif stop > start:
-                                led_list = list(range(start-1, stop))
+                                led_list = list(range(start - 1, stop))
                             else:
-                                led_list = list(reversed(range(stop-1, start)))
+                                led_list = list(
+                                    reversed(range(stop - 1, start)))
                             for i in led_list:
                                 self.leds.append((led_helper, int(i)))
                         else:
@@ -48,8 +49,8 @@ class PrinterLEDGroup:
                             if i > led_count or i < 1:
                                 raise self.printer.config_error(
                                     "LED index out of range for '%s' in '%s'"
-                                        % (parms[0],parms[1],))
-                            self.leds.append((led_helper, (int(i)-1)))
+                                    % (parms[0], parms[1],))
+                            self.leds.append((led_helper, (int(i) - 1)))
                     else:
                         for i in range(led_count):
                             self.leds.append((led_helper, int(i)))
@@ -63,12 +64,13 @@ class PrinterLEDGroup:
 
     def update_leds(self, led_state, print_time):
         for i, (led_helper, index) in enumerate(self.leds):
-            led_helper.set_color(index+1, led_state[i])
+            led_helper.set_color(index + 1, led_state[i])
         for led_helper in self.led_helpers:
             led_helper.check_transmit(print_time)
 
     def get_status(self, eventtime=None):
         return self.led_helper.get_status(eventtime)
+
 
 def load_config_prefix(config):
     return PrinterLEDGroup(config)

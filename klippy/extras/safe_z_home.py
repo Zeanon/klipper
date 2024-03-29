@@ -22,7 +22,7 @@ class SafeZHoming:
 
         if config.has_section("homing_override"):
             raise config.error("homing_override and safe_z_homing cannot"
-                               +" be used simultaneously")
+                               + " be used simultaneously")
 
     def cmd_G28(self, gcmd):
         toolhead = self.printer.lookup_object('toolhead')
@@ -69,7 +69,7 @@ class SafeZHoming:
             curtime = self.printer.get_reactor().monotonic()
             kin_status = toolhead.get_kinematics().get_status(curtime)
             if ('x' not in kin_status['homed_axes'] or
-                'y' not in kin_status['homed_axes']):
+                    'y' not in kin_status['homed_axes']):
                 raise gcmd.error("Must home X and Y axes first")
             # Move to safe XY homing position
             prevpos = toolhead.get_position()
@@ -86,6 +86,7 @@ class SafeZHoming:
             # Move XY back to previous positions
             if self.move_to_previous:
                 toolhead.manual_move(prevpos[:2], self.speed)
+
 
 def load_config(config):
     return SafeZHoming(config)

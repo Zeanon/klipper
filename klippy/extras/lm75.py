@@ -9,17 +9,18 @@ from . import bus
 LM75_CHIP_ADDR = 0x48
 LM75_I2C_SPEED = 100000
 LM75_REGS = {
-    'TEMP'   : 0x00,
-    'CONF'   : 0x01,
-    'THYST'  : 0x02,
-    'TOS'    : 0x03,
-    'PRODID' : 0x07    # TI LM75A chips only?
+    'TEMP': 0x00,
+    'CONF': 0x01,
+    'THYST': 0x02,
+    'TOS': 0x03,
+    'PRODID': 0x07    # TI LM75A chips only?
 }
 LM75_REPORT_TIME = .8
 # Temperature can be sampled at any time but the read aborts
 # the current conversion. Conversion time is 300ms so make
 # sure not to read too often.
 LM75_MIN_REPORT_TIME = .5
+
 
 class LM75:
     def __init__(self, config):
@@ -62,7 +63,7 @@ class LM75:
         try:
             prodid = self.read_register('PRODID', 1)[0]
             logging.info("lm75: Chip ID %#x" % prodid)
-        except:
+        except BaseException:
             pass
 
     def _sample_lm75(self, eventtime):

@@ -31,14 +31,17 @@ class SoftwareI2C:
         self.mcu.add_config_cmd("config_digital_out oid=%d pin=%s"
                                 " value=%d default_value=%d max_duration=%d" % (
                                     self.sda_oid, sda_params['pin'], 1, 1, 0))
+
     def get_mcu(self):
         return self.mcu
+
     def build_config(self):
         self.mcu.add_config_cmd("config_digital_out oid=%d pin=%s value=%d"
                                 " default_value=%d max_duration=%d" % (
                                     self.scl_oid, self.scl_pin, 1, 1, 0))
         self.update_pin_cmd = self.mcu.lookup_command(
             "update_digital_out oid=%c value=%c", cq=self.cmd_queue)
+
     def i2c_write(self, msg, minclock=0, reqclock=0):
         msg = [self.addr] + msg
         send = self.scl_main.update_pin_cmd.send
@@ -66,6 +69,7 @@ class SoftwareI2C:
         send([self.scl_oid, 1], minclock=minclock, reqclock=reqclock)
         send([self.sda_oid, 1], minclock=minclock, reqclock=reqclock)
 
+
 class mcp4018:
     def __init__(self, config):
         self.printer = config.get_printer()
@@ -81,17 +85,22 @@ class mcp4018:
         gcode.register_mux_command("SET_DIGIPOT", "DIGIPOT", self.name,
                                    self.cmd_SET_DIGIPOT,
                                    desc=self.cmd_SET_DIGIPOT_help)
+
     def handle_connect(self):
         self.set_dac(self.start_value)
+
     def set_dac(self, value):
         val = int(value * 127. / self.scale + .5)
         self.i2c.i2c_write([val])
     cmd_SET_DIGIPOT_help = "Set digipot value"
+
     def cmd_SET_DIGIPOT(self, gcmd):
         wiper = gcmd.get_float('WIPER', minval=0., maxval=self.scale)
         if wiper is not None:
             self.set_dac(wiper)
             gcmd.respond_info("New value for DIGIPOT = %s, wiper = %.2f"
-                               % (self.name, wiper))
+                              % (self.name, wiper))
+
+
 def load_config_prefix(config):
     return mcp4018(config)

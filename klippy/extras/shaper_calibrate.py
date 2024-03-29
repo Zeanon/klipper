@@ -50,6 +50,7 @@ class CalibrationData:
             "z": self.psd_z,
             "all": self.psd_sum,
         }
+
     def add_data(self, other):
         np = self.numpy
         for psd, other_psd in zip(self._psd_list, other._psd_list):
@@ -59,8 +60,10 @@ class CalibrationData:
                 self.freq_bins, other.freq_bins, other_psd
             )
             psd[:] = np.maximum(psd, other_normalized)
+
     def set_numpy(self, numpy):
         self.numpy = numpy
+
     def normalize_to_frequencies(self):
         freq_bins = self.freq_bins
         for psd in self._psd_list:
@@ -68,6 +71,7 @@ class CalibrationData:
             psd *= self.numpy.tanh(0.5 / MIN_FREQ * freq_bins) / (
                 freq_bins + 0.1
             )
+
     def get_psd(self, axis="all"):
         return self._psd_map[axis]
 
@@ -226,6 +230,7 @@ class ShaperCalibrate:
                 "installed via `~/klippy-env/bin/pip install` (refer to "
                 "docs/Measuring_Resonances.md for more details)."
             )
+
     def background_process_exec(self, method, args):
         if self.printer is None:
             return method(*args)
@@ -237,7 +242,7 @@ class ShaperCalibrate:
             queuelogger.clear_bg_logging()
             try:
                 res = method(*args)
-            except:
+            except BaseException:
                 child_conn.send((True, traceback.format_exc()))
                 child_conn.close()
                 return
@@ -264,6 +269,7 @@ class ShaperCalibrate:
         calc_proc.join()
         parent_conn.close()
         return res
+
     def _split_into_windows(self, x, window_size, overlap):
         # Memory-efficient algorithm to split an input 'x' into a series
         # of overlapping windows
@@ -274,6 +280,7 @@ class ShaperCalibrate:
         return self.numpy.lib.stride_tricks.as_strided(
             x, shape=shape, strides=strides, writeable=False
         )
+
     def _psd(self, x, fs, nfft):
         # Calculate power spectral density (PSD) using Welch's algorithm
         np = self.numpy
@@ -303,6 +310,7 @@ class ShaperCalibrate:
         # Calculate the frequency bins
         freqs = np.fft.rfftfreq(nfft, 1.0 / fs)
         return freqs, psd
+
     def calc_freq_response(self, raw_values):
         np = self.numpy
         if raw_values is None:
@@ -329,6 +337,7 @@ class ShaperCalibrate:
         fy, py = self._psd(data[:, 2], SAMPLING_FREQ, M)
         fz, pz = self._psd(data[:, 3], SAMPLING_FREQ, M)
         return CalibrationData(fx, px + py + pz, px, py, pz)
+
     def process_accelerometer_data(self, data):
         calibration_data = self.background_process_exec(
             self.calc_freq_response, (data,)
@@ -339,6 +348,7 @@ class ShaperCalibrate:
             )
         calibration_data.set_numpy(self.numpy)
         return calibration_data
+
     def _estimate_remaining_vibrations(self, freq_bins, vals, psd):
         # Calculate the acceptable level of remaining vibrations.
         # Note that these are not true remaining vibrations, but rather
@@ -353,6 +363,7 @@ class ShaperCalibrate:
         ).sum()
         all_vibrations = (psd * freq_bins**2).sum()
         return remaining_vibrations / all_vibrations
+
     def _get_shaper_smoothing(self, shaper, accel=5000, scv=5.0):
         half_accel = accel * 0.5
 
@@ -377,6 +388,7 @@ class ShaperCalibrate:
         offset_90 = inv_D * math.sqrt(offset_90_x**2 + offset_90_y**2)
         offset_180 *= inv_D
         return max(offset_90, abs(offset_180))
+
     def _get_smoother_smoothing(self, smoother, accel=5000, scv=5.0):
         np = self.numpy
         half_accel = accel * 0.5
@@ -396,6 +408,7 @@ class ShaperCalibrate:
         offset_90_y = np.trapz(((scv - half_accel * t) * t * w)[t < 0], dx=dt)
         offset_90 = math.sqrt(offset_90_x**2 + offset_90_y**2)
         return max(offset_90, abs(offset_180))
+
     def fit_shaper(
         self,
         shaper_cfg,
@@ -471,6 +484,7 @@ class ShaperCalibrate:
             ):
                 selected = res
         return selected
+
     def _bisect(self, func, eps=1e-8):
         left = right = 1.0
         if not func(1e-9):
@@ -488,6 +502,7 @@ class ShaperCalibrate:
             else:
                 right = middle
         return left
+
     def find_max_accel(self, s, get_smoothing):
         # Just some empirically chosen value which produces good projections
         # for max_accel without much smoothing
@@ -497,6 +512,7 @@ class ShaperCalibrate:
             1e-2,
         )
         return max_accel
+
     def find_best_shaper(
         self,
         calibration_data,
@@ -599,6 +615,7 @@ class ShaperCalibrate:
                 # or it improves the score and smoothing (by 5% and 10% resp.)
                 best_shaper = shaper
         return best_shaper, all_shapers
+
     def save_params(self, configfile, axis, shaper_name, shaper_freq):
         if axis == "xy":
             self.save_params(configfile, "x", shaper_name, shaper_freq)
@@ -608,6 +625,7 @@ class ShaperCalibrate:
             configfile.set(
                 "input_shaper", "shaper_freq_" + axis, "%.1f" % (shaper_freq,)
             )
+
     def apply_params(self, input_shaper, axis, shaper_name, shaper_freq):
         if axis == "xy":
             self.apply_params(input_shaper, "x", shaper_name, shaper_freq)
@@ -625,6 +643,7 @@ class ShaperCalibrate:
                 },
             )
         )
+
     def save_calibration_data(
         self, output, calibration_data, shapers=None, max_freq=None
     ):

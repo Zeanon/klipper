@@ -8,13 +8,14 @@
 import logging
 import json
 
+
 class ExcludeObject:
     def __init__(self, config):
         self.printer = config.get_printer()
         self.gcode = self.printer.lookup_object('gcode')
         self.gcode_move = self.printer.load_object(config, 'gcode_move')
         self.printer.register_event_handler('klippy:connect',
-                                        self._handle_connect)
+                                            self._handle_connect)
         self.printer.register_event_handler("virtual_sdcard:reset_file",
                                             self._reset_file)
         self.next_transform = None
@@ -40,7 +41,7 @@ class ExcludeObject:
             tuning_tower = self.printer.lookup_object('tuning_tower')
             if tuning_tower.is_active():
                 logging.info('The ExcludeObject move transform is not being '
-                    'loaded due to Tuning tower being Active')
+                             'loaded due to Tuning tower being Active')
                 return
 
             self.next_transform = self.gcode_move.set_move_transform(self,
@@ -64,8 +65,8 @@ class ExcludeObject:
             tuning_tower = self.printer.lookup_object('tuning_tower')
             if tuning_tower.is_active():
                 logging.error('The Exclude Object move transform was not '
-                    'unregistered because it is not at the head of the '
-                    'transform chain.')
+                              'unregistered because it is not at the head of the '
+                              'transform chain.')
                 return
 
             self.gcode_move.set_move_transform(self.next_transform, force=True)
@@ -102,7 +103,7 @@ class ExcludeObject:
         offset = self._get_extrusion_offsets()
 
         if self.initial_extrusion_moves > 0 and \
-            self.last_position[3] != newpos[3]:
+                self.last_position[3] != newpos[3]:
             # Since the transform is not loaded until there is a request to
             # exclude an object, the transform needs to track a few extrusions
             # to get the state of the extruder
@@ -120,8 +121,8 @@ class ExcludeObject:
         # before moving away from the last position.  Any remaining corrections
         # will be made on the firs XY move.
         if (offset[0] != 0 or offset[1] != 0) and \
-            (newpos[0] != self.last_position_excluded[0] or \
-            newpos[1] != self.last_position_excluded[1]):
+            (newpos[0] != self.last_position_excluded[0] or
+             newpos[1] != self.last_position_excluded[1]):
             offset[0] = 0
             offset[1] = 0
             offset[2] = 0
@@ -132,7 +133,7 @@ class ExcludeObject:
             offset[2] = 0
 
         if self.extruder_adj != 0 and \
-            newpos[3] != self.last_position_excluded[3]:
+                newpos[3] != self.last_position_excluded[3]:
             offset[3] += self.extruder_adj
             self.extruder_adj = 0
 
@@ -147,7 +148,7 @@ class ExcludeObject:
             offset[i] = newpos[i] - self.last_position_extruded[i]
         offset[3] = offset[3] + newpos[3] - self.last_position[3]
         self.last_position[:] = newpos
-        self.last_position_excluded[:] =self.last_position
+        self.last_position_excluded[:] = self.last_position
         self.max_position_excluded = max(self.max_position_excluded, newpos[3])
 
     def _move_into_excluded_region(self, newpos, speed):
@@ -194,6 +195,7 @@ class ExcludeObject:
 
     cmd_EXCLUDE_OBJECT_START_help = "Marks the beginning the current object" \
                                     " as labeled"
+
     def cmd_EXCLUDE_OBJECT_START(self, gcmd):
         name = gcmd.get('NAME').upper()
         if not any(obj["name"] == name for obj in self.objects):
@@ -202,13 +204,14 @@ class ExcludeObject:
         self.was_excluded_at_start = self._test_in_excluded_region()
 
     cmd_EXCLUDE_OBJECT_END_help = "Marks the end the current object"
+
     def cmd_EXCLUDE_OBJECT_END(self, gcmd):
-        if self.current_object == None and self.next_transform:
+        if self.current_object is None and self.next_transform:
             gcmd.respond_info("EXCLUDE_OBJECT_END called, but no object is"
                               " currently active")
             return
         name = gcmd.get('NAME', default=None)
-        if name != None and name.upper() != self.current_object:
+        if name is not None and name.upper() != self.current_object:
             gcmd.respond_info("EXCLUDE_OBJECT_END NAME=%s does not match the"
                               " current object NAME=%s" %
                               (name.upper(), self.current_object))
@@ -216,6 +219,7 @@ class ExcludeObject:
         self.current_object = None
 
     cmd_EXCLUDE_OBJECT_help = "Cancel moves inside a specified objects"
+
     def cmd_EXCLUDE_OBJECT(self, gcmd):
         reset = gcmd.get('RESET', None)
         current = gcmd.get('CURRENT', None)
@@ -243,6 +247,7 @@ class ExcludeObject:
             self._list_excluded_objects(gcmd)
 
     cmd_EXCLUDE_OBJECT_DEFINE_help = "Provides a summary of an object"
+
     def cmd_EXCLUDE_OBJECT_DEFINE(self, gcmd):
         reset = gcmd.get('RESET', None)
         name = gcmd.get('NAME', '').upper()
@@ -259,10 +264,10 @@ class ExcludeObject:
             obj = {"name": name.upper()}
             obj.update(parameters)
 
-            if center != None:
+            if center is not None:
                 obj['center'] = json.loads('[%s]' % center)
 
-            if polygon != None:
+            if polygon is not None:
                 obj['polygon'] = json.loads(polygon)
 
             self._add_object_definition(obj)
@@ -297,6 +302,7 @@ class ExcludeObject:
     def _list_excluded_objects(self, gcmd):
         object_list = " ".join(self.excluded_objects)
         gcmd.respond_info('Excluded objects: {}'.format(object_list))
+
 
 def load_config(config):
     return ExcludeObject(config)
