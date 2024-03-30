@@ -111,6 +111,7 @@ class ForceMove:
         if name not in self.steppers:
             raise gcmd.error("Unknown stepper %s" % (name,))
         return self.steppers[name]
+
     cmd_STEPPER_BUZZ_help = "Oscillate a given stepper to help id it"
 
     def cmd_STEPPER_BUZZ(self, gcmd):
@@ -127,6 +128,7 @@ class ForceMove:
             self.manual_move(stepper, -dist, speed)
             toolhead.dwell(.450)
         self._restore_enable(stepper, was_enable)
+
     cmd_FORCE_MOVE_help = "Manually move a stepper; invalidates kinematics"
 
     def cmd_FORCE_MOVE(self, gcmd):
@@ -138,6 +140,7 @@ class ForceMove:
                      stepper.get_name(), distance, speed, accel)
         self._force_enable(stepper)
         self.manual_move(stepper, distance, speed, accel)
+
     cmd_SET_KINEMATIC_POSITION_help = "Force a low-level kinematic position"
 
     def cmd_SET_KINEMATIC_POSITION(self, gcmd):
@@ -162,6 +165,7 @@ class ForceMove:
             homing_axes.append(2)
         logging.info("SET_KINEMATIC_POSITION pos=%.3f,%.3f,%.3f", x, y, z)
         toolhead.set_position([x, y, z, curpos[3]], homing_axes=homing_axes)
+
     cmd_MARK_AS_HOMED_help = "Manually set a specific axis as homed"
 
     def cmd_MARK_AS_HOMED(self, gcmd):
