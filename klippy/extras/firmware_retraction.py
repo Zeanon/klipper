@@ -136,7 +136,8 @@ class FirmwareRetraction:
     def cmd_G10(self, gcmd):
         retract_gcode = ""                                # Reset retract string
         homing_status = self._get_homing_status()          # Check homing status
-        if 'xyz' not in homing_status: # If printer is not homed, ignore command
+        # If printer is not homed, ignore command
+        if 'xyz' not in homing_status:
             if self.verbose:
                 gcmd.respond_info('Printer is not homed. '
                                   'Command ignored!')
@@ -505,7 +506,8 @@ class FirmwareRetraction:
 
     # Helper to get homing status
     def _get_homing_status(self):
-        curtime = self.printer.get_reactor().monotonic() # Check if Z axis homed
+        # Check if Z axis homed
+        curtime = self.printer.get_reactor().monotonic()
         kin_status = self.toolhead.get_kinematics().get_status(curtime)
         return kin_status['homed_axes']
 
