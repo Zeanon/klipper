@@ -233,10 +233,19 @@ class SwitchSensor:
 
     def get_sensor_status(self):
         return ("Filament Sensor %s: %s\n"
-                "Runout Distance: %.2f"
+                "Filament Detected: %s\n"
+                "Runout Distance: %.2f\n"
+                "Runout Elapsed: %.2f\n"
+                "Smart: %s"
                 % (self.runout_helper.name,
                    'enabled' if self.runout_helper.sensor_enabled
-                   else 'disabled', self.runout_helper.runout_distance))
+                   else 'disabled',
+                   'true' if self.runout_helper.filament_present
+                   else 'false',
+                   self.runout_helper.runout_distance,
+                   self.runout_helper.runout_elapsed,
+                   'true' if self.runout_helper.smart
+                   else 'false'))
 
     def sensor_get_status(self, eventtime):
         return {
