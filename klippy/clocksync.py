@@ -109,7 +109,8 @@ class ClockSync:
         else:
             self.last_prediction_time = sent_time
             self.prediction_variance = (
-                (1. - DECAY) * (self.prediction_variance + clock_diff2 * DECAY))
+                (1. - DECAY) *
+                (self.prediction_variance + clock_diff2 * DECAY))
         # Add clock and sent_time to linear regression
         diff_sent_time = sent_time - self.time_avg
         self.time_avg += DECAY * diff_sent_time
@@ -230,9 +231,9 @@ class SecondarySync(ClockSync):
         est_print_time = est_main_clock / main_mcu_freq
         # Determine sync1_print_time and sync2_print_time
         sync1_print_time = max(print_time, est_print_time)
-        sync2_print_time = max(sync1_print_time + 4.,
-                               self.last_sync_time,
-                               print_time + 2.5 * (print_time - est_print_time))
+        sync2_print_time = max(
+            sync1_print_time + 4., self.last_sync_time, print_time + 2.5 *
+            (print_time - est_print_time))
         # Calc sync2_sys_time (inverse of main_sync.estimatated_print_time)
         sync2_main_clock = sync2_print_time * main_mcu_freq
         sync2_sys_time = ser_time + (sync2_main_clock - ser_clock) / ser_freq

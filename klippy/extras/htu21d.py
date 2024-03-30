@@ -162,7 +162,8 @@ class HTU21D:
 
             # Wait
             self.reactor.pause(self.reactor.monotonic() +
-                               HTU21D_DEVICES[self.deviceId][self.resolution][0])
+                               HTU21D_DEVICES[self.deviceId]
+                               [self.resolution][0])
 
             params = self.i2c.i2c_read([], 3)
 
@@ -185,7 +186,8 @@ class HTU21D:
 
             # Wait
             self.reactor.pause(self.reactor.monotonic() +
-                               HTU21D_DEVICES[self.deviceId][self.resolution][1])
+                               HTU21D_DEVICES[self.deviceId]
+                               [self.resolution][1])
 
             params = self.i2c.i2c_read([], 3)
 

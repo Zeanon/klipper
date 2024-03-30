@@ -64,8 +64,10 @@ class SX1509(object):
             return SX1509_digital_out(self, pin_params)
         elif pin_type == 'pwm' and pin_params['pin'][0:4] == "PIN_":
             return SX1509_pwm(self, pin_params)
-        raise pins.error("Wrong pin or incompatible type: %s with type %s! " % (
-            pin_params['pin'][0:4], pin_type))
+        raise pins.error(
+            "Wrong pin or incompatible type: %s with type %s! " %
+            (pin_params['pin'][0: 4],
+             pin_type))
 
     def get_mcu(self):
         return self._mcu

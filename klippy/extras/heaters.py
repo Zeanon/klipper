@@ -379,7 +379,8 @@ class Heater:
                                             float,
                                             False)
             tolerance = self._check_value_gcmd(
-                'TOLERANCE', current_profile['pid_tolerance'], gcmd, float, False)
+                'TOLERANCE', current_profile['pid_tolerance'],
+                gcmd, float, False)
             control = self._check_value_gcmd('CONTROL',
                                              current_profile['control'],
                                              gcmd,

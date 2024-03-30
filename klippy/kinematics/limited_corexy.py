@@ -92,7 +92,8 @@ class LimitedCoreXYKinematics(corexy.CoreXYKinematics):
             y_o_a = y / max_y_accel
             if self.scale_per_axis:
                 max_a *= move_d / (max(abs(x_o_a + y_o_a),
-                                       abs(x_o_a - y_o_a)) * max(max_x_accel, max_y_accel))
+                                       abs(x_o_a - y_o_a)) *
+                                   max(max_x_accel, max_y_accel))
             else:
                 max_a = move_d / max(abs(x_o_a + y_o_a), abs(x_o_a - y_o_a))
         if z:

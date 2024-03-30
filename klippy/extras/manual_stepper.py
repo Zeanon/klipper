@@ -14,7 +14,8 @@ class ManualStepper:
         if config.get('endstop_pin', None) is not None:
             self.can_home = True
             self.rail = stepper.PrinterRail(
-                config, need_position_minmax=False, default_position_endstop=0.)
+                config, need_position_minmax=False,
+                default_position_endstop=0.)
             self.steppers = self.rail.get_steppers()
         else:
             self.can_home = False

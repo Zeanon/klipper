@@ -99,8 +99,9 @@ class DeltesianKinematics:
             sr2 = slow_ratio ** 2
             self.slow_x2 = min([math.sqrt((sr2 * a2) / (sr2 + 1))
                                 - axl for a2, axl in zip(arm2, arm_x)]) ** 2
-            self.very_slow_x2 = min([math.sqrt((2 * sr2 * a2) / (2 * sr2 + 1))
-                                     - axl for a2, axl in zip(arm2, arm_x)]) ** 2
+            self.very_slow_x2 = min(
+                [math.sqrt((2 * sr2 * a2) / (2 * sr2 + 1)) - axl for a2,
+                 axl in zip(arm2, arm_x)]) ** 2
             logging.info("Deltesian kinematics: moves slowed past %.2fmm"
                          " and %.2fmm"
                          % (math.sqrt(self.slow_x2),
