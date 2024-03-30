@@ -231,8 +231,8 @@ class BedMesh:
             if self.log_fade_complete:
                 self.log_fade_complete = False
                 logging.info(
-                    "bed_mesh fade complete: Current Z: %.4f fade_target: %.4f " %
-                    (z, self.fade_target))
+                    "bed_mesh fade complete: Current Z: %.4f fade_target: %.4f "
+                    % (z, self.fade_target))
             self.toolhead.move([x, y, z + self.fade_target, e], speed)
         else:
             self.splitter.build_move(self.last_position, newpos, factor)

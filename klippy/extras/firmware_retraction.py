@@ -33,7 +33,8 @@ class FirmwareRetraction:
         self.currentPos = []
         self.currentZ = 0.0
         self.z_hop_Z = 0.0                           # Z coordinate of zhop move
-        self.safe_z_hop_height = self.z_hop_height  # Zhop preventing out-of-range
+        # Zhop preventing out-of-range
+        self.safe_z_hop_height = self.z_hop_height
 
         self.is_retracted = False                           # Retract state flag
         self.ramp_move = False                                  # Ramp move flag
@@ -88,7 +89,8 @@ class FirmwareRetraction:
                              self.z_hop_height, self.z_hop_style,
                              self.is_retracted, self.ramp_move))
 
-        if self.stored_set_retraction_gcmds:  # List queued SET_RETRACTION commands
+        # List queued SET_RETRACTION commands
+        if self.stored_set_retraction_gcmds:
             for i, stored_gcmd in reversed(list(enumerate(
                     self.stored_set_retraction_gcmds))):
                 params = ' '.join('{} = {}'.format(k, v) for k, v in
@@ -134,7 +136,7 @@ class FirmwareRetraction:
     def cmd_G10(self, gcmd):
         retract_gcode = ""                                # Reset retract string
         homing_status = self._get_homing_status()          # Check homing status
-        if 'xyz' not in homing_status:  # If printer is not homed, ignore command
+        if 'xyz' not in homing_status: # If printer is not homed, ignore command
             if self.verbose:
                 gcmd.respond_info('Printer is not homed. '
                                   'Command ignored!')
@@ -190,7 +192,8 @@ class FirmwareRetraction:
                                                self.max_vel * 60))
                 # Ramp move: z_hop during 1st move after retract
                 elif self.z_hop_style == 'ramp':
-                    self.ramp_move = True  # Set flag to ramp move in next G1 move
+                    # Set flag to ramp move in next G1 move
+                    self.ramp_move = True
 
             retract_gcode += (
                 # Restore previous accel and speed value limits
@@ -205,13 +208,14 @@ class FirmwareRetraction:
 
             self.gcode.run_script_from_command(retract_gcode)
             self.is_retracted = True        # Set the flag to filament retracted
-            self.acc_vel_state = []              # Reset acc and vel setting list
+            self.acc_vel_state = []             # Reset acc and vel setting list
 
             if self.z_hop_height > 0.0:
                 # Swap original G1 handlers if z_hop enabled to offset following
                 # moves in eiter absolute or relative mode
                 self._unregister_G1()
-                self.G1_toggle_state = True  # Prevent repeat unregister with flag
+                # Prevent repeat unregister with flag
+                self.G1_toggle_state = True
         else:
             if self.verbose:
                 gcmd.respond_info('Printer is already in retract '
@@ -290,7 +294,8 @@ class FirmwareRetraction:
                 if self.stored_set_retraction_gcmds:
                     for stored_gcmd in self.stored_set_retraction_gcmds:
                         self._execute_set_retraction(stored_gcmd)
-                    self.stored_set_retraction_gcmds = []  # Reset stored comms list
+                    # Reset stored comms list
+                    self.stored_set_retraction_gcmds = []
         else:
             if self.verbose:
                 gcmd.respond_info('Printer is not retracted. '
@@ -500,7 +505,7 @@ class FirmwareRetraction:
 
     # Helper to get homing status
     def _get_homing_status(self):
-        curtime = self.printer.get_reactor().monotonic()  # Check if Z axis homed
+        curtime = self.printer.get_reactor().monotonic() # Check if Z axis homed
         kin_status = self.toolhead.get_kinematics().get_status(curtime)
         return kin_status['homed_axes']
 

@@ -95,7 +95,8 @@ class ClockSync:
         clock_diff2 = (clock - exp_clock)**2
         if (clock_diff2 > 25. * self.prediction_variance
                 and clock_diff2 > (.000500 * self.mcu_freq)**2):
-            if clock > exp_clock and sent_time < self.last_prediction_time + 10.:
+            if (clock > exp_clock
+                    and sent_time < self.last_prediction_time + 10.):
                 logging.debug("Ignoring clock sample %.3f:"
                               " freq=%d diff=%d stddev=%.3f",
                               sent_time, self.clock_est[2], clock - exp_clock,

@@ -193,7 +193,10 @@ class ClockSyncRegression:
         diff_chip_clock = chip_clock - self.chip_clock_avg
         self.chip_clock_avg += decay * diff_chip_clock
         self.chip_clock_covariance = (1. - decay) * (
-            self.chip_clock_covariance + diff_mcu_clock * diff_chip_clock * decay)
+            self.chip_clock_covariance
+            + diff_mcu_clock
+            * diff_chip_clock
+            * decay)
 
     def set_last_chip_clock(self, chip_clock):
         base_mcu, base_chip, inv_cfreq = self.get_clock_translation()

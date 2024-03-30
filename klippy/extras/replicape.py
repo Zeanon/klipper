@@ -142,7 +142,8 @@ class servo_pwm:
                 # /sys/class/pwm/ used by the Linux MCU should be a symlink
                 # to this directory.
                 pwmdev = os.listdir(
-                    '/sys/devices/platform/ocp/48302000.epwmss/48302200.pwm/pwm/')
+                    '/sys/devices/platform/ocp/'
+                    '48302000.epwmss/48302200.pwm/pwm/')
                 pwmchip = [pc for pc in pwmdev if pc.startswith('pwmchip')][0]
             except BaseException:
                 raise pins.error("Replicape unable to determine pwmchip")
@@ -169,9 +170,13 @@ class servo_pwm:
 
 ReplicapeStepConfig = {
     'disable': None,
-    '1': (1 << 7) | (1 << 5), '2': (1 << 7) | (1 << 5) | (1 << 6), 'spread2': (1 << 5),
-    '4': (1 << 7) | (1 << 5) | (1 << 4), '16': (1 << 7) | (1 << 5) | (1 << 6) | (1 << 4),
-    'spread4': (1 << 5) | (1 << 4), 'spread16': (1 << 7), 'stealth4': (1 << 7) | (1 << 6),
+    '1': (1 << 7) | (1 << 5), '2': (1 << 7) | (1 << 5) | (1 << 6),
+    'spread2': (1 << 5),
+    '4': (1 << 7) | (1 << 5) | (1 << 4),
+    '16': (1 << 7) | (1 << 5) | (1 << 6) | (1 << 4),
+    'spread4': (1 << 5) | (1 << 4),
+    'spread16': (1 << 7),
+    'stealth4': (1 << 7) | (1 << 6),
     'stealth16': 0
 }
 
