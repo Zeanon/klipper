@@ -98,7 +98,7 @@ class EncoderSensor:
             return True
         return False
     def set_filament_sensor(self, gcmd):
-        reset_meeded = False
+        reset_needed = False
         detection_length = gcmd.get_float('DETECTION_LENGTH', None, minval=0.)
         if detection_length is not None:
             if detection_length != self.detection_length:
