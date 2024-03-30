@@ -73,7 +73,9 @@ class VirtualSDGCodeProvider:
         self.file_position = self.file_size = 0
 
     def get_gcode(self):
-        logging.info('Starting SD card print (position %d)', self.file_position)
+        logging.info(
+            'Starting SD card print (position %d)',
+            self.file_position)
         try:
             self.current_file.seek(self.file_position)
         except BaseException:

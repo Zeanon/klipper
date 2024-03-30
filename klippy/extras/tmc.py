@@ -45,7 +45,12 @@ class FieldHelper:
             field_value -= (1 << field_value.bit_length())
         return field_value
 
-    def set_field(self, field_name, field_value, reg_value=None, reg_name=None):
+    def set_field(
+            self,
+            field_name,
+            field_value,
+            reg_value=None,
+            reg_name=None):
         # Returns register value with field bits filled with supplied value
         if reg_name is None:
             reg_name = self.field_to_register[field_name]
@@ -74,7 +79,8 @@ class FieldHelper:
     def pretty_format(self, reg_name, reg_value):
         # Provide a string description of a register
         reg_fields = self.all_fields.get(reg_name, {})
-        reg_fields = sorted([(mask, name) for name, mask in reg_fields.items()])
+        reg_fields = sorted([(mask, name)
+                            for name, mask in reg_fields.items()])
         fields = []
         for mask, field_name in reg_fields:
             field_value = self.get_field(field_name, reg_value, reg_name)
@@ -130,7 +136,8 @@ class TMCErrorCheck:
                 mask |= self.fields.all_fields[reg_name][f]
                 if f in err_fields:
                     err_mask |= self.fields.all_fields[reg_name][f]
-        self.drv_status_reg_info = [0, reg_name, mask, err_mask, cs_actual_mask]
+        self.drv_status_reg_info = [
+            0, reg_name, mask, err_mask, cs_actual_mask]
         # Setup for temperature query
         self.adc_temp = None
         self.adc_temp_reg = self.fields.lookup_register("adc_temp")
@@ -256,7 +263,8 @@ class TMCCommandHelper:
         self.toff = None
         self.mcu_phase_offset = None
         self.stepper = None
-        self.stepper_enable = self.printer.load_object(config, "stepper_enable")
+        self.stepper_enable = self.printer.load_object(
+            config, "stepper_enable")
         self.printer.register_event_handler("stepper:sync_mcu_position",
                                             self._handle_sync_mcu_pos)
         self.printer.register_event_handler("stepper:set_sdir_inverted",
@@ -288,7 +296,8 @@ class TMCCommandHelper:
 
     def cmd_INIT_TMC(self, gcmd):
         logging.info("INIT_TMC %s", self.name)
-        print_time = self.printer.lookup_object('toolhead').get_last_move_time()
+        print_time = self.printer.lookup_object(
+            'toolhead').get_last_move_time()
         self._init_registers(print_time)
     cmd_SET_TMC_FIELD_help = "Set a register field of a TMC driver"
 
@@ -310,14 +319,16 @@ class TMCCommandHelper:
             value = TMCtstepHelper(step_dist, mres, tmc_frequency,
                                    velocity)
         reg_val = self.fields.set_field(field_name, value)
-        print_time = self.printer.lookup_object('toolhead').get_last_move_time()
+        print_time = self.printer.lookup_object(
+            'toolhead').get_last_move_time()
         self.mcu_tmc.set_register(reg_name, reg_val, print_time)
     cmd_SET_TMC_CURRENT_help = "Set the current of a TMC driver"
 
     def cmd_SET_TMC_CURRENT(self, gcmd):
         ch = self.current_helper
         prev_cur, prev_hold_cur, req_hold_cur, max_cur = ch.get_current()
-        run_current = gcmd.get_float('CURRENT', None, minval=0., maxval=max_cur)
+        run_current = gcmd.get_float(
+            'CURRENT', None, minval=0., maxval=max_cur)
         hold_current = gcmd.get_float('HOLDCURRENT', None,
                                       above=0., maxval=max_cur)
         if run_current is not None or hold_current is not None:
@@ -348,7 +359,8 @@ class TMCCommandHelper:
         if self.fields.lookup_register(field_name, None) is None:
             # TMC2660 uses MSTEP
             field_name = "mstep"
-        reg = self.mcu_tmc.get_register(self.fields.lookup_register(field_name))
+        reg = self.mcu_tmc.get_register(
+            self.fields.lookup_register(field_name))
         return self.fields.get_field(field_name, reg)
 
     def _handle_sync_mcu_pos(self, stepper):
@@ -450,7 +462,8 @@ class TMCCommandHelper:
     def get_status(self, eventtime=None):
         cpos = None
         if self.stepper is not None and self.mcu_phase_offset is not None:
-            cpos = self.stepper.mcu_to_commanded_position(self.mcu_phase_offset)
+            cpos = self.stepper.mcu_to_commanded_position(
+                self.mcu_phase_offset)
         current = self.current_helper.get_current()
         res = {'mcu_phase_offset': self.mcu_phase_offset,
                'phase_offset_position': cpos,
@@ -652,7 +665,8 @@ def TMCStealthchopHelper(config, mcu_tmc):
 
         stepper_name = " ".join(config.get_name().split()[1:])
         sconfig = config.getsection(stepper_name)
-        rotation_dist, steps_per_rotation = stepper.parse_step_distance(sconfig)
+        rotation_dist, steps_per_rotation = stepper.parse_step_distance(
+            sconfig)
         step_dist = rotation_dist / steps_per_rotation
         mres = fields.get_field("mres")
         tpwmthrs = TMCtstepHelper(step_dist, mres, mcu_tmc.get_tmc_frequency(),
@@ -677,7 +691,8 @@ def TMCVcoolthrsHelper(config, mcu_tmc):
     if velocity is not None:
         stepper_name = " ".join(config.get_name().split()[1:])
         sconfig = config.getsection(stepper_name)
-        rotation_dist, steps_per_rotation = stepper.parse_step_distance(sconfig)
+        rotation_dist, steps_per_rotation = stepper.parse_step_distance(
+            sconfig)
         step_dist = rotation_dist / steps_per_rotation
         mres = fields.get_field("mres")
         tcoolthrs = TMCtstepHelper(step_dist, mres,
@@ -696,7 +711,8 @@ def TMCVhighHelper(config, mcu_tmc):
     if velocity is not None:
         stepper_name = " ".join(config.get_name().split()[1:])
         sconfig = config.getsection(stepper_name)
-        rotation_dist, steps_per_rotation = stepper.parse_step_distance(sconfig)
+        rotation_dist, steps_per_rotation = stepper.parse_step_distance(
+            sconfig)
         step_dist = rotation_dist / steps_per_rotation
         mres = fields.get_field("mres")
         thigh = TMCtstepHelper(step_dist, mres,

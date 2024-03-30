@@ -73,7 +73,8 @@ class VibrationPulseTest:
         return self.probe_points
 
     def prepare_test(self, gcmd):
-        self.freq_start = gcmd.get_float("FREQ_START", self.min_freq, minval=1.)
+        self.freq_start = gcmd.get_float(
+            "FREQ_START", self.min_freq, minval=1.)
         self.freq_end = gcmd.get_float("FREQ_END", self.max_freq,
                                        minval=self.freq_start, maxval=300.)
         self.hz_per_sec = gcmd.get_float("HZ_PER_SEC", self.hz_per_sec,
@@ -144,7 +145,8 @@ class ResonanceTester:
                 ('y', config.get('accel_chip_y').strip())]
             if self.accel_chip_names[0][1] == self.accel_chip_names[1][1]:
                 self.accel_chip_names = [('xy', self.accel_chip_names[0][1])]
-        self.max_smoothing = config.getfloat('max_smoothing', None, minval=0.05)
+        self.max_smoothing = config.getfloat(
+            'max_smoothing', None, minval=0.05)
 
         self.gcode = self.printer.lookup_object('gcode')
         self.gcode.register_command("MEASURE_AXES_NOISE",
@@ -264,8 +266,9 @@ class ResonanceTester:
                 raise gcmd.error("Unsupported output '%s', only 'resonances'"
                                  " and 'raw_data' are supported" % (output,))
         if not outputs:
-            raise gcmd.error("No output specified, at least one of 'resonances'"
-                             " or 'raw_data' must be set in OUTPUT parameter")
+            raise gcmd.error(
+                "No output specified, at least one of 'resonances'"
+                " or 'raw_data' must be set in OUTPUT parameter")
         name_suffix = gcmd.get("NAME", time.strftime("%Y%m%d_%H%M%S"))
         if not self.is_valid_name_suffix(name_suffix):
             raise gcmd.error("Invalid NAME parameter")

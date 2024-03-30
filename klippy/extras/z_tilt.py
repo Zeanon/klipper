@@ -40,7 +40,8 @@ class ZAdjustHelper:
         # Report on movements
         stepstrs = ["%s = %.6f" % (s.get_name(), a)
                     for s, a in zip(self.z_steppers, adjustments)]
-        msg = "Making the following Z adjustments:\n%s" % ("\n".join(stepstrs),)
+        msg = "Making the following Z adjustments:\n%s" % (
+            "\n".join(stepstrs),)
         gcode.respond_info(msg)
         # Disable Z stepper movements
         toolhead.flush_step_generation()
@@ -175,7 +176,8 @@ class ZTilt:
         self.z_positions = config.getlists('z_positions', seps=(',', '\n'),
                                            parser=float, count=2)
         self.retry_helper = RetryHelper(config)
-        self.probe_helper = probe.ProbePointsHelper(config, self.probe_finalize)
+        self.probe_helper = probe.ProbePointsHelper(
+            config, self.probe_finalize)
         self.probe_helper.minimum_points(2)
         self.z_status = ZAdjustStatus(self.printer)
         self.z_helper = ZAdjustHelper(config, len(self.z_positions))

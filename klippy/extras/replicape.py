@@ -101,9 +101,11 @@ class pca9685_pwm:
 class ReplicapeDACEnable:
     def __init__(self, replicape, channel, pin_type, pin_params):
         if pin_type != 'digital_out':
-            raise pins.error("Replicape virtual enable pin must be digital_out")
+            raise pins.error(
+                "Replicape virtual enable pin must be digital_out")
         if pin_params['invert']:
-            raise pins.error("Replicape virtual enable pin can not be inverted")
+            raise pins.error(
+                "Replicape virtual enable pin can not be inverted")
         self.mcu = replicape.host_mcu
         self.value = replicape.stepper_dacs[channel]
         self.pwm = pca9685_pwm(replicape, channel, pin_type, pin_params)

@@ -244,7 +244,8 @@ class Calibrater:
         self._calibration(self.probe_points, self.nozzle_points, self.interval)
 
     def _calculate_nozzle_points(self, sample_count, interval_dist):
-        # calculate the points to put the probe at, returned as a list of tuples
+        # calculate the points to put the probe at, returned as a list of
+        # tuples
         nozzle_points = []
         for i in range(sample_count):
             x = self.start_point[0] + i * interval_dist

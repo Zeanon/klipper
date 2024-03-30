@@ -68,7 +68,8 @@ class PrinterADCScaled:
 
     def setup_pin(self, pin_type, pin_params):
         if pin_type != 'adc':
-            raise self.printer.config_error("adc_scaled only supports adc pins")
+            raise self.printer.config_error(
+                "adc_scaled only supports adc pins")
         return MCU_scaled_adc(self, pin_params)
 
     def calc_smooth(self, read_time, read_value, last):
@@ -80,10 +81,12 @@ class PrinterADCScaled:
         return (read_time, smoothed_value)
 
     def vref_callback(self, read_time, read_value):
-        self.last_vref = self.calc_smooth(read_time, read_value, self.last_vref)
+        self.last_vref = self.calc_smooth(
+            read_time, read_value, self.last_vref)
 
     def vssa_callback(self, read_time, read_value):
-        self.last_vssa = self.calc_smooth(read_time, read_value, self.last_vssa)
+        self.last_vssa = self.calc_smooth(
+            read_time, read_value, self.last_vssa)
 
 
 def load_config_prefix(config):

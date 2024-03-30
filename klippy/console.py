@@ -99,7 +99,9 @@ class KeyboardReader:
 
     def handle_output(self, params):
         tdiff = params['#receive_time'] - self.start_time
-        self.output("%07.3f: %s: %s" % (tdiff, params['#name'], params['#msg']))
+        self.output(
+    "%07.3f: %s: %s" %
+     (tdiff, params['#name'], params['#msg']))
 
     def handle_suppress(self, params):
         pass
@@ -160,7 +162,8 @@ class KeyboardReader:
             paddr = addr + p
             d = data[p:p + 16]
             hexbytes = " ".join(["%02x" % (v,) for v in d])
-            pb = "".join([chr(v) if v >= 0x20 and v < 0x7f else '.' for v in d])
+            pb = "".join([chr(v) if v >= 0x20 and v <
+                         0x7f else '.' for v in d])
             o = "%08x  %-47s  |%s|" % (paddr, hexbytes, pb)
             self.output("%s %s" % (o[:34], o[34:]))
 

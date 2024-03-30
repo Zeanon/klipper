@@ -157,7 +157,8 @@ class HTU21D:
             if self.hold_master_mode:
                 params = self.i2c.i2c_write([HTU21D_COMMANDS['HTU21D_TEMP']])
             else:
-                params = self.i2c.i2c_write([HTU21D_COMMANDS['HTU21D_TEMP_NH']])
+                params = self.i2c.i2c_write(
+                    [HTU21D_COMMANDS['HTU21D_TEMP_NH']])
 
             # Wait
             self.reactor.pause(self.reactor.monotonic() +

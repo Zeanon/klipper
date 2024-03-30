@@ -136,7 +136,10 @@ class PrinterSkew:
                     "skew_correction:  Load failed, unknown profile [%s]"
                     % (name))
                 return
-            self._update_skew(prof['xy_skew'], prof['xz_skew'], prof['yz_skew'])
+            self._update_skew(
+                prof['xy_skew'],
+                prof['xz_skew'],
+                prof['yz_skew'])
         elif gcmd.get('SAVE', None) is not None:
             name = gcmd.get('SAVE')
             configfile = self.printer.lookup_object('configfile')

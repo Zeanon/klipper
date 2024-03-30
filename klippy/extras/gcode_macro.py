@@ -188,8 +188,8 @@ class GCodeMacro:
                 self.variables[option[len(prefix):]] = literal
             except (SyntaxError, TypeError, ValueError) as e:
                 raise config.error(
-                    "Option '%s' in section '%s' is not a valid literal: %s" % (
-                        option, config.get_name(), e))
+                    "Option '%s' in section '%s' is not a valid literal: %s" %
+                    (option, config.get_name(), e))
 
     def handle_connect(self):
         prev_cmd = self.gcode.register_command(self.alias, None)

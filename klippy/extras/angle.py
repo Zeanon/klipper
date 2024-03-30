@@ -110,7 +110,9 @@ class AngleCalibration:
         bucket_size = angle_max // calibration_count
         full_steps = len(angles)
         nominal_step = float(angle_max) / full_steps
-        self.angle_phase_offset = (angles.index(min(angles)) & 3) * nominal_step
+        self.angle_phase_offset = (
+            angles.index(
+                min(angles)) & 3) * nominal_step
         self.calibration_reversed = angles[-2] > angles[-1]
         if self.calibration_reversed:
             angles = list(reversed(angles))
@@ -432,18 +434,31 @@ class HelperTLE5012B:
         mcu_clock, chip_clock = self._query_clock()
         self.last_chip_clock = chip_clock
         self.last_chip_mcu_clock = mcu_clock
-        self.chip_freq = float(1 << 5) / self.mcu.seconds_to_clock(1. / 750000.)
+        self.chip_freq = float(1 << 5) / \
+            self.mcu.seconds_to_clock(1. / 750000.)
         self.update_clock()
     cmd_ANGLE_DEBUG_READ_help = "Query low-level angle sensor register"
 
     def cmd_ANGLE_DEBUG_READ(self, gcmd):
-        reg = gcmd.get("REG", minval=0, maxval=0x30, parser=lambda x: int(x, 0))
+        reg = gcmd.get(
+            "REG",
+            minval=0,
+            maxval=0x30,
+            parser=lambda x: int(
+                x,
+                0))
         val = self._read_reg(reg)
         gcmd.respond_info("ANGLE REG[0x%02x] = 0x%04x" % (reg, val))
     cmd_ANGLE_DEBUG_WRITE_help = "Set low-level angle sensor register"
 
     def cmd_ANGLE_DEBUG_WRITE(self, gcmd):
-        reg = gcmd.get("REG", minval=0, maxval=0x30, parser=lambda x: int(x, 0))
+        reg = gcmd.get(
+            "REG",
+            minval=0,
+            maxval=0x30,
+            parser=lambda x: int(
+                x,
+                0))
         val = gcmd.get("VAL", minval=0, maxval=0xffff,
                        parser=lambda x: int(x, 0))
         self._write_reg(reg, val)
@@ -470,8 +485,10 @@ class Angle:
                    "tle5012b": HelperTLE5012B}
         sensor_type = config.getchoice('sensor_type', {s: s for s in sensors})
         sensor_class = sensors[sensor_type]
-        self.spi = bus.MCU_SPI_from_config(config, sensor_class.SPI_MODE,
-                                           default_speed=sensor_class.SPI_SPEED)
+        self.spi = bus.MCU_SPI_from_config(
+            config,
+            sensor_class.SPI_MODE,
+            default_speed=sensor_class.SPI_SPEED)
         self.mcu = mcu = self.spi.get_mcu()
         self.oid = oid = mcu.create_oid()
         self.sensor_helper = sensor_class(config, self.spi, oid)

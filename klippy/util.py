@@ -103,7 +103,11 @@ def dump_mcu_build():
         f.close()
         data = json.loads(data)
         logging.info("Last MCU build version: %s", data.get('version', ''))
-        logging.info("Last MCU build tools: %s", data.get('build_versions', ''))
+        logging.info(
+            "Last MCU build tools: %s",
+            data.get(
+                'build_versions',
+                ''))
         cparts = ["%s=%s" % (k, v) for k, v in data.get('config', {}).items()]
         logging.info("Last MCU build config: %s", " ".join(cparts))
     except BaseException:

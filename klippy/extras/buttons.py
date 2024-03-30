@@ -271,7 +271,13 @@ class PrinterButtons:
                 self.printer, pin, pullup)
         adc_buttons.setup_button(min_val, max_val, callback)
 
-    def register_adc_button_push(self, pin, min_val, max_val, pullup, callback):
+    def register_adc_button_push(
+            self,
+            pin,
+            min_val,
+            max_val,
+            pullup,
+            callback):
         def helper(eventtime, state, callback=callback):
             if state:
                 callback(eventtime)
@@ -283,7 +289,8 @@ class PrinterButtons:
         mcu = mcu_name = None
         pin_params_list = []
         for pin in pins:
-            pin_params = ppins.lookup_pin(pin, can_invert=True, can_pullup=True)
+            pin_params = ppins.lookup_pin(
+                pin, can_invert=True, can_pullup=True)
             if mcu is not None and pin_params['chip'] != mcu:
                 raise ppins.error("button pins must be on same mcu")
             mcu = pin_params['chip']

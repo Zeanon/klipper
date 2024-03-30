@@ -44,8 +44,8 @@ class ExcludeObject:
                              'loaded due to Tuning tower being Active')
                 return
 
-            self.next_transform = self.gcode_move.set_move_transform(self,
-                                                                     force=True)
+            self.next_transform = self.gcode_move.set_move_transform(
+                self, force=True)
             self.extrusion_offsets = {}
             self.max_position_extruded = 0
             self.max_position_excluded = 0

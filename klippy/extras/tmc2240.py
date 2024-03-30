@@ -323,7 +323,8 @@ class TMC2240CurrentHelper:
     def _calc_current(self, run_current, hold_current):
         gscaler = self._calc_globalscaler(run_current)
         irun = self._calc_current_bits(run_current, gscaler)
-        ihold = self._calc_current_bits(min(hold_current, run_current), gscaler)
+        ihold = self._calc_current_bits(
+            min(hold_current, run_current), gscaler)
         return gscaler, irun, ihold
 
     def _calc_current_from_field(self, field_name):
@@ -360,8 +361,8 @@ class TMC2240:
         self.fields = tmc.FieldHelper(Fields, SignedFields, FieldFormatters)
         if config.get("uart_pin", None) is not None:
             # use UART for communication
-            self.mcu_tmc = tmc_uart.MCU_TMC_uart(config, Registers, self.fields,
-                                                 3, TMC_FREQUENCY)
+            self.mcu_tmc = tmc_uart.MCU_TMC_uart(
+                config, Registers, self.fields, 3, TMC_FREQUENCY)
         else:
             # Use SPI bus for communication
             self.mcu_tmc = tmc2130.MCU_TMC_SPI(config, Registers, self.fields,

@@ -231,8 +231,8 @@ class BedMesh:
             if self.log_fade_complete:
                 self.log_fade_complete = False
                 logging.info(
-                    "bed_mesh fade complete: Current Z: %.4f fade_target: %.4f "
-                    % (z, self.fade_target))
+                    "bed_mesh fade complete: Current Z: %.4f fade_target: %.4f " %
+                    (z, self.fade_target))
             self.toolhead.move([x, y, z + self.fade_target, e], speed)
         else:
             self.splitter.build_move(self.last_position, newpos, factor)
@@ -499,7 +499,8 @@ class BedMeshCalibrate:
             max_x = max_y = self.radius
         else:
             # rectangular
-            x_cnt, y_cnt = parse_config_pair(config, 'probe_count', 3, minval=3)
+            x_cnt, y_cnt = parse_config_pair(
+                config, 'probe_count', 3, minval=3)
             min_x, min_y = config.getfloatlist('mesh_min', count=2)
             max_x, max_y = config.getfloatlist('mesh_max', count=2)
             if max_x <= min_x or max_y <= min_y:
@@ -596,7 +597,8 @@ class BedMeshCalibrate:
             return False
         exclude_objects = self.printer.lookup_object("exclude_object", None)
         if exclude_objects is None:
-            gcmd.respond_info("Exclude objects not enabled. Using full mesh...")
+            gcmd.respond_info(
+                "Exclude objects not enabled. Using full mesh...")
             return False
         objects = exclude_objects.get_status().get("objects", [])
         if not objects:

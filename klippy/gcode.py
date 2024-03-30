@@ -96,7 +96,12 @@ class GCodeCommand:
         return value
 
     def get_int(self, name, default=sentinel, minval=None, maxval=None):
-        return self.get(name, default, parser=int, minval=minval, maxval=maxval)
+        return self.get(
+            name,
+            default,
+            parser=int,
+            minval=minval,
+            maxval=maxval)
     def get_float(self, name, default=sentinel, minval=None, maxval=None,
                   above=None, below=None):
         return self.get(name, default, parser=float, minval=minval,
@@ -113,7 +118,8 @@ class GCodeDispatch:
         self.printer = printer
         self.is_fileinput = not not printer.get_start_args().get("debuginput")
         printer.register_event_handler("klippy:ready", self._handle_ready)
-        printer.register_event_handler("klippy:shutdown", self._handle_shutdown)
+        printer.register_event_handler(
+            "klippy:shutdown", self._handle_shutdown)
         printer.register_event_handler("klippy:disconnect",
                                        self._handle_disconnect)
         # Command handling
@@ -156,7 +162,8 @@ class GCodeDispatch:
                 "gcode command %s already registered" % (cmd,))
         if not self.is_traditional_gcode(cmd):
             origfunc = func
-            def func(params): return origfunc(self._get_extended_params(params))
+            def func(params): return origfunc(
+                self._get_extended_params(params))
         self.ready_gcode_handlers[cmd] = func
         if when_not_ready:
             self.base_gcode_handlers[cmd] = func
@@ -364,7 +371,8 @@ class GCodeDispatch:
             raise gcmd.error("The value '%s' is not valid for %s"
                              % (key_param, key))
         values[key_param](gcmd)
-    # Low-level G-Code commands that are needed before the config file is loaded
+    # Low-level G-Code commands that are needed before the config file is
+    # loaded
 
     def cmd_M110(self, gcmd):
         # Set Current Line Number
@@ -421,7 +429,8 @@ class GCodeDispatch:
     def cmd_HELP(self, gcmd):
         cmdhelp = []
         if not self.is_printer_ready:
-            cmdhelp.append("Printer is not ready - not all commands available.")
+            cmdhelp.append(
+                "Printer is not ready - not all commands available.")
         cmdhelp.append("Available extended commands:")
         for cmd in sorted(self.gcode_handlers):
             if cmd in self.gcode_help:
@@ -435,7 +444,8 @@ class GCodeIO:
     def __init__(self, printer):
         self.printer = printer
         printer.register_event_handler("klippy:ready", self._handle_ready)
-        printer.register_event_handler("klippy:shutdown", self._handle_shutdown)
+        printer.register_event_handler(
+            "klippy:shutdown", self._handle_shutdown)
         self.gcode = printer.lookup_object('gcode')
         self.gcode_mutex = self.gcode.get_mutex()
         self.fd = printer.get_start_args().get("gcode_fd")

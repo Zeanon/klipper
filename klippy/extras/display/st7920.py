@@ -57,7 +57,8 @@ class DisplayBase:
                 chip_pos = pos >> 1
                 if fb_id < 0x40:
                     # Graphics framebuffer update
-                    self.send([0x80 + fb_id, 0x80 + chip_pos], is_extended=True)
+                    self.send([0x80 + fb_id, 0x80 + chip_pos],
+                              is_extended=True)
                 else:
                     self.send([fb_id + chip_pos])
                 self.send(new_data[pos:pos + count], is_data=True)

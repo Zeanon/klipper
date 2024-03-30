@@ -247,7 +247,13 @@ Fields["THIGH"] = {
     "thigh": 0xfffff << 0
 }
 
-SignedFields = ["cur_a", "cur_b", "sgt", "xactual", "vactual", "pwm_scale_auto"]
+SignedFields = [
+    "cur_a",
+    "cur_b",
+    "sgt",
+    "xactual",
+    "vactual",
+    "pwm_scale_auto"]
 
 FieldFormatters = dict(tmc2130.FieldFormatters)
 FieldFormatters.update({
@@ -275,7 +281,8 @@ class TMC5160CurrentHelper:
         hold_current = config.getfloat('hold_current', MAX_CURRENT,
                                        above=0., maxval=MAX_CURRENT)
         self.req_hold_current = hold_current
-        self.sense_resistor = config.getfloat('sense_resistor', 0.075, above=0.)
+        self.sense_resistor = config.getfloat(
+            'sense_resistor', 0.075, above=0.)
         gscaler, irun, ihold = self._calc_current(run_current, hold_current)
         self.fields.set_field("globalscaler", gscaler)
         self.fields.set_field("ihold", ihold)
@@ -300,7 +307,8 @@ class TMC5160CurrentHelper:
     def _calc_current(self, run_current, hold_current):
         gscaler = self._calc_globalscaler(run_current)
         irun = self._calc_current_bits(run_current, gscaler)
-        ihold = self._calc_current_bits(min(hold_current, run_current), gscaler)
+        ihold = self._calc_current_bits(
+            min(hold_current, run_current), gscaler)
         return gscaler, irun, ihold
 
     def _calc_current_from_field(self, field_name):

@@ -122,8 +122,10 @@ class ClockSync:
         # Update prediction from linear regression
         new_freq = self.clock_covariance / self.time_variance
         pred_stddev = math.sqrt(self.prediction_variance)
-        self.serial.set_clock_est(new_freq, self.time_avg + TRANSMIT_EXTRA,
-                                  int(self.clock_avg - 3. * pred_stddev), clock)
+        self.serial.set_clock_est(new_freq,
+                                  self.time_avg + TRANSMIT_EXTRA,
+                                  int(self.clock_avg - 3. * pred_stddev),
+                                  clock)
         self.clock_est = (self.time_avg + self.min_half_rtt,
                           self.clock_avg, new_freq)
         # logging.debug("regr %.3f: freq=%.3f d=%d(%.3f)",
@@ -228,7 +230,8 @@ class SecondarySync(ClockSync):
         est_print_time = est_main_clock / main_mcu_freq
         # Determine sync1_print_time and sync2_print_time
         sync1_print_time = max(print_time, est_print_time)
-        sync2_print_time = max(sync1_print_time + 4., self.last_sync_time,
+        sync2_print_time = max(sync1_print_time + 4.,
+                               self.last_sync_time,
                                print_time + 2.5 * (print_time - est_print_time))
         # Calc sync2_sys_time (inverse of main_sync.estimatated_print_time)
         sync2_main_clock = sync2_print_time * main_mcu_freq

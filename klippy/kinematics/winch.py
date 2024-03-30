@@ -39,8 +39,10 @@ class WinchKinematics:
 
     def calc_position(self, stepper_positions):
         # Use only first three steppers to calculate cartesian position
-        pos = [stepper_positions[rail.get_name()] for rail in self.steppers[:3]]
-        return mathutil.trilateration(self.anchors[:3], [sp * sp for sp in pos])
+        pos = [stepper_positions[rail.get_name()]
+               for rail in self.steppers[:3]]
+        return mathutil.trilateration(
+            self.anchors[:3], [sp * sp for sp in pos])
 
     def set_position(self, newpos, homing_axes):
         for s in self.steppers:

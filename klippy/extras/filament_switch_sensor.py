@@ -166,6 +166,7 @@ class RunoutHelper:
         return status
 
     cmd_QUERY_FILAMENT_SENSOR_help = "Query the status of the Filament Sensor"
+
     def cmd_QUERY_FILAMENT_SENSOR(self, gcmd):
         msg = "Filament Sensor %s: filament %s" %\
               (self.name,
@@ -173,6 +174,7 @@ class RunoutHelper:
         gcmd.respond_info(msg)
 
     cmd_SET_FILAMENT_SENSOR_help = "Sets the filament sensor on/off"
+
     def cmd_SET_FILAMENT_SENSOR(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
         reset = gcmd.get_int('RESET', None, minval=0, maxval=1)

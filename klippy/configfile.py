@@ -327,7 +327,8 @@ class PrinterConfig:
         regular_config = self._build_config_wrapper(regular_data, filename)
         autosave_data = self._strip_duplicates(autosave_data, regular_config)
         self.autosave = self._build_config_wrapper(autosave_data, filename)
-        cfg = self._build_config_wrapper(regular_data + autosave_data, filename)
+        cfg = self._build_config_wrapper(
+            regular_data + autosave_data, filename)
         return cfg
 
     def check_unused_options(self, config):

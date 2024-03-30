@@ -152,7 +152,8 @@ class TMCCurrentHelper:
         hold_current = config.getfloat('hold_current', MAX_CURRENT,
                                        above=0., maxval=MAX_CURRENT)
         self.req_hold_current = hold_current
-        self.sense_resistor = config.getfloat('sense_resistor', 0.110, above=0.)
+        self.sense_resistor = config.getfloat(
+            'sense_resistor', 0.110, above=0.)
         vsense, irun, ihold = self._calc_current(run_current, hold_current)
         self.fields.set_field("vsense", vsense)
         self.fields.set_field("ihold", ihold)
@@ -163,7 +164,8 @@ class TMCCurrentHelper:
         vref = 0.32
         if vsense:
             vref = 0.18
-        cs = int(32. * sense_resistor * current * math.sqrt(2.) / vref + .5) - 1
+        cs = int(32. * sense_resistor * current *
+                 math.sqrt(2.) / vref + .5) - 1
         return max(0, min(31, cs))
 
     def _calc_current_from_bits(self, cs, vsense):
@@ -308,7 +310,8 @@ class MCU_TMC_SPI:
         reg = self.name_to_reg[reg_name]
         with self.mutex:
             for retry in range(5):
-                v = self.tmc_spi.reg_write(reg, val, self.chain_pos, print_time)
+                v = self.tmc_spi.reg_write(
+                    reg, val, self.chain_pos, print_time)
                 if v == val:
                     return
         raise self.printer.command_error(

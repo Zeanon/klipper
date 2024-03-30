@@ -21,14 +21,16 @@ class ControllerFan:
         else:
             self.fan = defined_fan
         self.stepper_names = config.getlist("stepper", None)
-        self.stepper_enable = self.printer.load_object(config, 'stepper_enable')
+        self.stepper_enable = self.printer.load_object(
+            config, 'stepper_enable')
         self.printer.load_object(config, 'heaters')
         self.heaters = []
         self.fan_speed = config.getfloat('fan_speed', default=1.,
                                          minval=0., maxval=1.)
         self.idle_speed = config.getfloat(
             'idle_speed', default=self.fan_speed, minval=0., maxval=1.)
-        self.idle_timeout = config.getint("idle_timeout", default=30, minval=-1)
+        self.idle_timeout = config.getint(
+            "idle_timeout", default=30, minval=-1)
         self.heater_names = config.getlist("heater", None)
         self.last_on = self.idle_timeout
         self.last_speed = 0.
@@ -73,7 +75,8 @@ class ControllerFan:
         speed = self.idle_speed
         active = False
         for name in self.stepper_names:
-            active |= self.stepper_enable.lookup_enable(name).is_motor_enabled()
+            active |= self.stepper_enable.lookup_enable(
+                name).is_motor_enabled()
         for heater in self.heaters:
             _, target_temp = heater.get_temp(eventtime)
             if target_temp:

@@ -278,7 +278,8 @@ class MCU_TMC_uart:
                 if self.ifcnt == (ifcnt + 1) & 0xff:
                     return
         raise self.printer.command_error(
-            "Unable to write tmc uart '%s' register %s" % (self.name, reg_name))
+            "Unable to write tmc uart '%s' register %s" %
+            (self.name, reg_name))
 
     def get_tmc_frequency(self):
         return self.tmc_frequency

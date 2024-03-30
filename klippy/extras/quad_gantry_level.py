@@ -30,7 +30,8 @@ class QuadGantryLevel:
             config, "Possibly Z motor numbering is wrong")
         self.max_adjust = config.getfloat("max_adjust", 4, above=0)
         self.horizontal_move_z = config.getfloat("horizontal_move_z", 5.0)
-        self.probe_helper = probe.ProbePointsHelper(config, self.probe_finalize)
+        self.probe_helper = probe.ProbePointsHelper(
+            config, self.probe_finalize)
         if len(self.probe_helper.probe_points) != 4:
             raise config.error(
                 "Need exactly 4 probe points for quad_gantry_level")

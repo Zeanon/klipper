@@ -28,9 +28,10 @@ class SoftwareI2C:
         if sda_params['chip'] != self.mcu:
             raise ppins.error("%s: scl_pin and sda_pin must be on same mcu" % (
                 config.get_name(),))
-        self.mcu.add_config_cmd("config_digital_out oid=%d pin=%s"
-                                " value=%d default_value=%d max_duration=%d" % (
-                                    self.sda_oid, sda_params['pin'], 1, 1, 0))
+        self.mcu.add_config_cmd(
+            "config_digital_out oid=%d pin=%s"
+            " value=%d default_value=%d max_duration=%d" %
+            (self.sda_oid, sda_params['pin'], 1, 1, 0))
 
     def get_mcu(self):
         return self.mcu

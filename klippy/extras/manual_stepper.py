@@ -21,7 +21,8 @@ class ManualStepper:
             self.rail = stepper.PrinterStepper(config)
             self.steppers = [self.rail]
         self.velocity = config.getfloat('velocity', 5., above=0.)
-        self.accel = self.homing_accel = config.getfloat('accel', 0., minval=0.)
+        self.accel = self.homing_accel = config.getfloat(
+            'accel', 0., minval=0.)
         self.next_cmd_time = 0.
         # Setup iterative solver
         ffi_main, ffi_lib = chelper.get_ffi()

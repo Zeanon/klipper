@@ -74,9 +74,10 @@ class SmartEffectorEndstopWrapper:
             ppins = self.printer.lookup_object('pins')
             pin_params = ppins.lookup_pin(control_pin, can_invert=True)
             self.control_pin = ControlPinHelper(pin_params)
-            self.gcode.register_command("RESET_SMART_EFFECTOR",
-                                        self.cmd_RESET_SMART_EFFECTOR,
-                                        desc=self.cmd_RESET_SMART_EFFECTOR_help)
+            self.gcode.register_command(
+                "RESET_SMART_EFFECTOR",
+                self.cmd_RESET_SMART_EFFECTOR,
+                desc=self.cmd_RESET_SMART_EFFECTOR_help)
         else:
             self.control_pin = None
         self.gcode.register_command("SET_SMART_EFFECTOR",
@@ -136,8 +137,8 @@ class SmartEffectorEndstopWrapper:
                 raise gcmd.error("control_pin must be set in [smart_effector] "
                                  "for sensitivity programming")
         self.probe_accel = gcmd.get_float('ACCEL', self.probe_accel, minval=0.)
-        self.recovery_time = gcmd.get_float('RECOVERY_TIME', self.recovery_time,
-                                            minval=0.)
+        self.recovery_time = gcmd.get_float(
+            'RECOVERY_TIME', self.recovery_time, minval=0.)
         if self.probe_accel:
             respond_info.append(
                 "probing accelartion: %.3f" % (self.probe_accel,))

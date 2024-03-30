@@ -65,7 +65,8 @@ def measurements_to_distances(measured_params, delta_params):
         for cd, ip, op in zip(center_dists, inner_pos, outer_pos)]
     # Calculate positions of outer measurements
     outer_center = MeasureOuterRadius * scale
-    start_pos = [(ax * outer_center, ay * outer_center) for ax, ay in xy_angles]
+    start_pos = [(ax * outer_center, ay * outer_center)
+                 for ax, ay in xy_angles]
     shifted_angles = xy_angles[2:] + xy_angles[:2]
     first_pos = [(ax * inner_ridge + spx, ay * inner_ridge + spy, 0.)
                  for (ax, ay), (spx, spy) in zip(shifted_angles, start_pos)]
@@ -121,13 +122,17 @@ class DeltaCalibrate:
             dist = config.getfloat("distance%d" % (i,), None)
             if dist is None:
                 break
-            distance_pos1 = load_config_stable(config, "distance%d_pos1" % (i,))
-            distance_pos2 = load_config_stable(config, "distance%d_pos2" % (i,))
+            distance_pos1 = load_config_stable(
+                config, "distance%d_pos1" % (i,))
+            distance_pos2 = load_config_stable(
+                config, "distance%d_pos2" % (i,))
             self.last_distances.append((dist, distance_pos1, distance_pos2))
         # Register gcode commands
         self.gcode = self.printer.lookup_object('gcode')
-        self.gcode.register_command('DELTA_CALIBRATE', self.cmd_DELTA_CALIBRATE,
-                                    desc=self.cmd_DELTA_CALIBRATE_help)
+        self.gcode.register_command(
+            'DELTA_CALIBRATE',
+            self.cmd_DELTA_CALIBRATE,
+            desc=self.cmd_DELTA_CALIBRATE_help)
         self.gcode.register_command('DELTA_ANALYZE', self.cmd_DELTA_ANALYZE,
                                     desc=self.cmd_DELTA_ANALYZE_help)
 

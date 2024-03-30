@@ -116,7 +116,9 @@ class CustomInputShaperParams:
     def _parse_custom_shaper(self, custom_a_str, custom_t_str, parse_error):
         A = parse_float_list(custom_a_str)
         if A is None:
-            raise parse_error("Invalid shaper A string: '%s'" % (custom_a_str,))
+            raise parse_error(
+                "Invalid shaper A string: '%s'" %
+                (custom_a_str,))
         if min([abs(a) for a in A]) < 0.001:
             raise parse_error("All shaper A coefficients must be non-zero")
         if sum(A) < 0.001:
@@ -125,7 +127,9 @@ class CustomInputShaperParams:
             )
         T = parse_float_list(custom_t_str)
         if T is None:
-            raise parse_error("Invalid shaper T string: '%s'" % (custom_t_str,))
+            raise parse_error(
+                "Invalid shaper T string: '%s'" %
+                (custom_t_str,))
         if T != sorted(T):
             raise parse_error("Shaper T parameter is not ordered: %s" % (T,))
         if len(A) != len(T):
@@ -237,7 +241,8 @@ class AxisInputShaper:
             )
         if not success:
             self.disable_shaping()
-            ffi_lib.extruder_set_shaper_params(sk, axis, self.n, self.A, self.T)
+            ffi_lib.extruder_set_shaper_params(
+                sk, axis, self.n, self.A, self.T)
         return success
 
     def disable_shaping(self):
@@ -420,10 +425,12 @@ class AxisInputSmoother:
         if exact_mode:
             success = (
                 ffi_lib.extruder_set_smoothing_params(
-                    sk, axis, self.n, self.coeffs, self.smooth_time, self.t_offs
-                )
-                == 0
-            )
+                    sk,
+                    axis,
+                    self.n,
+                    self.coeffs,
+                    self.smooth_time,
+                    self.t_offs) == 0)
         else:
             smoother_type = self.get_type()
             extr_smoother_func = shaper_defs.EXTRUDER_SMOOTHERS.get(
@@ -681,7 +688,8 @@ class InputShaper:
                 raise gcmd.error("Invalid AXIS='%s'" % (axis_str,))
             for s in shapers:
                 if s.disable_shaping():
-                    msg += "Disabled input shaper for AXIS='%s'\n" % (axis_str,)
+                    msg += "Disabled input shaper for AXIS='%s'\n" % (
+                        axis_str,)
                 else:
                     msg += (
                         "Cannot disable input shaper for AXIS='%s': not "

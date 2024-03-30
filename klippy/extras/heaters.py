@@ -174,7 +174,8 @@ class Heater:
         self.inv_smooth_time = inv_smooth_time
 
     def set_temp(self, degrees):
-        if degrees and (degrees < self.min_temp or degrees > self.max_set_temp):
+        if degrees and (
+                degrees < self.min_temp or degrees > self.max_set_temp):
             raise self.printer.command_error(
                 "Requested temperature (%.1f) out of range (%.1f:%.1f)"
                 % (degrees, self.min_temp, self.max_set_temp))
@@ -282,9 +283,8 @@ class Heater:
                                                str,
                                                False)
             if control == 'watermark':
-                temp_profile['max_delta'] = config_section.getfloat('max_delta',
-                                                                    2.0,
-                                                                    above=0.)
+                temp_profile['max_delta'] = config_section.getfloat(
+                    'max_delta', 2.0, above=0.)
             elif control == 'pid' or control == 'pid_v':
                 for key, (type,
                           placeholder) in PID_PROFILE_OPTIONS.items():
@@ -292,11 +292,8 @@ class Heater:
                                    and key != 'pid_ki'
                                    and key != 'pid_kd')
                     above = 0. if key == 'smooth_time' else None
-                    temp_profile[key] = self._check_value_config(key,
-                                                                 config_section,
-                                                                 type,
-                                                                 can_be_none,
-                                                                 above)
+                    temp_profile[key] = self._check_value_config(
+                        key, config_section, type, can_be_none, above)
                 if name == 'default':
                     temp_profile['smooth_time'] = None
             else:
@@ -381,11 +378,8 @@ class Heater:
                                             gcmd,
                                             float,
                                             False)
-            tolerance = self._check_value_gcmd('TOLERANCE',
-                                               current_profile['pid_tolerance'],
-                                               gcmd,
-                                               float,
-                                               False)
+            tolerance = self._check_value_gcmd(
+                'TOLERANCE', current_profile['pid_tolerance'], gcmd, float, False)
             control = self._check_value_gcmd('CONTROL',
                                              current_profile['control'],
                                              gcmd,
@@ -803,7 +797,9 @@ class ControlVelocityPID:
         d = self.Kd * -self.d2  # invert sign to prevent derivative kick
 
         if target_temp > 0.:
-            self.pwm = max(0., min(self.heater_max_power, self.pwm + p + i + d))
+            self.pwm = max(
+                0., min(
+                    self.heater_max_power, self.pwm + p + i + d))
         else:
             self.pwm = 0.
 

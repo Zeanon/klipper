@@ -64,8 +64,11 @@ class RotaryDeltaKinematics:
         lower_arms = [
             sconfig.getfloat('lower_arm_length', a_lower_arm, above=0.)
             for sconfig in stepper_configs]
-        angles = [sconfig.getfloat('angle', angle)
-                  for sconfig, angle in zip(stepper_configs, [30., 150., 270.])]
+        angles = [
+            sconfig.getfloat(
+                'angle', angle) for sconfig, angle in zip(
+                stepper_configs, [
+                    30., 150., 270.])]
         # Setup rotary delta calibration helper
         endstops = [rail.get_homing_info().position_endstop
                     for rail in self.rails]
@@ -90,7 +93,8 @@ class RotaryDeltaKinematics:
         self.home_position = tuple(
             self.calibration.actuator_to_cartesian(eangles))
         self.max_z = min(endstops)
-        self.min_z = config.getfloat('minimum_z_position', 0, maxval=self.max_z)
+        self.min_z = config.getfloat(
+            'minimum_z_position', 0, maxval=self.max_z)
         min_ua = min([shoulder_radius + ua for ua in upper_arms])
         min_la = min([la - shoulder_radius for la in lower_arms])
         self.max_xy2 = min(min_ua, min_la)**2

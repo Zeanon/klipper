@@ -63,7 +63,8 @@ class EndstopPhase:
         self.name = config.get_name().split()[1]
         # Obtain step_distance and microsteps from stepper config section
         sconfig = config.getsection(self.name)
-        rotation_dist, steps_per_rotation = stepper.parse_step_distance(sconfig)
+        rotation_dist, steps_per_rotation = stepper.parse_step_distance(
+            sconfig)
         self.step_dist = rotation_dist / steps_per_rotation
         self.phases = sconfig.getint("microsteps", note_valid=False) * 4
         self.phase_calc = PhaseCalc(self.printer, self.name, self.phases)
@@ -82,7 +83,8 @@ class EndstopPhase:
                 raise config.error("Invalid trigger_phase '%s'"
                                    % (trigger_phase,))
             self.endstop_phase = self.phase_calc.convert_phase(p, ps)
-        self.endstop_align_zero = config.getboolean('endstop_align_zero', False)
+        self.endstop_align_zero = config.getboolean(
+            'endstop_align_zero', False)
         self.endstop_accuracy = config.getfloat('endstop_accuracy', None,
                                                 above=0.)
         # Determine endstop accuracy

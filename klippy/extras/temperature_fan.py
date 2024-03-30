@@ -290,7 +290,9 @@ class ControlCurve:
                 "temperature_fan."
             )
         self.points.sort(key=lambda p: p[0])
-        last_point = [temperature_fan.min_temp, temperature_fan.get_min_speed()]
+        last_point = [
+            temperature_fan.min_temp,
+            temperature_fan.get_min_speed()]
         for point in self.points:
             if point[1] < last_point[1]:
                 raise temperature_fan.printer.config_error(
@@ -310,8 +312,8 @@ class ControlCurve:
         current_temp, target_temp = self.temperature_fan.get_temp(read_time)
         temp = self.smooth_temps(temp)
         if temp >= target_temp:
-            self.temperature_fan.set_speed(read_time,
-                                           self.temperature_fan.get_max_speed())
+            self.temperature_fan.set_speed(
+                read_time, self.temperature_fan.get_max_speed())
             return
         below = [self.temperature_fan.min_temp,
                  self.temperature_fan.get_min_speed()]

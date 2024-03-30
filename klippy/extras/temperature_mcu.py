@@ -26,7 +26,8 @@ class PrinterTemperatureMCU:
             self.adc1 = config.getfloat('sensor_adc1', minval=0., maxval=1.)
             self.temp2 = config.getfloat('sensor_temperature2', None)
             if self.temp2 is not None:
-                self.adc2 = config.getfloat('sensor_adc2', minval=0., maxval=1.)
+                self.adc2 = config.getfloat(
+                    'sensor_adc2', minval=0., maxval=1.)
         # Setup ADC port
         ppins = config.get_printer().lookup_object('pins')
         self.mcu_adc = ppins.setup_pin('adc',
@@ -94,7 +95,8 @@ class PrinterTemperatureMCU:
         # Setup manual base/slope override
         if self.temp1 is not None:
             if self.temp2 is not None:
-                self.slope = (self.temp2 - self.temp1) / (self.adc2 - self.adc1)
+                self.slope = (self.temp2 - self.temp1) / \
+                    (self.adc2 - self.adc1)
             self.base_temperature = self.calc_base(self.temp1, self.adc1)
         # Setup min/max checks
         adc_range = [self.calc_adc(t) for t in [self.min_temp, self.max_temp]]

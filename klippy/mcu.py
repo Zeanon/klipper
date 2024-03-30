@@ -122,7 +122,8 @@ class CommandWrapper:
 
     def send_wait_ack(self, data=(), minclock=0, reqclock=0):
         cmd = self._cmd.encode(data)
-        self._serial.raw_send_wait_ack(cmd, minclock, reqclock, self._cmd_queue)
+        self._serial.raw_send_wait_ack(
+            cmd, minclock, reqclock, self._cmd_queue)
 
     def get_command_tag(self):
         return self._msgtag
@@ -315,7 +316,8 @@ class MCU_endstop:
         self._trigger_completion = None
         self._rest_ticks = 0
         ffi_main, ffi_lib = chelper.get_ffi()
-        self._trdispatch = ffi_main.gc(ffi_lib.trdispatch_alloc(), ffi_lib.free)
+        self._trdispatch = ffi_main.gc(
+            ffi_lib.trdispatch_alloc(), ffi_lib.free)
         self._trsyncs = [MCU_trsync(mcu, self._trdispatch)]
 
     def get_mcu(self):
@@ -889,7 +891,10 @@ class MCU:
         mcu_type = self._serial.get_msgparser().get_constant("MCU")
         ppins = self._printer.lookup_object("pins")
         pin_resolver = ppins.get_pin_resolver(self._name)
-        for cmdlist in (self._config_cmds, self._restart_cmds, self._init_cmds):
+        for cmdlist in (
+                self._config_cmds,
+                self._restart_cmds,
+                self._init_cmds):
             for i, cmd in enumerate(cmdlist):
                 cmdlist[i] = pin_resolver.update_command(cmd)
                 logging.info("command: %s", cmdlist[i])
@@ -918,7 +923,8 @@ class MCU:
         except msgproto.enumeration_error as e:
             enum_name, enum_value = e.get_enum_params()
             if enum_name == "pin":
-                # Raise pin name errors as a config error (not a protocol error)
+                # Raise pin name errors as a config error (not a protocol
+                # error)
                 raise self._printer.config_error(
                     "Pin '%s' is not a valid pin name on mcu '%s'"
                     % (enum_value, self._name)
@@ -1054,7 +1060,8 @@ class MCU:
                     # Cheetah boards require RTS to be deasserted
                     # else a reset will trigger the built-in bootloader.
                     rts = resmeth != "cheetah"
-                    self._serial.connect_uart(self._serialport, self._baud, rts)
+                    self._serial.connect_uart(
+                        self._serialport, self._baud, rts)
                 else:
                     self._serial.connect_pipe(self._serialport)
                 self._clocksync.connect(self._serial)
@@ -1217,7 +1224,9 @@ class MCU:
             return
         if self._reset_cmd is None:
             # Attempt reset via config_reset command
-            logging.info("Attempting MCU '%s' config_reset command", self._name)
+            logging.info(
+                "Attempting MCU '%s' config_reset command",
+                self._name)
             self._is_shutdown = True
             self._shutdown(force=True)
             self._reactor.pause(self._reactor.monotonic() + 0.015)

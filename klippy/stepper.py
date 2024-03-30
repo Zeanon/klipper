@@ -120,7 +120,8 @@ class MCU_stepper:
             self._step_both_edge = True
             self._step_pulse_duration = 0.0
             invert_step = -1
-        step_pulse_ticks = self._mcu.seconds_to_clock(self._step_pulse_duration)
+        step_pulse_ticks = self._mcu.seconds_to_clock(
+            self._step_pulse_duration)
         self._mcu.add_config_cmd(
             "config_stepper oid=%d step_pin=%s dir_pin=%s invert_step=%d"
             " step_pulse_ticks=%u"
@@ -253,7 +254,8 @@ class MCU_stepper:
             mcu_pos = self.get_mcu_position()
         self._stepper_kinematics = sk
         ffi_main, ffi_lib = chelper.get_ffi()
-        ffi_lib.itersolve_set_stepcompress(sk, self._stepqueue, self._step_dist)
+        ffi_lib.itersolve_set_stepcompress(
+            sk, self._stepqueue, self._step_dist)
         self.set_trapq(self._trapq)
         self._set_mcu_position(mcu_pos)
         return old_sk
@@ -625,8 +627,10 @@ def LookupMultiRail(
     units_in_radians=False,
 ):
     rail = PrinterRail(
-        config, need_position_minmax, default_position_endstop, units_in_radians
-    )
+        config,
+        need_position_minmax,
+        default_position_endstop,
+        units_in_radians)
     for i in range(1, 99):
         if not config.has_section(config.get_name() + str(i)):
             break

@@ -37,7 +37,8 @@ class QueryEndstops:
 
     def cmd_QUERY_ENDSTOPS(self, gcmd):
         # Query the endstops
-        print_time = self.printer.lookup_object('toolhead').get_last_move_time()
+        print_time = self.printer.lookup_object(
+            'toolhead').get_last_move_time()
         self.last_state = [(name, mcu_endstop.query_endstop(print_time))
                            for mcu_endstop, name in self.endstops]
         # Report results

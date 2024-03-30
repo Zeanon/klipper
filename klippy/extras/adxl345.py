@@ -177,9 +177,12 @@ class AccelCommandHelper:
         gcode.register_mux_command("ACCELEROMETER_DEBUG_READ", "CHIP", name,
                                    self.cmd_ACCELEROMETER_DEBUG_READ,
                                    desc=self.cmd_ACCELEROMETER_DEBUG_READ_help)
-        gcode.register_mux_command("ACCELEROMETER_DEBUG_WRITE", "CHIP", name,
-                                   self.cmd_ACCELEROMETER_DEBUG_WRITE,
-                                   desc=self.cmd_ACCELEROMETER_DEBUG_WRITE_help)
+        gcode.register_mux_command(
+            "ACCELEROMETER_DEBUG_WRITE",
+            "CHIP",
+            name,
+            self.cmd_ACCELEROMETER_DEBUG_WRITE,
+            desc=self.cmd_ACCELEROMETER_DEBUG_WRITE_help)
     cmd_ACCELEROMETER_MEASURE_help = "Start/stop accelerometer"
 
     def cmd_ACCELEROMETER_MEASURE(self, gcmd):
@@ -255,7 +258,9 @@ class ADXL345:
         self.axes_map = read_axes_map(config)
         self.data_rate = config.getint('rate', 3200)
         if self.data_rate not in QUERY_RATES:
-            raise config.error("Invalid rate parameter: %d" % (self.data_rate,))
+            raise config.error(
+                "Invalid rate parameter: %d" %
+                (self.data_rate,))
         # Setup mcu sensor_adxl345 bulk query code
         self.spi = bus.MCU_SPI_from_config(config, 3, default_speed=5000000)
         self.mcu = mcu = self.spi.get_mcu()

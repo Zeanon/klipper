@@ -153,7 +153,8 @@ class TMCCommandHelperTrigorilla:
 
     def cmd_INIT_TMC(self, gcmd):
         logging.info("INIT_TMC %s", self.name)
-        print_time = self.printer.lookup_object('toolhead').get_last_move_time()
+        print_time = self.printer.lookup_object(
+            'toolhead').get_last_move_time()
         self._init_registers(print_time)
     cmd_SET_TMC_FIELD_help = "Set a register field of a TMC driver"
 
@@ -175,14 +176,16 @@ class TMCCommandHelperTrigorilla:
             value = tmc.TMCtstepHelper(step_dist, mres, tmc_frequency,
                                        velocity)
         reg_val = self.fields.set_field(field_name, value)
-        print_time = self.printer.lookup_object('toolhead').get_last_move_time()
+        print_time = self.printer.lookup_object(
+            'toolhead').get_last_move_time()
         self.mcu_tmc.set_register(reg_name, reg_val, print_time)
     cmd_SET_TMC_CURRENT_help = "Set the current of a TMC driver"
 
     def cmd_SET_TMC_CURRENT(self, gcmd):
         ch = self.current_helper
         prev_cur, prev_hold_cur, req_hold_cur, max_cur = ch.get_current()
-        run_current = gcmd.get_float('CURRENT', None, minval=0., maxval=max_cur)
+        run_current = gcmd.get_float(
+            'CURRENT', None, minval=0., maxval=max_cur)
         hold_current = gcmd.get_float('HOLDCURRENT', None,
                                       above=0., maxval=max_cur)
         if run_current is not None or hold_current is not None:

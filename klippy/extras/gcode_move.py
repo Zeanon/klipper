@@ -10,7 +10,8 @@ class GCodeMove:
     def __init__(self, config):
         self.printer = printer = config.get_printer()
         printer.register_event_handler("klippy:ready", self._handle_ready)
-        printer.register_event_handler("klippy:shutdown", self._handle_shutdown)
+        printer.register_event_handler(
+            "klippy:shutdown", self._handle_shutdown)
         printer.register_event_handler("toolhead:set_position",
                                        self.reset_last_position)
         printer.register_event_handler("toolhead:manual_move",

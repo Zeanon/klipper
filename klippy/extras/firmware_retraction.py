@@ -63,7 +63,8 @@ class FirmwareRetraction:
 
     def cmd_SET_RETRACTION(self, gcmd):
         if not self.is_retracted:        # Only execute command when unretracted
-            self._execute_set_retraction(gcmd)     # Execute command immediately
+            # Execute command immediately
+            self._execute_set_retraction(gcmd)
         else:
             # Queue command for execution when G11 is called.
             # If CLEAR_RETRACTION is called, stored set_retraction commands are
@@ -92,8 +93,9 @@ class FirmwareRetraction:
                     self.stored_set_retraction_gcmds))):
                 params = ' '.join('{} = {}'.format(k, v) for k, v in
                                   stored_gcmd.get_command_parameters().items())
-                gcmd.respond_info('Stored command #%d: SET_RETRACTION %s' %
-                                  (i + 1, params))      # Format stored commands
+                gcmd.respond_info(
+                    'Stored command #%d: SET_RETRACTION %s' %
+                    (i + 1, params))  # Format stored commands
 
     # Command to clear FW retraction (add to CANCEL macros at the beginning)
     cmd_CLEAR_RETRACTION_help = ('Clear retraction state without retract move '
@@ -150,16 +152,20 @@ class FirmwareRetraction:
             retract_gcode = (
                 "SAVE_GCODE_STATE NAME=_retract_state\n"
                 "G91\n"
-                "M204 S{:.5f}\n"                # Set max accel for retract move
-                "G1 E-{:.5f} F{}\n"          # Retract filament at retract speed
-                "G90\n"                 # Switch to absolute mode (just in case)
+                # Set max accel for retract move
+                "M204 S{:.5f}\n"
+                # Retract filament at retract speed
+                "G1 E-{:.5f} F{}\n"
+                # Switch to absolute mode (just in case)
+                "G90\n"
             ).format(self.max_acc, self.retract_length,
                      int(self.retract_speed * 60))
 
             # Incl move command if z_hop_height>0 depending on z_hop_style
             if self.z_hop_height > 0.0:
                 # Set safe zhop parameters to prevent out-of-range moves when
-                # canceling or finishing print while retracted - Only Cartesian!
+                # canceling or finishing print while retracted - Only
+                # Cartesian!
                 self._set_safe_zhop_retract_params()
                 retract_gcode += (
                     "SET_VELOCITY_LIMIT VELOCITY={:.5f} \
@@ -221,7 +227,8 @@ class FirmwareRetraction:
                                   'Command ignored!')
         elif self.is_retracted:             # Check if the filament is retracted
             # Check if extruder is above min. temperature. If not, don't retract
-            # but clear_retraction to prevent damage to extruder and/or filament
+            # but clear_retraction to prevent damage to extruder and/or
+            # filament
             if not self.extruder.heater.can_extrude:
                 self._execute_clear_retraction()
                 if self.verbose:
@@ -237,7 +244,8 @@ class FirmwareRetraction:
                 self._save_acc_vel_state()         # Save accel and vel settings
                 unretract_gcode = (
                     "SAVE_GCODE_STATE NAME=_unretract_state\n"
-                    "M204 S{:.5f}\n"          # Set max accel for unretract move
+                    # Set max accel for unretract move
+                    "M204 S{:.5f}\n"
                     "G91\n"
                 ).format(self.max_acc)
 
@@ -560,7 +568,8 @@ class FirmwareRetraction:
         prev_cmd = self.gcode.register_command(old_cmd_name, None)
         pdesc = 'Renamed builtin of "%s"' % old_cmd_name
         if not toggle_state:
-            # Register prev method to toggled handler, indicate built-in command
+            # Register prev method to toggled handler, indicate built-in
+            # command
             self.gcode.register_command(new_cmd_name,
                                         prev_cmd,
                                         desc=pdesc)
@@ -578,7 +587,8 @@ class FirmwareRetraction:
             # Register untoggled method to untog handler
 
     # G1 method that accounts for z-hop by altering the z-coordinates
-    # Offsets are not touched to prevent incompatibility issues with user macros
+    # Offsets are not touched to prevent incompatibility issues with user
+    # macros
     def _G1_zhop(self, gcmd):
         params = gcmd.get_command_parameters()
         is_relative = self._toolhead_is_relative()

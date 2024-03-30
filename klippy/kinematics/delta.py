@@ -88,7 +88,8 @@ class DeltaKinematics:
             self._actuator_to_cartesian(self.abs_endstops))
         self.max_z = min([rail.get_homing_info().position_endstop
                           for rail in self.rails])
-        self.min_z = config.getfloat('minimum_z_position', 0, maxval=self.max_z)
+        self.min_z = config.getfloat(
+            'minimum_z_position', 0, maxval=self.max_z)
         self.limit_z = min([ep - arm
                             for ep, arm in zip(self.abs_endstops, arm_lengths)])
         self.min_arm_length = min_arm_length = min(arm_lengths)

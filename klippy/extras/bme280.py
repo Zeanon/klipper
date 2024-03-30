@@ -247,17 +247,21 @@ class BME280:
 
         if self.chip_type == 'BME680':
             self.max_sample_time = 0.5
-            self.sample_timer = self.reactor.register_timer(self._sample_bme680)
+            self.sample_timer = self.reactor.register_timer(
+                self._sample_bme680)
             self.chip_registers = BME680_REGS
         elif self.chip_type == 'BMP180':
-            self.max_sample_time = (1.25 + ((2.3 * self.os_pres) + .575)) / 1000
-            self.sample_timer = self.reactor.register_timer(self._sample_bmp180)
+            self.max_sample_time = (
+                1.25 + ((2.3 * self.os_pres) + .575)) / 1000
+            self.sample_timer = self.reactor.register_timer(
+                self._sample_bmp180)
             self.chip_registers = BMP180_REGS
         else:
             self.max_sample_time = \
                 (1.25 + (2.3 * self.os_temp) + ((2.3 * self.os_pres) + .575)
                  + ((2.3 * self.os_hum) + .575)) / 1000
-            self.sample_timer = self.reactor.register_timer(self._sample_bme280)
+            self.sample_timer = self.reactor.register_timer(
+                self._sample_bme280)
             self.chip_registers = BME280_REGS
 
         if self.chip_type in ('BME680', 'BME280'):
@@ -324,7 +328,8 @@ class BME280:
         meas = self.os_temp << 5 | self.os_pres << 2
         self.write_register('CTRL_MEAS', [meas])
 
-        gas_wait_0 = self._calculate_gas_heater_duration(self.gas_heat_duration)
+        gas_wait_0 = self._calculate_gas_heater_duration(
+            self.gas_heat_duration)
         self.write_register('GAS_WAIT_0', [gas_wait_0])
         res_heat_0 = self._calculate_gas_heater_resistance(self.gas_heat_temp)
         self.write_register('RES_HEAT_0', [res_heat_0])
@@ -462,8 +467,8 @@ class BME280:
             pressure = ((pressure - var2 / 4096.) * 6250.) / var1
             var1 = dig['P9'] * pressure * pressure / 2147483648.
             var2 = pressure * dig['P8'] / 32768.
-            var3 = (pressure / 256.) * (pressure / 256.) * (pressure / 256.) * (
-                dig['P10'] / 131072.)
+            var3 = (pressure / 256.) * (pressure / 256.) * \
+                (pressure / 256.) * (dig['P10'] / 131072.)
             return pressure + (var1 + var2 + var3 + (dig['P7'] * 128.)) / 16.
 
     def _compensate_humidity_bme280(self, raw_humidity):

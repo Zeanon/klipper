@@ -338,7 +338,8 @@ class ExtruderStepper:
                 failed_shapers.append(shaper)
             # Pressure advance requires extruder smoothing, make sure that
             # some smoothing is enabled
-            if shaper.is_extruder_smoothing(exact_mode) and shaper.is_enabled():
+            if shaper.is_extruder_smoothing(
+                    exact_mode) and shaper.is_enabled():
                 self.smoother.disable_axis(shaper.get_axis())
             else:
                 self.smoother.enable_axis(shaper.get_axis())

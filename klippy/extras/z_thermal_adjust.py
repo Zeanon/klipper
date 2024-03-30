@@ -150,7 +150,8 @@ class ZThermalAdjuster:
         return self.smoothed_temp, 0.
 
     def stats(self, eventtime):
-        return False, '%s: temp=%.1f' % ("z_thermal_adjust", self.smoothed_temp)
+        return False, '%s: temp=%.1f' % (
+            "z_thermal_adjust", self.smoothed_temp)
 
     def cmd_SET_Z_THERMAL_ADJUST(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)

@@ -67,7 +67,9 @@ class MPU9250:
         self.axes_map = adxl345.read_axes_map(config)
         self.data_rate = config.getint('rate', 4000)
         if self.data_rate not in SAMPLE_RATE_DIVS:
-            raise config.error("Invalid rate parameter: %d" % (self.data_rate,))
+            raise config.error(
+                "Invalid rate parameter: %d" %
+                (self.data_rate,))
         # Setup mcu sensor_mpu9250 bulk query code
         self.i2c = bus.MCU_I2C_from_config(config,
                                            default_addr=MPU9250_ADDR,

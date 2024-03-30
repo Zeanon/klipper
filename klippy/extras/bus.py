@@ -20,7 +20,9 @@ def resolve_bus_name(mcu, param, bus):
     if bus is None:
         rev_enums = {v: k for k, v in enums.items()}
         if 0 not in rev_enums:
-            raise ppins.error("Must specify %s on mcu '%s'" % (param, mcu_name))
+            raise ppins.error(
+                "Must specify %s on mcu '%s'" %
+                (param, mcu_name))
         bus = rev_enums[0]
     if bus not in enums:
         raise ppins.error("Unknown %s '%s'" % (param, bus))

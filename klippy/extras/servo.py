@@ -22,7 +22,8 @@ class PrinterServo:
                                          above=self.min_width,
                                          below=SERVO_SIGNAL_PERIOD)
         self.max_angle = config.getfloat('maximum_servo_angle', 180.)
-        self.angle_to_width = (self.max_width - self.min_width) / self.max_angle
+        self.angle_to_width = (
+            self.max_width - self.min_width) / self.max_angle
         self.width_to_value = 1. / SERVO_SIGNAL_PERIOD
         self.last_value = self.last_value_time = 0.
         initial_pwm = 0.
@@ -121,7 +122,8 @@ class PrinterServo:
     def cmd_SET_SERVO(self, gcmd):
         if self.active_template is not None:
             return
-        print_time = self.printer.lookup_object('toolhead').get_last_move_time()
+        print_time = self.printer.lookup_object(
+            'toolhead').get_last_move_time()
         width = gcmd.get_float('WIDTH', None)
         if width is not None:
             self._set_pwm(print_time, self._get_pwm_from_pulse_width(width))
@@ -149,7 +151,9 @@ class PrinterServo:
                 try:
                     lparams[p] = ast.literal_eval(v)
                 except ValueError as e:
-                    raise gcmd.error("Unable to parse '%s' as a literal" % (v,))
+                    raise gcmd.error(
+                        "Unable to parse '%s' as a literal" %
+                        (v,))
         self._activate_template(template, lparams)
         self._activate_timer()
 

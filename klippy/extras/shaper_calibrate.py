@@ -208,7 +208,8 @@ def estimate_smoother(np, smoother, test_damping_ratio, test_freqs):
 
     s_r = step_response(np, time, omega, test_damping_ratio)
     w_dt = w[:, wm:wp] * (np.reciprocal(norms) * dt)[:, np.newaxis]
-    response = np.einsum("ijk,ik->ij", get_windows(s_r, wp - wm), w_dt[:, ::-1])
+    response = np.einsum(
+        "ijk,ik->ij", get_windows(s_r, wp - wm), w_dt[:, ::-1])
     velocity = (response[:, 1:] - response[:, :-1]) / (omega * dt)[
         :, np.newaxis
     ]
@@ -508,9 +509,8 @@ class ShaperCalibrate:
         # for max_accel without much smoothing
         TARGET_SMOOTHING = 0.12
         max_accel = self._bisect(
-            lambda test_accel: get_smoothing(s, test_accel) <= TARGET_SMOOTHING,
-            1e-2,
-        )
+            lambda test_accel: get_smoothing(
+                s, test_accel) <= TARGET_SMOOTHING, 1e-2, )
         return max_accel
 
     def find_best_shaper(
@@ -556,9 +556,9 @@ class ShaperCalibrate:
                 )
                 logger(
                     "To avoid too much smoothing with '%s', suggested "
-                    "max_accel <= %.0f mm/sec^2"
-                    % (smoother.name, round(smoother.max_accel / 100.0) * 100.0)
-                )
+                    "max_accel <= %.0f mm/sec^2" %
+                    (smoother.name, round(
+                        smoother.max_accel / 100.0) * 100.0))
             all_shapers.append(smoother)
             if (
                 best_shaper is None

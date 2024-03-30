@@ -20,11 +20,13 @@ class HallFilamentWidthSensor:
         self.dia2 = config.getfloat('Cal_dia2', 2.0)
         self.rawdia1 = config.getint('Raw_dia1', 9500)
         self.rawdia2 = config.getint('Raw_dia2', 10500)
-        self.MEASUREMENT_INTERVAL_MM = config.getint('measurement_interval', 10)
+        self.MEASUREMENT_INTERVAL_MM = config.getint(
+            'measurement_interval', 10)
         self.nominal_filament_dia = config.getfloat(
             'default_nominal_filament_diameter', above=1)
         self.measurement_delay = config.getfloat('measurement_delay', above=0.)
-        self.measurement_max_difference = config.getfloat('max_difference', 0.2)
+        self.measurement_max_difference = config.getfloat(
+            'max_difference', 0.2)
         self.max_diameter = (self.nominal_filament_dia
                              + self.measurement_max_difference)
         self.min_diameter = (self.nominal_filament_dia
@@ -32,7 +34,8 @@ class HallFilamentWidthSensor:
         self.diameter = self.nominal_filament_dia
         self.is_active = config.getboolean('enable', False)
         self.runout_dia_min = config.getfloat('min_diameter', 1.0)
-        self.runout_dia_max = config.getfloat('max_diameter', self.max_diameter)
+        self.runout_dia_max = config.getfloat(
+            'max_diameter', self.max_diameter)
         self.is_log = config.getboolean('logging', False)
         # Use the current diameter instead of nominal while the first
         # measurement isn't in place
