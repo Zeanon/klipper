@@ -91,7 +91,6 @@ class DumpStepper:
             "last_step_time": last_time,
         }
     def _add_api_client(self, web_request):
-        logging.info("test3")
         self.api_dump.add_client(web_request)
         hdr = ("interval", "count", "add", "add2", "shift")
         web_request.send({"header": hdr})

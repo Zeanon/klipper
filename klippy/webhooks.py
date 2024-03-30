@@ -269,6 +269,8 @@ class ClientConnection:
 
     def send(self, data):
         try:
+            logging.info("Data:")
+            logging.info(data)
             jmsg = json.dumps(data, separators=(',', ':'))
             self.send_buffer += jmsg.encode() + b"\x03"
         except (TypeError, ValueError) as e:
