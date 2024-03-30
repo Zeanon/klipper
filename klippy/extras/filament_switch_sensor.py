@@ -165,33 +165,36 @@ class RunoutHelper:
         }
         status.update(self.defined_sensor.sensor_get_status(eventtime))
         return status
-    cmd_QUERY_FILAMENT_SENSOR_help = "Query the status of the Filament Sensor"
 
+    cmd_QUERY_FILAMENT_SENSOR_help = "Query the status of the Filament Sensor"
     def cmd_QUERY_FILAMENT_SENSOR(self, gcmd):
         msg = "Filament Sensor %s: filament %s" %\
               (self.name,
                "detected" if self.filament_present else "not detected")
         gcmd.respond_info(msg)
-    cmd_SET_FILAMENT_SENSOR_help = "Sets the filament sensor on/off"
 
+    cmd_SET_FILAMENT_SENSOR_help = "Sets the filament sensor on/off"
     def cmd_SET_FILAMENT_SENSOR(self, gcmd):
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
         reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
         smart = gcmd.get_int('SMART', None, minval=0, maxval=1)
+        reset_needed = False
         if (enable is None
                 and reset is None
                 and smart is None
                 and self.defined_sensor.get_info(gcmd)):
             return
         if enable is not None:
-            if self.defined_sensor.enable(enable):
-                reset = 1
+            if self.defined_sensor.reset_needed(enable):
+                reset_needed = True
             self.sensor_enabled = enable
+        if reset is not None and reset:
+            reset_needed = True
         if smart is not None:
             self.smart = smart
         if self.defined_sensor.set_filament_sensor(gcmd):
-            reset = 1
-        if reset is not None and reset:
+            reset_needed = True
+        if reset_needed:
             self.defined_sensor.reset()
 
 
@@ -242,22 +245,24 @@ class SwitchSensor:
         }
 
     def get_info(self, gcmd):
-        runout_distance = gcmd.get_float('RUNOUT_DISTANCE', None, minval=0.)
+        runout_distance = gcmd.get_float("RUNOUT_DISTANCE", None, minval=0.0)
         if runout_distance is None:
             gcmd.respond_info(self.get_sensor_status())
-            return 1
-        return 0
+            return True
+        return False
 
-    def enable(self, enable):
+    def reset_needed(self, enable):
         if enable != self.runout_helper.sensor_enabled:
-            return 1
-        return 0
+            return True
+        return False
 
     def set_filament_sensor(self, gcmd):
-        runout_distance = gcmd.get_float('RUNOUT_DISTANCE', None, minval=0.)
+        runout_distance = gcmd.get_float("RUNOUT_DISTANCE", None, minval=0.0)
         if runout_distance is not None:
             self.runout_helper.runout_distance = runout_distance
-        return 0
+        # No reset is needed when changing the runout_distance, so we always
+        # return False
+        return False
 
     def reset(self):
         self.runout_helper.reset_runout_distance_info()
