@@ -350,8 +350,7 @@ class Heater:
                 value = gcmd.get_int(name,
                                      default,
                                      minval=minval,
-                                     maxval=maxval,
-                                     above=above)
+                                     maxval=maxval)
             elif type is float:
                 value = gcmd.get_float(name,
                                        default,
