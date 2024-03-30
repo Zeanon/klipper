@@ -370,7 +370,7 @@ class ExtruderStepper:
         if pa_model_name != self.pa_model.name:
             pa_model = self.pa_models[pa_model_name]()
         self.pa_model.set_enabled(gcmd.get_int('ENABLE',
-                                               self.pa_model.enabled,
+                                               self.pa_model.pa_enabled,
                                                minval=0,
                                                maxval=1))
         pa_model.update(gcmd)
