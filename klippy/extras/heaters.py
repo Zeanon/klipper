@@ -57,7 +57,7 @@ class Heater:
         self.enabled = True
         self.cold_extrude = False
         self.max_power = config.getfloat('max_power', 1., above=0., maxval=1.)
-        self.config_smooth_time = config.getfloat('smooth_time', 1., minval=0.)
+        self.config_smooth_time = config.getfloat('smooth_time', 1., above=0.)
         self.smooth_time = self.config_smooth_time
         self.inv_smooth_time = 1. / self.smooth_time
         self.is_shutdown = False
@@ -246,7 +246,7 @@ class Heater:
                                        maxval=1)
         self.smooth_time = gcmd.get_float('SMOOTH_TIME',
                                           self.config_smooth_time,
-                                          minval=0.)
+                                          above=0.)
         self.inv_smooth_time = 1. / self.smooth_time
         self.get_control().update_smooth_time()
         if save_to_profile:
@@ -405,7 +405,7 @@ class Heater:
                                                  gcmd,
                                                  float,
                                                  True,
-                                                 minval=0.)
+                                                 above=0.)
             keep_target = self._check_value_gcmd('KEEP_TARGET',
                                                  0,
                                                  gcmd,
