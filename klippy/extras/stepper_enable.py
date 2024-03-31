@@ -155,7 +155,7 @@ class PrinterStepperEnable:
     def register_stepper(self, config, mcu_stepper):
         name = mcu_stepper.get_name()
         max_enable_time = config.getfloat('max_enable_time', 0.,
-                                          minval=1.000,
+                                          minval=2.000,
                                           maxval=MAX_ENABLE_TIME)
         disable_on_error = config.getboolean('disable_on_error', False)
         if disable_on_error:
