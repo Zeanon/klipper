@@ -163,6 +163,8 @@ trapq_append(struct trapq *tq, double print_time
     }
 }
 
+#define HISTORY_EXPIRE (30.0)
+
 // Expire any moves older than `print_time` from the trapezoid velocity queue
 void __visible
 trapq_finalize_moves(struct trapq *tq, double print_time
@@ -189,9 +191,10 @@ trapq_finalize_moves(struct trapq *tq, double print_time
     if (list_empty(&tq->history))
         return;
     struct move *latest = list_first_entry(&tq->history, struct move, node);
+    double expire_time = latest->print_time + latest->move_t - HISTORY_EXPIRE;
     for (;;) {
         struct move *m = list_last_entry(&tq->history, struct move, node);
-        if (m == latest || m->print_time + m->move_t > clear_history_time)
+        if (m == latest || m->print_time + m->move_t > expire_time)
             break;
         list_del(&m->node);
         free(m);
