@@ -124,7 +124,7 @@ class Fan:
         tachometer_status = self.tachometer.get_status(eventtime)
         return {
             'speed': self.pwm_value,
-            'requested_speed': self.last_fan_value,
+            'arequested_speed': self.last_fan_value,
             'rpm': tachometer_status['rpm'],
         }
 
