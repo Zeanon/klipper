@@ -13,8 +13,7 @@ class RunoutHelper:
     def __init__(self,
                  config,
                  defined_sensor,
-                 runout_distance=0,
-                 check_on_print_start=False):
+                 runout_distance=0):
         self.name = config.get_name().split()[-1]
         self.defined_sensor = defined_sensor
         self.printer = config.get_printer()
@@ -42,15 +41,13 @@ class RunoutHelper:
         self.filament_present = False
         self.sensor_enabled = True
         self.smart = config.getboolean('smart', False)
-        self.always_fire_events = config.getboolean("always_fire_events", False)
-        self.check_on_print_start = check_on_print_start
+        self.always_fire_events = config.getboolean(
+            "always_fire_events", False)
         self.runout_position = 0.
         self.runout_elapsed = 0.
         self.runout_distance_timer = None
         # Register commands and event handlers
         self.printer.register_event_handler("klippy:ready", self._handle_ready)
-        self.printer.register_event_handler('idle_timeout:printing',
-                                            self._handle_printing)
         self.gcode.register_mux_command(
             "QUERY_FILAMENT_SENSOR", "SENSOR", self.name,
             self.cmd_QUERY_FILAMENT_SENSOR,
@@ -62,10 +59,6 @@ class RunoutHelper:
 
     def _handle_ready(self):
         self.min_event_systime = self.reactor.monotonic() + 2.
-
-    def _handle_printing(self, print_time):
-        if self.check_on_print_start:
-            self.note_filament_present(self.filament_present, True, True)
 
     def _runout_event_handler(self, eventtime):
         if self.immediate_runout_gcode is not None:
@@ -122,9 +115,11 @@ class RunoutHelper:
         self.min_event_systime = self.reactor.monotonic() + self.event_delay
 
     def note_filament_present(self,
-                              is_filament_present,
+                              is_filament_present=None,
                               force=False,
                               immediate=False):
+        if is_filament_present is None:
+            is_filament_present = self.filament_present
         if is_filament_present == self.filament_present and not force:
             return
         self.filament_present = is_filament_present
@@ -173,6 +168,7 @@ class RunoutHelper:
             "filament_detected": bool(self.filament_present),
             "enabled": bool(self.sensor_enabled),
             "smart": bool(self.smart),
+            "always_fire_events": bool(self.always_fire_events),
         }
         status.update(self.defined_sensor.sensor_get_status(eventtime))
         return status
@@ -191,10 +187,15 @@ class RunoutHelper:
         enable = gcmd.get_int('ENABLE', None, minval=0, maxval=1)
         reset = gcmd.get_int('RESET', None, minval=0, maxval=1)
         smart = gcmd.get_int('SMART', None, minval=0, maxval=1)
+        always_fire_events = gcmd.get_int('ALWAYS_FIRE_EVENTS',
+                                          None,
+                                          minval=0,
+                                          maxval=1)
         reset_needed = False
         if (enable is None
                 and reset is None
                 and smart is None
+                and always_fire_events is None
                 and self.defined_sensor.get_info(gcmd)):
             return
         if enable is not None:
@@ -205,6 +206,8 @@ class RunoutHelper:
             reset_needed = True
         if smart is not None:
             self.smart = smart
+        if always_fire_events is not None:
+            self.always_fire_events = always_fire_events
         if self.defined_sensor.set_filament_sensor(gcmd):
             reset_needed = True
         if reset_needed:
@@ -218,14 +221,14 @@ class SwitchSensor:
         buttons = self.printer.load_object(config, 'buttons')
         switch_pin = config.get('switch_pin')
         runout_distance = config.getfloat('runout_distance', 0., minval=0.)
-        check_on_print_start = config.getboolean('check_on_print_start', False)
         buttons.register_buttons([switch_pin], self._button_handler)
+        self.check_on_print_start = config.getboolean('check_on_print_start',
+                                                      False)
         self.reactor = self.printer.get_reactor()
         self.estimated_print_time = None
         self.runout_helper = RunoutHelper(config,
                                           self,
-                                          runout_distance,
-                                          check_on_print_start)
+                                          runout_distance)
         if config.get('immediate_runout_gcode', None) is not None:
             self.runout_helper.immediate_runout_gcode = (
                 gcode_macro.load_template(config, 'immediate_runout_gcode', '')
@@ -233,10 +236,17 @@ class SwitchSensor:
         self.get_status = self.runout_helper.get_status
         self.printer.register_event_handler('klippy:ready',
                                             self._handle_ready)
+        self.printer.register_event_handler('idle_timeout:printing',
+                                            self._handle_printing)
 
     def _handle_ready(self):
         self.estimated_print_time = (
             self.printer.lookup_object('mcu').estimated_print_time)
+
+    def _handle_printing(self, print_time):
+        if self.check_on_print_start:
+            self.runout_helper.note_filament_present(
+                None, True, True)
 
     def _button_handler(self, eventtime, state):
         self.runout_helper.note_filament_present(state)
@@ -253,7 +263,9 @@ class SwitchSensor:
                 "Filament Detected: %s\n"
                 "Runout Distance: %.2f\n"
                 "Runout Elapsed: %.2f\n"
-                "Smart: %s"
+                "Smart: %s\n"
+                "Always Fire Events: %s\n"
+                "Check on Print Start: %s"
                 % (self.runout_helper.name,
                    'enabled' if self.runout_helper.sensor_enabled
                    else 'disabled',
@@ -262,17 +274,26 @@ class SwitchSensor:
                    self.runout_helper.runout_distance,
                    self.runout_helper.runout_elapsed,
                    'true' if self.runout_helper.smart
+                   else 'false',
+                   'true' if self.runout_helper.always_fire_events
+                   else 'false',
+                   'true' if self.check_on_print_start
                    else 'false'))
 
     def sensor_get_status(self, eventtime):
         return {
             "runout_distance": float(self.runout_helper.runout_distance),
-            "runout_elapsed": float(self.runout_helper.runout_elapsed)
+            "runout_elapsed": float(self.runout_helper.runout_elapsed),
+            "check_on_print_start": bool(self.check_on_print_start),
         }
 
     def get_info(self, gcmd):
         runout_distance = gcmd.get_float("RUNOUT_DISTANCE", None, minval=0.0)
-        if runout_distance is None:
+        check_on_print_start = gcmd.get_int("CHECK_ON_PRINT_START",
+                                            None,
+                                            minval=0,
+                                            maxval=1)
+        if runout_distance is None and check_on_print_start is None:
             gcmd.respond_info(self.get_sensor_status())
             return True
         return False
@@ -284,8 +305,14 @@ class SwitchSensor:
 
     def set_filament_sensor(self, gcmd):
         runout_distance = gcmd.get_float("RUNOUT_DISTANCE", None, minval=0.0)
+        check_on_print_start = gcmd.get_int("CHECK_ON_PRINT_START",
+                                            None,
+                                            minval=0,
+                                            maxval=1)
         if runout_distance is not None:
             self.runout_helper.runout_distance = runout_distance
+        if check_on_print_start is not None:
+            self.check_on_print_start = check_on_print_start
         # No reset is needed when changing the runout_distance, so we always
         # return False
         return False

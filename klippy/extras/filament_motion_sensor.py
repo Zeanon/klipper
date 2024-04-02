@@ -85,7 +85,8 @@ class EncoderSensor:
         return ("Filament Sensor %s: %s\n"
                 "Filament Detected: %s\n"
                 "Detection Length: %.2f\n"
-                "Smart: %s"
+                "Smart: %s\n"
+                "Always Fire Events: %s"
                 % (self.runout_helper.name,
                    'enabled' if self.runout_helper.sensor_enabled > 0
                    else 'disabled',
@@ -93,7 +94,9 @@ class EncoderSensor:
                    else 'false',
                    self.detection_length,
                    'true' if self.runout_helper.smart
-                   else 'false'))
+                   else 'false',
+                   'true' if self.runout_helper.always_fire_events
+                   else 'false',))
 
     def sensor_get_status(self, eventtime):
         return {
