@@ -10,7 +10,11 @@ CHECK_RUNOUT_TIMEOUT = .250
 
 
 class RunoutHelper:
-    def __init__(self, config, defined_sensor, runout_distance=0):
+    def __init__(self,
+                 config,
+                 defined_sensor,
+                 runout_distance=0,
+                 check_on_print_start=False):
         self.name = config.get_name().split()[-1]
         self.defined_sensor = defined_sensor
         self.printer = config.get_printer()
@@ -38,10 +42,11 @@ class RunoutHelper:
         self.filament_present = False
         self.sensor_enabled = True
         self.smart = config.getboolean('smart', False)
+        self.always_fire_events = config.getboolean("always_fire_events", False)
+        self.check_on_print_start = check_on_print_start
         self.runout_position = 0.
         self.runout_elapsed = 0.
         self.runout_distance_timer = None
-        self.force_trigger = False
         # Register commands and event handlers
         self.printer.register_event_handler("klippy:ready", self._handle_ready)
         self.printer.register_event_handler('idle_timeout:printing',
@@ -59,7 +64,8 @@ class RunoutHelper:
         self.min_event_systime = self.reactor.monotonic() + 2.
 
     def _handle_printing(self, print_time):
-        self.note_filament_present(self.filament_present, True)
+        if self.check_on_print_start:
+            self.note_filament_present(self.filament_present, True, True)
 
     def _runout_event_handler(self, eventtime):
         if self.immediate_runout_gcode is not None:
@@ -115,12 +121,16 @@ class RunoutHelper:
             logging.exception("Script running error")
         self.min_event_systime = self.reactor.monotonic() + self.event_delay
 
-    def note_filament_present(self, is_filament_present, force=False):
+    def note_filament_present(self,
+                              is_filament_present,
+                              force=False,
+                              immediate=False):
         if is_filament_present == self.filament_present and not force:
             return
         self.filament_present = is_filament_present
         eventtime = self.reactor.monotonic()
-        if eventtime < self.min_event_systime:
+        if (eventtime < self.min_event_systime
+                or (not self.always_fire_events and not self.sensor_enabled)):
             # do not process during the initialization time, duplicates,
             # during the event delay time, while an event is running, or
             # when the sensor is disabled
@@ -154,7 +164,9 @@ class RunoutHelper:
             logging.info(
                 "Filament Sensor %s: runout event detected, Time %.2f" %
                 (self.name, eventtime))
-            self.reactor.register_callback(self._runout_event_handler)
+            self.reactor.register_callback(self._execute_runout
+                                           if immediate
+                                           else self._runout_event_handler)
 
     def get_status(self, eventtime):
         status = {
@@ -206,10 +218,14 @@ class SwitchSensor:
         buttons = self.printer.load_object(config, 'buttons')
         switch_pin = config.get('switch_pin')
         runout_distance = config.getfloat('runout_distance', 0., minval=0.)
+        check_on_print_start = config.getboolean('check_on_print_start', False)
         buttons.register_buttons([switch_pin], self._button_handler)
         self.reactor = self.printer.get_reactor()
         self.estimated_print_time = None
-        self.runout_helper = RunoutHelper(config, self, runout_distance)
+        self.runout_helper = RunoutHelper(config,
+                                          self,
+                                          runout_distance,
+                                          check_on_print_start)
         if config.get('immediate_runout_gcode', None) is not None:
             self.runout_helper.immediate_runout_gcode = (
                 gcode_macro.load_template(config, 'immediate_runout_gcode', '')
