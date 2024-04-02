@@ -14,6 +14,7 @@ class Fan:
     def __init__(self, config, default_shutdown_speed=0.):
         self.printer = config.get_printer()
         self.last_fan_value = 0.
+        self.pwm_value = 0.
         self.last_fan_time = 0.
         # Read config
         self.kick_start_time = config.getfloat('kick_start_time', 0.1,
@@ -65,8 +66,6 @@ class Fan:
         if self.max_err is None:
             self.max_err = 3
 
-        self.speed = None
-
         self.printer.register_event_handler("klippy:ready", self.handle_ready)
         # Register callbacks
         self.printer.register_event_handler("gcode:request_restart",
@@ -87,7 +86,6 @@ class Fan:
         return self.mcu_fan.get_mcu()
 
     def set_speed(self, print_time, value, force=False):
-        self.speed = value
         if value == self.last_fan_value and not force:
             return
         if value > 0:
@@ -109,6 +107,7 @@ class Fan:
             # Run fan at full speed for specified kick_start_time
             self.mcu_fan.set_pwm(print_time, self.max_power)
             print_time += self.kick_start_time
+        self.pwm_value = pwm_value
         self.mcu_fan.set_pwm(print_time, pwm_value)
         self.last_fan_time = print_time
         self.last_fan_value = value
@@ -124,7 +123,8 @@ class Fan:
     def get_status(self, eventtime):
         tachometer_status = self.tachometer.get_status(eventtime)
         return {
-            'speed': self.last_fan_value,
+            'speed': self.pwm_value,
+            'requested_speed': self.last_fan_value,
             'rpm': tachometer_status['rpm'],
         }
 
@@ -157,7 +157,7 @@ class Fan:
                                       minval=0.)
         curtime = self.printer.get_reactor().monotonic()
         print_time = self.get_mcu().estimated_print_time(curtime)
-        self.set_speed(print_time, self.speed, force=True)
+        self.set_speed(print_time, self.last_fan_value, force=True)
 
 
 class FanTachometer:
