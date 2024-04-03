@@ -110,7 +110,7 @@ class EncoderSensor:
             return True
         return False
 
-    def reset_needed(self, enable):
+    def reset_needed(self, enable=None, always_fire_events=None):
         if enable and not self.runout_helper.sensor_enabled:
             return True
         return False

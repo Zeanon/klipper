@@ -1297,6 +1297,12 @@ extended [G-Code command](G-Codes.md#z_tilt) becomes available.
 #   more points than steppers then you will likely have a fixed
 #   minimum value for the range of probed points which you can learn
 #   by observing command output.
+#max_deviation: 5.0
+#   The maximum amount all points can deviate from each other before
+#   the z_tilt is aborted.
+#increasing_threshold: 0.0000001
+#   Sets the threshold that probe points can increase before the z_tilt
+#   will be aborted.
 ```
 
 ### [quad_gantry_level]
@@ -1347,6 +1353,10 @@ Where x is the 0, 0 point on the bed
 #retry_tolerance: 0
 #   If retries are enabled then retry if largest and smallest probed
 #   points differ more than retry_tolerance.
+#increasing_threshold: 0.0000001
+#   Sets the threshold that probe points can increase before the qgl
+#   will be aborted.
+#   If you want to ignore the check just set it really high (like 9999)
 ```
 
 ### [skew_correction]
@@ -4760,6 +4770,13 @@ more information.
 #   If set to true the sensor will use the virtual_sd_card module to determine
 #   whether the printer is printing which is more reliable but will not work
 #   when streaming a print over usb or similar.
+#always_fire_events:
+#   If set to true, runout events will always fire no matter whether the sensor
+#   is enabled or disabled. Usefull for MMUs
+#check_on_print_start:
+#   If set to true, the sensor will be reevaluated when a print starts and if
+#   no filament is detected the runout_gcode will be run no matter the defined
+#   runout_distance(immediate_runout_gcode will not be run in this case)
 ```
 
 ### [filament_motion_sensor]
@@ -4786,6 +4803,8 @@ switch_pin:
 #insert_gcode:
 #event_delay:
 #pause_delay:
+#smart:
+#always_fire_events:
 #   See the "filament_switch_sensor" section for a description of the
 #   above parameters.
 ```

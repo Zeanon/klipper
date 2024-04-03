@@ -513,29 +513,34 @@ depend on the sensor type defined in the configuration.
 #### SET_FILAMENT_SENSOR
 ###### For filament_switch_sensor:
 `SET_FILAMENT_SENSOR SENSOR=<sensor_name> [ENABLE=0|1] [RESET=0|1]
-[RUNOUT_DISTANCE=<mm>] [SMART=0|1]`: Sets values for the
-filament sensor.  If all parameters are omitted, the current stats will
-be reported. <br>
+[RUNOUT_DISTANCE=<mm>] [SMART=0|1] [ALWAYS_FIRE_EVENTS=0|1] [CHECK_ON_PRINT_START=0|1]`:
+Sets values for the filament sensor.
+If all parameters are omitted, the current stats will be reported. <br>
 ENABLE sets the filament sensor on/off. If ENABLE is set to 0, the
 filament sensor will be disabled, if set to 1 it is enabled. If the state
 of the sensor changes, a reset will be triggered. <br>
 RESET removes all pending runout_gcodes and pauses and force a reevaluation
 of the sensor state. <br>
 RUNOUT_DISTANCE sets the runout_distance. <br>
-SMART sets the smart parameter.
+SMART sets the smart parameter. <br>
+ALWAYS_FIRE_EVENTS sets the always_fire_events parameter, if set to true,
+a reset of the sensor will be triggered. <br>
+CHECK_ON_PRINT_START sets the check_on_print_start parameter.
 
 ###### For filament_motion_sensor:
 `SET_FILAMENT_SENSOR SENSOR=<sensor_name> [ENABLE=0|1] [RESET=0|1]
-[DETECTION_LENGTH=<mm>] [SMART=0|1]`: Sets values for the
-filament sensor.  If all parameters are omitted, the current stats will
-be reported. <br>
+[DETECTION_LENGTH=<mm>] [SMART=0|1] [ALWAYS_FIRE_EVENTS=0|1]`:
+Sets values for the filament sensor.
+If all parameters are omitted, the current stats will be reported. <br>
 ENABLE sets the filament sensor on/off. If ENABLE is set to 0, the
 filament sensor will be disabled, if set to 1 it is enabled. If the sensor
 was previously disabled and gets enabled, a reset will be triggered. <br>
 RESET resets the state of the sensor and sets it to filament detected. <br>
 DETECTION_LENGTH sets the detection_length, if the new detection length is
 different from the old one, a reset will be triggered. <br>
-SMART sets the smart parameter.
+SMART sets the smart parameter. <br>
+ALWAYS_FIRE_EVENTS sets the always_fire_events parameter, no reset will
+be triggered.
 
 ### [firmware_retraction]
 
@@ -1542,8 +1547,11 @@ The following commands are available when the
 [z_tilt config section](Config_Reference.md#z_tilt) is enabled.
 
 #### Z_TILT_ADJUST
-`Z_TILT_ADJUST [HORIZONTAL_MOVE_Z=<value>] [<probe_parameter>=<value>]`: This
+`Z_TILT_ADJUST [HORIZONTAL_MOVE_Z=<value>] [<probe_parameter>=<value>]
+[MAX_DEVIATION=<value>] [INCREASING_THRESHOLD=<value>]`: This
 command will probe the points specified in the config and then make independent
 adjustments to each Z stepper to compensate for tilt. See the PROBE command for
 details on the optional probe parameters. The optional `HORIZONTAL_MOVE_Z`
 value overrides the `horizontal_move_z` option specified in the config file.
+MAX_DEVIATION will set the max_deviation parameter.
+INCREASING_THRESHOLD sets the increasing_threshold parameter.

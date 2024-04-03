@@ -199,8 +199,6 @@ class RunoutHelper:
                 and self.defined_sensor.get_info(gcmd)):
             return
         if enable is not None:
-            if self.defined_sensor.reset_needed(enable):
-                reset_needed = True
             self.sensor_enabled = enable
         if reset is not None and reset:
             reset_needed = True
@@ -209,6 +207,9 @@ class RunoutHelper:
         if always_fire_events is not None:
             self.always_fire_events = always_fire_events
         if self.defined_sensor.set_filament_sensor(gcmd):
+            reset_needed = True
+        if self.defined_sensor.reset_needed(enable=enable,
+                                            always_fire_events=always_fire_events):
             reset_needed = True
         if reset_needed:
             self.defined_sensor.reset()
@@ -298,8 +299,10 @@ class SwitchSensor:
             return True
         return False
 
-    def reset_needed(self, enable):
-        if enable != self.runout_helper.sensor_enabled:
+    def reset_needed(self, enable=None, always_fire_events=None):
+        if enable is not None and enable != self.runout_helper.sensor_enabled:
+            return True
+        if always_fire_events is not None and always_fire_events:
             return True
         return False
 
