@@ -208,8 +208,8 @@ class RunoutHelper:
             self.always_fire_events = always_fire_events
         if self.defined_sensor.set_filament_sensor(gcmd):
             reset_needed = True
-        if self.defined_sensor.reset_needed(enable=enable,
-                                            always_fire_events=always_fire_events):
+        if self.defined_sensor.reset_needed(
+                enable=enable, always_fire_events=always_fire_events):
             reset_needed = True
         if reset_needed:
             self.defined_sensor.reset()
