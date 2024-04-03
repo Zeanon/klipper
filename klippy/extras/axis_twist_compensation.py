@@ -400,10 +400,7 @@ class Calibrater:
         self.compensation.z_compensations = self.results
         self.compensation.compensation_start_x = self.start_point[0]
         self.compensation.compensation_end_x = self.end_point[0]
-        self.gcode.respond_info(
-            "AXIS_TWIST_COMPENSATION state has been saved "
-            "for the current session. The SAVE_CONFIG command will "
-            "update the printer config file and restart the printer.")
+
         self.compensation.load_compensations(self.results)
 
         self.nozzle_points = None
@@ -427,14 +424,6 @@ class Calibrater:
         self.end_gcode.run_gcode_from_command()
         self.gcode.register_command('QUERY_TWIST_COMPENSATION_RUNNING',
                                     None)
-        self.gcode.register_command('ABORT', None)
-
-
-class Helpers:
-    @staticmethod
-    def format_float_to_n_decimals(raw_float, n=6):
-        # format float to n decimals, defaults to 6
-        return "{:.{}f}".format(raw_float, n)
 
 
 def verify_no_compensation(printer):
