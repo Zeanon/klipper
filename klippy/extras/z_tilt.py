@@ -112,7 +112,7 @@ class RetryHelper:
                                                        minval=0.,
                                                        maxval=
                                                        MAX_RETRY_TOLERANCE)
-        self.default_inc_threshold = config.get_float("increasing_threshold",
+        self.default_inc_threshold = config.getfloat("increasing_threshold",
                                                       0.0000001,
                                                       above=0.0)
         self.default_max_deviation = config.getfloat("max_deviation",
