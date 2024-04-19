@@ -634,7 +634,7 @@ class PrinterExtruder:
         else:
             extruder = self.printer.lookup_object('toolhead').get_extruder()
         pheaters = self.printer.lookup_object('heaters')
-        pheaters.set_temperature(extruder.get_heater(), temp, wait)
+        pheaters.set_temperature(extruder.get_heater(), temp, wait, gcmd=gcmd)
 
     def cmd_M109(self, gcmd):
         # Set Extruder Temperature and Wait

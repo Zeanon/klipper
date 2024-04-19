@@ -34,7 +34,7 @@ class ControllerFan:
         self.heater_names = config.getlist("heater", None)
         self.last_on = self.idle_timeout
         self.last_speed = 0.
-        self.enabled = 1
+        self.enabled = True
         gcode = self.printer.lookup_object('gcode')
         gcode.register_mux_command(
             "SET_CONTROLLER_FAN", "CONTROLLER_FAN", self.name,

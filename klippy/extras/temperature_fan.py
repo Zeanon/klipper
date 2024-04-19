@@ -51,7 +51,7 @@ class TemperatureFan:
                             super_fan)
         self.next_speed_time = 0.
         self.last_speed_value = 0.
-        self.enabled = 1
+        self.enabled = True
         gcode = self.printer.lookup_object('gcode')
         gcode.register_mux_command(
             "SET_TEMPERATURE_FAN_TARGET", "TEMPERATURE_FAN", self.name,
@@ -95,6 +95,7 @@ class TemperatureFan:
         status = self.fan.get_status(eventtime)
         status["temperature"] = round(self.last_temp, 2)
         status["target"] = self.target_temp
+        status["control"] = self.control.get_type()
         return status
     cmd_SET_TEMPERATURE_FAN_TARGET_help = \
         "Sets a temperature fan target and fan speed limits"
