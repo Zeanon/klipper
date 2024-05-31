@@ -99,7 +99,7 @@ Fields["DRV_STATUS"] = {
     "s2vsb":                    0x01 << 13,
     "stealth":                  0x01 << 14,
     "fsactive":                 0x01 << 15,
-    "csactual":                 0x1F << 16,
+    "cs_actual":                0x1F << 16,
     "stallguard":               0x01 << 24,
     "ot":                       0x01 << 25,
     "otpw":                     0x01 << 26,
@@ -373,6 +373,7 @@ class TMC2240:
         tmc.TMCStealthchopHelper(config, self.mcu_tmc)
         tmc.TMCVcoolthrsHelper(config, self.mcu_tmc)
         tmc.TMCVhighHelper(config, self.mcu_tmc)
+        # Allow other registers to be set from the config
         set_config_field = self.fields.set_config_field
         #   GCONF
         set_config_field(config, "multistep_filt", True)

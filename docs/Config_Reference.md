@@ -2154,6 +2154,9 @@ Support for eddy current inductive probes. One may define this section
 sensor_type: ldc1612
 #   The sensor chip used to perform eddy current measurements. This
 #   parameter must be provided and must be set to ldc1612.
+#intb_pin:
+#   MCU gpio pin connected to the ldc1612 sensor's INTB pin (if
+#   available). The default is to not use the INTB pin.
 #z_offset:
 #   The nominal distance (in mm) between the nozzle and bed that a
 #   probing attempt should stop at. This parameter must be provided.
@@ -3553,27 +3556,18 @@ run_current:
 #   set, "stealthChop" mode will be enabled if the stepper motor
 #   velocity is below this value. The default is 0, which disables
 #   "stealthChop" mode.
-#vcoolthrs: 0
-#   The velocity (in mm/s) to set the "CoolStep" threshold to. When set,
-#   the CoolStep feature will be disabled if the stepper motor velocity
-#   is below this value. Besides CoolStep, this also sets the velocity
-#   below which the Stall output of the driver gets disabled, so it will
-#   influence the homing. If it is not specified, it defaults to 0mm/s during
-#   homing, but CoolStep is also disabled at all other times. Configure this
-#   setting in order to enable the CoolStep feature and to improve the
-#   sensorless homing reliability.
-#vhigh: 0
-#   The velocity (in mm/s) to set the "High velocity" threshold to. When set,
-#   the CoolStep feature will be disabled if the stepper motor velocity
-#   is approximately above this value. Besides CoolStep, this also sets the
-#   velocity above which the Stall output of the driver gets disabled, so it
-#   might influence the homing if it is set too low.
-#   In combination with `vhighchm` or `vhighfs`, the velocity threshold above
-#   which the driver switches to "Constant off time with slow decay" mode and
-#   FullStepping can be configured, which could help maintain motor torque when
-#   the back EMF of the motor approaches the stepper supply voltage.
-#   If it is not specified, it defaults to the maximum possible velocity,
-#   effectively disabling the "High velocity" mode.
+#coolstep_threshold:
+#   The velocity (in mm/s) to set the TMC driver internal "CoolStep"
+#   threshold to. If set, the coolstep feature will be enabled when
+#   the stepper motor velocity is near or above this value. Important
+#   - if coolstep_threshold is set and "sensorless homing" is used,
+#   then one must ensure that the homing speed is above the coolstep
+#   threshold! The default is to not enable the coolstep feature.
+#high_velocity_threshold:
+#   The velocity (in mm/s) to set the TMC driver internal "high
+#   velocity" threshold (THIGH) to. This is typically used to disable
+#   the "CoolStep" feature at high speeds. The default is to not set a
+#   TMC "high velocity" threshold.
 #driver_MSLUT0: 2863314260
 #driver_MSLUT1: 1251300522
 #driver_MSLUT2: 608774441
@@ -3713,15 +3707,13 @@ run_current:
 #sense_resistor: 0.110
 #stealthchop_threshold: 0
 #   See the "tmc2208" section for the definition of these parameters.
-#vcoolthrs: 0
-#   The velocity (in mm/s) to set the "CoolStep" threshold to. When set,
-#   the CoolStep feature will be disabled if the stepper motor velocity
-#   is below this value. Besides CoolStep, this also sets the velocity
-#   below which the Stall output of the driver gets disabled, so it will
-#   influence the homing. If it is not specified, it defaults to 0mm/s during
-#   homing, but CoolStep is also disabled at all other times. Configure this
-#   setting in order to enable the CoolStep feature and to improve the
-#   sensorless homing reliability.
+#coolstep_threshold:
+#   The velocity (in mm/s) to set the TMC driver internal "CoolStep"
+#   threshold to. If set, the coolstep feature will be enabled when
+#   the stepper motor velocity is near or above this value. Important
+#   - if coolstep_threshold is set and "sensorless homing" is used,
+#   then one must ensure that the homing speed is above the coolstep
+#   threshold! The default is to not enable the coolstep feature.
 #uart_address:
 #   The address of the TMC2209 chip for UART messages (an integer
 #   between 0 and 3). This is typically used when multiple TMC2209
@@ -3881,27 +3873,18 @@ run_current:
 #   set, "stealthChop" mode will be enabled if the stepper motor
 #   velocity is below this value. The default is 0, which disables
 #   "stealthChop" mode.
-#vcoolthrs: 0
-#   The velocity (in mm/s) to set the "CoolStep" threshold to. When set,
-#   the CoolStep feature will be disabled if the stepper motor velocity
-#   is below this value. Besides CoolStep, this also sets the velocity
-#   below which the Stall output of the driver gets disabled, so it will
-#   influence the homing. If it is not specified, it defaults to 0mm/s during
-#   homing, but CoolStep is also disabled at all other times. Configure this
-#   setting in order to enable the CoolStep feature and to improve the
-#   sensorless homing reliability.
-#vhigh: 0
-#   The velocity (in mm/s) to set the "High velocity" threshold to. When set,
-#   the CoolStep feature will be disabled if the stepper motor velocity
-#   is approximately above this value. Besides CoolStep, this also sets the
-#   velocity above which the Stall output of the driver gets disabled, so it
-#   might influence the homing if it is set too low.
-#   In combination with `vhighchm` or `vhighfs`, the velocity threshold above
-#   which the driver switches to "Constant off time with slow decay" mode and
-#   FullStepping can be configured, which could help maintain motor torque when
-#   the back EMF of the motor approaches the stepper supply voltage.
-#   If it is not specified, it defaults to the maximum possible velocity,
-#   effectively disabling the "High velocity" mode.
+#coolstep_threshold:
+#   The velocity (in mm/s) to set the TMC driver internal "CoolStep"
+#   threshold to. If set, the coolstep feature will be enabled when
+#   the stepper motor velocity is near or above this value. Important
+#   - if coolstep_threshold is set and "sensorless homing" is used,
+#   then one must ensure that the homing speed is above the coolstep
+#   threshold! The default is to not enable the coolstep feature.
+#high_velocity_threshold:
+#   The velocity (in mm/s) to set the TMC driver internal "high
+#   velocity" threshold (THIGH) to. This is typically used to disable
+#   the "CoolStep" feature at high speeds. The default is to not set a
+#   TMC "high velocity" threshold.
 #driver_MSLUT0: 2863314260
 #driver_MSLUT1: 1251300522
 #driver_MSLUT2: 608774441
@@ -4040,27 +4023,18 @@ run_current:
 #   set, "stealthChop" mode will be enabled if the stepper motor
 #   velocity is below this value. The default is 0, which disables
 #   "stealthChop" mode.
-#vcoolthrs: 0
-#   The velocity (in mm/s) to set the "CoolStep" threshold to. When set,
-#   the CoolStep feature will be disabled if the stepper motor velocity
-#   is below this value. Besides CoolStep, this also sets the velocity
-#   below which the Stall output of the driver gets disabled, so it will
-#   influence the homing. If it is not specified, it defaults to 0mm/s during
-#   homing, but CoolStep is also disabled at all other times. Configure this
-#   setting in order to enable the CoolStep feature and to improve the
-#   sensorless homing reliability.
-#vhigh: 0
-#   The velocity (in mm/s) to set the "High velocity" threshold to. When set,
-#   the CoolStep feature will be disabled if the stepper motor velocity
-#   is approximately above this value. Besides CoolStep, this also sets the
-#   velocity above which the Stall output of the driver gets disabled, so it
-#   might influence the homing if it is set too low.
-#   In combination with `vhighchm` or `vhighfs`, the velocity threshold above
-#   which the driver switches to "Constant off time with slow decay" mode and
-#   FullStepping can be configured, which could help maintain motor torque when
-#   the back EMF of the motor approaches the stepper supply voltage.
-#   If it is not specified, it defaults to the maximum possible velocity,
-#   effectively disabling the "High velocity" mode.
+#coolstep_threshold:
+#   The velocity (in mm/s) to set the TMC driver internal "CoolStep"
+#   threshold to. If set, the coolstep feature will be enabled when
+#   the stepper motor velocity is near or above this value. Important
+#   - if coolstep_threshold is set and "sensorless homing" is used,
+#   then one must ensure that the homing speed is above the coolstep
+#   threshold! The default is to not enable the coolstep feature.
+#high_velocity_threshold:
+#   The velocity (in mm/s) to set the TMC driver internal "high
+#   velocity" threshold (THIGH) to. This is typically used to disable
+#   the "CoolStep" feature at high speeds. The default is to not set a
+#   TMC "high velocity" threshold.
 #driver_MSLUT0: 2863314260
 #driver_MSLUT1: 1251300522
 #driver_MSLUT2: 608774441
